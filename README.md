@@ -6,6 +6,7 @@ A small multi-game website. The landing page (`index.html`) lets players pick a 
 |------|--------|------------|
 | 👻 Lights Out Sleepover | `games/lights-out-sleepover/` | A spooky action game. Escape the goo monsters, save Sam from the underworld, and beat the Devil King, the Devil Prince and the Candy Man. 1–2 players. |
 | ♟ Chess | `games/chess/` | Full-rules chess (castling, en passant, promotion, checkmate, stalemate and draws). Play a friend on the same screen, or the computer on Easy, Medium or Hard. |
+| 🌰 Oakville Quest | `games/oakville-quest/` | A side-scrolling platformer about the history of Oakville, Ontario. Walk the town map, clear 7 history worlds, find the History Scrolls and defeat the Fog of Forgetting. Progress is saved in the browser. |
 
 Every game is a single self-contained `index.html`. Graphics, music and sound are drawn and synthesized in code.
 There is no build step and there are no dependencies.

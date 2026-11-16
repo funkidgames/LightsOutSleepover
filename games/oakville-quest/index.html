@@ -1,0 +1,752 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
+<title>Oakville Quest · FunKid Games</title>
+<style>
+  html,body{margin:0;height:100%;background:#0d1b2a;overflow:hidden;font-family:"Trebuchet MS",Verdana,system-ui,sans-serif;color:#fff}
+  #wrap{position:fixed;inset:0;display:flex;align-items:center;justify-content:center}
+  canvas{display:block;image-rendering:auto;border-radius:10px;box-shadow:0 10px 40px rgba(0,0,0,.6)}
+  #ov{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;background:rgba(6,14,26,.62);z-index:5;padding:14px}
+  #ov.hidden{display:none}
+  .card{background:#fff8e8;color:#3a2a14;border-radius:18px;max-width:560px;width:100%;padding:22px 26px;box-shadow:0 18px 50px rgba(0,0,0,.55);
+    border:5px solid #7a4a1a;text-align:center;max-height:92vh;overflow:auto}
+  .card h1{margin:0;font-size:38px;color:#7a2e0e;line-height:1.05}
+  .card h2{margin:0 0 4px;font-size:28px;color:#7a2e0e}
+  .card .year{display:inline-block;background:#7a4a1a;color:#ffe9b0;font-weight:bold;border-radius:999px;padding:3px 12px;margin:4px 0 10px;font-size:14px}
+  .card p{line-height:1.45;margin:8px 0;font-size:16px}
+  .card .fact{background:#ffefc2;border-left:6px solid #e0a020;text-align:left;padding:10px 14px;border-radius:8px;margin:12px 0}
+  .card .fact b{color:#7a2e0e}
+  .card button{font:inherit;font-weight:bold;font-size:18px;border:0;border-radius:12px;padding:10px 20px;margin:6px;cursor:pointer;
+    background:#2e8b3e;color:#fff;box-shadow:0 4px 0 #1a5a26}
+  .card button.alt{background:#7a4a1a;box-shadow:0 4px 0 #4a2a0a}
+  .card button:active{transform:translateY(2px);box-shadow:0 2px 0 #1a5a26}
+  .card .small{font-size:13px;color:#6a5a44}
+  .card ol{text-align:left;padding-left:22px} .card li{margin:6px 0}
+  .card a{color:#7a2e0e}
+  #touch{position:fixed;inset:auto 0 0 0;height:120px;display:none;z-index:4;pointer-events:none}
+  #touch button{pointer-events:auto;position:absolute;bottom:18px;width:84px;height:84px;border-radius:50%;border:0;font-size:34px;
+    background:rgba(255,255,255,.22);color:#fff;font-weight:bold;touch-action:none}
+  #back{position:fixed;left:12px;top:10px;z-index:6;color:#fff;text-decoration:none;font-weight:bold;background:rgba(0,0,0,.35);padding:6px 12px;border-radius:10px;font-size:14px}
+  #mute{position:fixed;right:12px;top:10px;z-index:6;background:rgba(0,0,0,.35);color:#fff;border:0;border-radius:10px;padding:6px 10px;font-size:16px;cursor:pointer}
+</style>
+</head>
+<body>
+<a id="back" href="/">⬅ All games</a>
+<button id="mute">🔊</button>
+<div id="wrap"><canvas id="c" width="960" height="540"></canvas></div>
+<div id="ov"></div>
+<div id="touch">
+  <button id="tL" style="left:18px">◀</button>
+  <button id="tR" style="left:118px">▶</button>
+  <button id="tJ" style="right:22px;width:100px;height:100px">⤒</button>
+</div>
+<script>
+'use strict';
+const cv = document.getElementById('c'), ctx = cv.getContext('2d');
+const W = 960, H = 540, T = 32, ROWS = 17;
+const ov = document.getElementById('ov');
+function fit(){ const s = Math.min(innerWidth/W, innerHeight/H); cv.style.width = W*s + 'px'; cv.style.height = H*s + 'px'; }
+addEventListener('resize', fit); fit();
+
+// ------------------------------------------------------------------ history content
+// Facts researched from the Canadian Encyclopedia, the Oakville Historical Society and Oakville News.
+const WORLDS = [
+  { name:'Sixteen Mile Creek', year:'Long before the town', theme:'creek', node:[575, 115],
+    intro:'For thousands of years, Indigenous peoples lived along this shore: first the Huron-Wendat and other nations, and later the Mississaugas, an Anishinaabe people who fished and camped along the creeks.',
+    fact:'In treaties signed in <b>1806</b> and <b>1820</b>, the Mississaugas gave up most of this land, including their reserves at the mouths of the Twelve and Sixteen Mile Creeks, to the British Crown. Oakville sits on the treaty lands of the <b>Mississaugas of the Credit First Nation</b>.',
+    bonus:'The Huron-Wendat who lived in this area long ago were major suppliers of beaver pelts to the French fur traders of New France.' },
+  { name:"Chisholm's Harbour", year:'1827', theme:'harbour', node:[548, 338],
+    intro:'In 1827, a businessman named William Chisholm bought 960 acres of land at the mouth of Sixteen Mile Creek. He had a big plan: build a harbour and a town to ship grain across the lake.',
+    fact:'Chisholm finished his harbour in <b>1828</b> and laid out the streets of the new town. In <b>1834</b> the harbour became an official Port of Entry, and soon it had a <b>shipbuilding yard</b> on Navy Street, a grist mill and grain storage.',
+    bonus:'Oakville got its name from the many oak trees growing here. Oak wood was perfect for building ships and barrels.' },
+  { name:'Freedom Harbour', year:'1830s – 1860s', theme:'freedom', node:[640, 380],
+    intro:'Slavery was abolished in Canada in 1834. For people escaping slavery in the United States, the Oakville harbour was often their very first sight of freedom: a final stop on the Underground Railroad.',
+    fact:'<b>Captain Robert Wilson</b> of Oakville used his ships to carry freedom seekers across Lake Ontario. His house still stands on <b>Navy Street</b>. Every year Oakville holds an <b>Emancipation Day</b> picnic at Erchless Estate to remember them.',
+    bonus:'<b>James Wesley Hill</b> escaped from Maryland hidden in a packing box. He settled near Oakville, started a strawberry farm, and is said to have helped 700 to 800 people reach freedom.' },
+  { name:'Old Town Oakville', year:'1857', theme:'town', node:[700, 280],
+    intro:'The little harbour village kept growing. Shops, churches and brick houses filled the streets near the lake.',
+    fact:'Oakville officially became a <b>Town in 1857</b>, and <b>George King Chisholm</b> was its first mayor. The Chisholm family home, <b>Erchless Estate</b>, is now the Oakville Museum.',
+    bonus:'In 1915 and 1916, Lakeshore Road was paved with concrete. The Oakville Historical Society says it was the first paved highway in Ontario!' },
+  { name:'Strawberry Fields', year:'1860s – 1900s', theme:'berry', node:[835, 190],
+    intro:'Oakville farmers discovered that strawberries grew wonderfully here. Soon the fields around town were red with berries every summer.',
+    fact:'In the 1860s <b>John Cross</b> started growing strawberries and making wooden berry baskets. By the mid-1870s, Oakville was the <b>top strawberry-growing district in all of Canada</b>.',
+    bonus:'The <b>Oakville Basket Company</b> opened in 1892. It burned down in 1893 and again in 1920, was rebuilt both times, and kept making baskets until 1984.' },
+  { name:'Bronte & the Big Merge', year:'1856 – 1962', theme:'bronte', node:[205, 400],
+    intro:'West of Oakville was the fishing village of Bronte, with its own harbour at the mouth of Bronte Creek. North of town, farms covered Trafalgar Township.',
+    fact:'Bronte built its harbour in <b>1856</b>. In <b>1962</b>, the Town of Oakville, the Village of Bronte and Trafalgar Township <b>joined together</b> to make the Oakville we know today.',
+    bonus:'In the 1950s, a car company built a giant assembly plant on old farmland in Trafalgar Township. At first it employed about 5,600 people!' },
+  { name:'Oakville Today', year:'Final world', theme:'today', node:[400, 190], boss:true,
+    intro:'Oakville is now home to over 213,000 people. But a gloomy villain, the <b>Fog of Forgetting</b>, wants everyone to forget the town\'s history! Use everything you learned to stop it.',
+    fact:'You collected the stories of Oakville: from the Mississaugas, to Chisholm\'s harbour, the Underground Railroad, the strawberry fields, Bronte and the town of today. <b>History lives on when we remember it!</b>',
+    bonus:'Oakville is Ontario\'s 12th-largest municipality, and the Canadian Golf Hall of Fame is at Glen Abbey Golf Club.' },
+];
+const SOURCES = [
+  ['The Canadian Encyclopedia: Oakville', 'https://thecanadianencyclopedia.ca/en/article/oakville'],
+  ['Oakville Historical Society: Our Town', 'https://oakvillehistory.org/oakville'],
+  ['Oakville News: The Underground Railroad in Oakville', 'https://oakvillenews.org/local-news/the-underground-railroad-oakville-8475638'],
+  ['Town of Oakville: Oakville Museum history', 'https://www.oakville.ca/parks-recreation-culture/arts-culture/oakville-museum/museum-history/'],
+];
+
+// ------------------------------------------------------------------ save data
+let save = { cleared:[], scrolls:[] };
+try { const s = JSON.parse(localStorage.getItem('oakvilleQuest') || 'null'); if (s && Array.isArray(s.cleared)) save = s; } catch(e){}
+function store(){ try { localStorage.setItem('oakvilleQuest', JSON.stringify(save)); } catch(e){} }
+
+// ------------------------------------------------------------------ audio
+let ac = null, muted = false, musicOn = true;
+function audio(){ if (!ac){ try { ac = new (window.AudioContext || window.webkitAudioContext)(); } catch(e){} } if (ac && ac.state === 'suspended') ac.resume(); }
+function tone(f, d, type, v, f2, when){
+  if (!ac || muted) return;
+  const t0 = (when || ac.currentTime), o = ac.createOscillator(), g = ac.createGain();
+  o.type = type || 'square'; o.frequency.setValueAtTime(f, t0); if (f2) o.frequency.exponentialRampToValueAtTime(f2, t0 + d);
+  g.gain.setValueAtTime(v || 0.08, t0); g.gain.exponentialRampToValueAtTime(0.0001, t0 + d); o.connect(g); g.connect(ac.destination); o.start(t0); o.stop(t0 + d + 0.02);
+}
+const sfx = {
+  jump(){ tone(300, 0.18, 'square', 0.06, 620); },
+  coin(){ tone(988, 0.07, 'square', 0.06); setTimeout(() => tone(1319, 0.18, 'square', 0.06), 70); },
+  stomp(){ tone(200, 0.12, 'triangle', 0.15, 80); },
+  bump(){ tone(140, 0.08, 'square', 0.08); },
+  power(){ [523, 659, 784, 1046, 1318].forEach((f, i) => setTimeout(() => tone(f, 0.12, 'square', 0.06), i*70)); },
+  hurt(){ tone(500, 0.35, 'sawtooth', 0.07, 120); },
+  scroll(){ [784, 988, 1175, 1568].forEach((f, i) => setTimeout(() => tone(f, 0.2, 'triangle', 0.09), i*110)); },
+  clear(){ [523, 659, 784, 659, 784, 1046].forEach((f, i) => setTimeout(() => tone(f, 0.22, 'square', 0.07), i*140)); },
+  die(){ [494, 440, 392, 330, 262].forEach((f, i) => setTimeout(() => tone(f, 0.2, 'triangle', 0.1), i*150)); },
+  boss(){ tone(90, 0.6, 'sawtooth', 0.12, 45); },
+};
+// cheerful original chiptune: melody + bass, a different tempo and voice per theme
+const MEL = [72,76,79,76,74,72,74,76, 77,76,74,72,71,72,74,0, 72,76,79,81,79,77,76,74, 72,74,76,74,72,71,72,0];
+const BASS = [48,48,55,55,53,53,55,55];
+const MUSIC = { map:[0.17,'triangle',0], creek:[0.2,'triangle',-5], harbour:[0.16,'square',0], freedom:[0.24,'triangle',-3],
+  town:[0.15,'square',2], berry:[0.14,'square',4], bronte:[0.16,'square',-2], today:[0.13,'sawtooth',-7] };
+let mStep = 0, mNext = 0, mTheme = 'map';
+const mf = n => 440*Math.pow(2, (n - 69)/12);
+setInterval(() => {
+  if (!ac || muted || !musicOn) return;
+  const [dur, wave, tr] = MUSIC[mTheme] || MUSIC.map;
+  while (mNext < ac.currentTime + 0.12){
+    if (mNext < ac.currentTime) mNext = ac.currentTime + 0.02;
+    const n = MEL[mStep % MEL.length]; if (n) tone(mf(n + tr), dur*0.9, wave, 0.035, 0, mNext);
+    if (mStep % 4 === 0) tone(mf(BASS[(mStep/4|0) % BASS.length] + tr), dur*3.5, 'triangle', 0.06, 0, mNext);
+    mStep++; mNext += dur;
+  }
+}, 40);
+document.getElementById('mute').onclick = e => { e.stopPropagation(); muted = !muted; e.target.textContent = muted ? '🔇' : '🔊'; };
+
+// ------------------------------------------------------------------ input
+const keys = {}, pressed = {};
+addEventListener('keydown', e => { audio(); const k = e.key.toLowerCase(); if (!keys[k]) pressed[k] = true; keys[k] = true;
+  if ([' ','arrowup','arrowdown','arrowleft','arrowright'].includes(k)) e.preventDefault(); onKey(k); });
+addEventListener('keyup', e => { keys[e.key.toLowerCase()] = false; });
+const touch = { l:false, r:false, j:false };
+const isTouch = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
+if (isTouch) document.getElementById('touch').style.display = 'block';
+for (const [id, k] of [['tL','l'],['tR','r'],['tJ','j']]){
+  const b = document.getElementById(id);
+  b.addEventListener('pointerdown', e => { e.preventDefault(); audio(); touch[k] = true; if (k === 'j') pressed.touchjump = true; if (state === 'map') onKey(k === 'l' ? 'arrowleft' : k === 'r' ? 'arrowright' : 'enter'); });
+  for (const ev of ['pointerup','pointercancel','pointerleave']) b.addEventListener(ev, () => touch[k] = false);
+}
+cv.addEventListener('pointerdown', e => { audio(); if (state === 'map'){ const r = cv.getBoundingClientRect(), x = (e.clientX - r.left)*W/r.width, y = (e.clientY - r.top)*H/r.height;
+  WORLDS.forEach((w, i) => { if (Math.hypot(w.node[0] - x, w.node[1] - y) < 30 && unlocked(i)){ if (mapSel === i) openIntro(i); else { mapSel = i; sfx.bump(); } } }); } });
+const left = () => keys['arrowleft'] || keys['a'] || touch.l;
+const right = () => keys['arrowright'] || keys['d'] || touch.r;
+const jumpHeld = () => keys[' '] || keys['arrowup'] || keys['w'] || keys['z'] || touch.j;
+
+// ------------------------------------------------------------------ helpers
+function rr(x, y, w, h, r){ ctx.beginPath(); ctx.moveTo(x+r, y); ctx.arcTo(x+w, y, x+w, y+h, r); ctx.arcTo(x+w, y+h, x, y+h, r); ctx.arcTo(x, y+h, x, y, r); ctx.arcTo(x, y, x+w, y, r); ctx.closePath(); }
+function circle(x, y, r){ ctx.beginPath(); ctx.arc(x, y, r, 0, Math.PI*2); ctx.fill(); }
+function ell(x, y, rx, ry){ ctx.beginPath(); ctx.ellipse(x, y, rx, ry, 0, 0, Math.PI*2); ctx.fill(); }
+function hash(n){ const x = Math.sin(n*127.1)*43758.5453; return x - Math.floor(x); }
+function rng(seed){ let a = seed >>> 0; return () => { a |= 0; a = a + 0x6D2B79F5 | 0; let t = Math.imul(a ^ a >>> 15, 1 | a); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; }; }
+function leafPath(x, y, s){ // maple leaf
+  ctx.beginPath();
+  const pts = [[0,-1],[0.18,-0.62],[0.42,-0.75],[0.36,-0.38],[0.82,-0.48],[0.62,-0.18],[0.8,0.05],[0.32,0.12],[0.38,0.42],[0.06,0.3],[0.06,0.9],[-0.06,0.9],[-0.06,0.3],[-0.38,0.42],[-0.32,0.12],[-0.8,0.05],[-0.62,-0.18],[-0.82,-0.48],[-0.36,-0.38],[-0.42,-0.75],[-0.18,-0.62]];
+  pts.forEach(([px, py], i) => i ? ctx.lineTo(x + px*s, y + py*s) : ctx.moveTo(x + px*s, y + py*s)); ctx.closePath();
+}
+
+// ------------------------------------------------------------------ the hero: Sprout the acorn explorer (original character)
+function drawHero(x, y, dir, t, moving, air, powered, flash){
+  if (flash && Math.sin(t*40) > 0) return;
+  ctx.save(); ctx.translate(x, y); ctx.scale(dir, 1);
+  const step = moving && !air ? Math.sin(t*16) : 0;
+  // maple-leaf cape when powered up
+  if (powered){ ctx.fillStyle = '#d62828'; ctx.beginPath(); ctx.moveTo(-6, -22); ctx.quadraticCurveTo(-22 - Math.abs(step)*3, -6, -16 - (moving ? 6 : 0), 6 + Math.sin(t*10)*2); ctx.lineTo(-2, 0); ctx.fill();
+    ctx.fillStyle = '#fff'; leafPath(-12, -6, 4); ctx.fill(); }
+  // legs + boots
+  ctx.fillStyle = '#4a3020'; rr(-8 + step*3, -6, 6, 8, 2); ctx.fill(); rr(2 - step*3, -6, 6, 8, 2); ctx.fill();
+  ctx.fillStyle = '#2a1a10'; rr(-9 + step*3, 0, 9, 4, 2); ctx.fill(); rr(1 - step*3, 0, 9, 4, 2); ctx.fill();
+  // green explorer tunic + belt + satchel strap
+  ctx.fillStyle = '#2e8b3e'; rr(-10, -22, 20, 18, 6); ctx.fill();
+  ctx.fillStyle = '#1e6a2c'; ctx.fillRect(-10, -9, 20, 3);
+  ctx.strokeStyle = '#7a4a1a'; ctx.lineWidth = 2; ctx.beginPath(); ctx.moveTo(-8, -21); ctx.lineTo(8, -8); ctx.stroke();
+  // arms
+  ctx.fillStyle = '#d9a35f'; circle(-10 - step*2, -12 + (air ? -6 : 0), 3.5); circle(10 + step*2, -12 + (air ? -8 : 0), 3.5);
+  // acorn head
+  ctx.fillStyle = '#d9a35f'; ell(0, -32, 11, 12);
+  ctx.fillStyle = 'rgba(255,255,255,.25)'; ell(-4, -36, 4, 3);
+  // eyes + smile + cheeks
+  ctx.fillStyle = '#2a1a10'; ell(3, -32, 2, 3); ell(8, -32, 2, 3);
+  ctx.fillStyle = '#fff'; circle(3.6, -33, 0.8); circle(8.6, -33, 0.8);
+  ctx.strokeStyle = '#2a1a10'; ctx.lineWidth = 1.5; ctx.beginPath(); ctx.arc(6, -27, 3, 0.2, Math.PI - 0.4); ctx.stroke();
+  ctx.fillStyle = 'rgba(255,110,90,.5)'; circle(10, -28, 2);
+  // acorn cap with crosshatch and stem
+  ctx.fillStyle = '#6b4423'; ctx.beginPath(); ctx.ellipse(0, -39, 13, 7, 0, Math.PI, 0); ctx.lineTo(13, -38); ctx.quadraticCurveTo(0, -35, -13, -38); ctx.fill();
+  ctx.strokeStyle = '#4a2a10'; ctx.lineWidth = 1; for (let i=-10;i<=10;i+=5){ ctx.beginPath(); ctx.moveTo(i - 3, -44); ctx.lineTo(i + 3, -37); ctx.stroke(); }
+  ctx.strokeStyle = '#4a2a10'; ctx.lineWidth = 3; ctx.beginPath(); ctx.moveTo(0, -45); ctx.quadraticCurveTo(3, -50, 6, -50); ctx.stroke();
+  // red scarf with flutter
+  ctx.fillStyle = '#d62828'; rr(-9, -24, 18, 4, 2); ctx.fill(); ctx.beginPath(); ctx.moveTo(-7, -23); ctx.lineTo(-16, -21 + Math.sin(t*12)*3); ctx.lineTo(-14, -17 + Math.sin(t*12)*3); ctx.lineTo(-6, -20); ctx.fill();
+  ctx.restore();
+}
+
+// ------------------------------------------------------------------ themes
+const THEMES = {
+  creek:   { sky:['#8fd3ff','#d8f1ff'], ground:'#5a8a3a', dirt:'#6b4a2a', block:'#8a6a3a', foes:['turtle','mosquito','turtle'] },
+  harbour: { sky:['#7ac4f0','#e2f4ff'], ground:'#8a6a44', dirt:'#5a4028', block:'#a07a4a', foes:['crab','gull','barrel'] },
+  freedom: { sky:['#0b1640','#2a3f7a'], ground:'#4a5a6a', dirt:'#2a3440', block:'#6a7a8a', foes:['wave','storm','wave'] },
+  town:    { sky:['#ffcf9a','#fff0d8'], ground:'#9a9a9a', dirt:'#7a4a3a', block:'#b5523a', foes:['jalopy','pigeon','jalopy'] },
+  berry:   { sky:['#9fe0ff','#e8fbff'], ground:'#4caf50', dirt:'#7a4a2a', block:'#c9893a', foes:['slug','crow','basket'] },
+  bronte:  { sky:['#9ac8e8','#eef6ff'], ground:'#6a7a8a', dirt:'#4a4a52', block:'#8a8a96', foes:['bot','gull','tire'] },
+  today:   { sky:['#6a6a8a','#c8c8d8'], ground:'#5a6a5a', dirt:'#3a3a44', block:'#6a6a7a', foes:['fogling','fogling','fogling'] },
+};
+function drawBackground(theme, camX, t){
+  const th = THEMES[theme];
+  const g = ctx.createLinearGradient(0, 0, 0, H); g.addColorStop(0, th.sky[0]); g.addColorStop(1, th.sky[1]); ctx.fillStyle = g; ctx.fillRect(0, 0, W, H);
+  const par = (f, w) => ((-camX*f) % w + w) % w - w;
+  if (theme === 'freedom'){
+    for (let i=0;i<70;i++){ ctx.fillStyle = `rgba(255,255,255,${0.4 + 0.5*Math.abs(Math.sin(t + i))})`; ctx.fillRect((hash(i)*W*1.5 - camX*0.03) % W, hash(i+9)*300, 2, 2); }
+    ctx.save(); ctx.shadowColor = '#fff6a0'; ctx.shadowBlur = 24; ctx.fillStyle = '#fffbd0'; circle(780, 120, 6); ctx.restore();
+    ctx.fillStyle = 'rgba(255,250,200,.85)'; ctx.font = 'bold 13px "Trebuchet MS"'; ctx.fillText('North Star', 795, 124);
+  } else if (theme === 'today'){
+    for (let i=0;i<6;i++){ const x = par(0.1, 320) + i*320; ctx.fillStyle = 'rgba(240,240,250,.6)'; ell(x + 100, 80 + (i%2)*30, 120, 26); }
+  } else { ctx.fillStyle = 'rgba(255,255,255,.85)'; for (let i=0;i<6;i++){ const x = par(0.08, 360) + i*360; ell(x + 80, 70 + (i%3)*25, 50, 16); ell(x + 115, 60 + (i%3)*25, 34, 14); } }
+  // far layer
+  const far = par(0.25, 480);
+  for (let k=0;k<4;k++){
+    const bx = far + k*480;
+    ctx.save(); ctx.translate(bx, 0);
+    if (theme === 'creek'){ ctx.fillStyle = '#3f7a3a'; for (let i=0;i<8;i++){ ell(i*60 + 20, 330, 45, 70); } ctx.fillStyle = '#5a3a1a'; for (let i=0;i<8;i++) ctx.fillRect(i*60 + 16, 360, 8, 80);
+      ctx.fillStyle = '#4aa0d8'; ctx.fillRect(0, 410, 480, 30); ctx.fillStyle = 'rgba(255,255,255,.5)'; for (let i=0;i<6;i++) ctx.fillRect(i*80 + ((t*30) % 80), 420, 30, 2);
+      ctx.fillStyle = '#8a5a2a'; ctx.beginPath(); ctx.moveTo(300, 405); ctx.quadraticCurveTo(340, 418, 380, 405); ctx.lineTo(372, 400); ctx.lineTo(308, 400); ctx.fill(); }
+    if (theme === 'harbour' || theme === 'bronte'){ ctx.fillStyle = '#3a8ac8'; ctx.fillRect(0, 380, 480, 70);
+      ctx.fillStyle = '#5a3a1a'; ctx.beginPath(); ctx.moveTo(120, 380); ctx.lineTo(260, 380); ctx.lineTo(245, 398); ctx.lineTo(135, 398); ctx.fill();
+      ctx.strokeStyle = '#3a2a1a'; ctx.lineWidth = 4; ctx.beginPath(); ctx.moveTo(170, 380); ctx.lineTo(170, 290); ctx.moveTo(215, 380); ctx.lineTo(215, 300); ctx.stroke();
+      ctx.fillStyle = '#f4ecd8'; ctx.beginPath(); ctx.moveTo(172, 295); ctx.lineTo(210, 372); ctx.lineTo(172, 372); ctx.fill(); ctx.beginPath(); ctx.moveTo(217, 305); ctx.lineTo(250, 372); ctx.lineTo(217, 372); ctx.fill();
+      if (theme === 'harbour'){ ctx.fillStyle = '#8a5a3a'; ctx.fillRect(340, 300, 110, 80); ctx.fillStyle = '#6a3a2a'; ctx.beginPath(); ctx.moveTo(332, 302); ctx.lineTo(395, 262); ctx.lineTo(458, 302); ctx.fill();
+        ctx.fillStyle = '#ffe9b0'; ctx.font = 'bold 12px "Trebuchet MS"'; ctx.fillText('GRAIN', 375, 340); }
+      else { ctx.fillStyle = '#8a8a96'; ctx.fillRect(320, 250, 150, 130); ctx.fillStyle = '#6a6a76'; ctx.fillRect(340, 190, 18, 60); ctx.fillRect(380, 170, 18, 80);
+        ctx.fillStyle = 'rgba(200,200,210,.6)'; ell(350, 180 - (t*10 % 30), 14, 10); ell(390, 160 - (t*10 % 30), 16, 11);
+        ctx.fillStyle = '#ffe9b0'; ctx.font = 'bold 12px "Trebuchet MS"'; ctx.fillText('CAR PLANT', 360, 300); ctx.fillText('BRONTE', 40, 370); } }
+    if (theme === 'freedom'){ ctx.fillStyle = '#1a3a6a'; ctx.fillRect(0, 380, 480, 70); ctx.fillStyle = 'rgba(160,200,255,.3)'; for (let i=0;i<8;i++) ctx.fillRect(i*60 + ((t*20) % 60), 395 + (i%3)*12, 28, 2);
+      ctx.fillStyle = '#0a1426'; ctx.beginPath(); ctx.moveTo(140, 382); ctx.lineTo(300, 382); ctx.lineTo(285, 398); ctx.lineTo(155, 398); ctx.fill(); ctx.fillRect(200, 300, 4, 82);
+      ctx.fillStyle = '#1a2a4a'; ctx.beginPath(); ctx.moveTo(204, 305); ctx.lineTo(260, 375); ctx.lineTo(204, 375); ctx.fill();
+      ctx.save(); ctx.shadowColor = '#ffd27a'; ctx.shadowBlur = 16; ctx.fillStyle = '#ffd27a'; circle(285, 372, 4); ctx.restore();
+      // lighthouse
+      ctx.fillStyle = '#e8e8e8'; ctx.beginPath(); ctx.moveTo(400, 380); ctx.lineTo(430, 380); ctx.lineTo(424, 280); ctx.lineTo(406, 280); ctx.fill(); ctx.fillStyle = '#c0392b'; ctx.fillRect(402, 270, 26, 12);
+      ctx.fillStyle = `rgba(255,240,160,${0.25 + 0.15*Math.sin(t*2)})`; ctx.beginPath(); ctx.moveTo(415, 276); ctx.lineTo(415 - 200*Math.cos(t*0.8), 250); ctx.lineTo(415 - 200*Math.cos(t*0.8), 300); ctx.fill(); }
+    if (theme === 'town'){ const cols = ['#b5523a','#9a4a3a','#c9733a','#a05a4a'];
+      for (let i=0;i<4;i++){ ctx.fillStyle = cols[i]; ctx.fillRect(i*120, 270 + (i%2)*20, 110, 180); ctx.fillStyle = '#ffe9b0'; for (let w=0;w<6;w++) ctx.fillRect(i*120 + 14 + (w%3)*32, 290 + (i%2)*20 + Math.floor(w/3)*50, 18, 26); }
+      ctx.fillStyle = '#f4f0e8'; ctx.fillRect(130, 240, 120, 60); ctx.fillStyle = '#5a5a5a'; ctx.beginPath(); ctx.moveTo(122, 242); ctx.lineTo(190, 205); ctx.lineTo(258, 242); ctx.fill();
+      ctx.fillStyle = '#7a2e0e'; ctx.font = 'bold 11px "Trebuchet MS"'; ctx.fillText('ERCHLESS', 160, 275); }
+    if (theme === 'berry'){ ctx.fillStyle = '#5fbf4a'; ctx.fillRect(0, 360, 480, 90); for (let r=0;r<4;r++) for (let i=0;i<24;i++){ ctx.fillStyle = '#2e7a2a'; ell(i*20 + (r%2)*10, 372 + r*18, 9, 5); ctx.fillStyle = '#e02a3a'; circle(i*20 + (r%2)*10 + 3, 372 + r*18, 2.5); }
+      ctx.fillStyle = '#b5523a'; ctx.fillRect(300, 270, 150, 90); ctx.fillStyle = '#8a3a2a'; ctx.beginPath(); ctx.moveTo(292, 272); ctx.lineTo(375, 230); ctx.lineTo(458, 272); ctx.fill();
+      ctx.fillStyle = '#ffe9b0'; ctx.font = 'bold 11px "Trebuchet MS"'; ctx.fillText('OAKVILLE BASKET CO.', 312, 310); }
+    if (theme === 'today'){ ctx.fillStyle = '#4a4a5a'; for (let i=0;i<7;i++){ const h = 120 + hash(i)*140; ctx.fillRect(i*70, 450 - h, 60, h); ctx.fillStyle = 'rgba(255,240,180,.5)'; for (let w=0;w<8;w++) ctx.fillRect(i*70 + 8 + (w%3)*16, 460 - h + Math.floor(w/3)*22, 8, 12); ctx.fillStyle = '#4a4a5a'; } }
+    ctx.restore();
+  }
+  if (theme === 'today'){ ctx.fillStyle = 'rgba(150,150,170,.25)'; ctx.fillRect(0, 0, W, H); }
+}
+
+// ------------------------------------------------------------------ enemies (all original critters)
+function drawFoe(e, t){
+  const x = e.x, y = e.y, d = e.vx < 0 ? -1 : 1;
+  ctx.save(); ctx.translate(x, y);
+  if (e.squash){ ctx.scale(1.3, 0.35); }
+  switch (e.kind){
+    case 'turtle': ctx.fillStyle = '#3a6a2a'; ell(0, -10, 15, 11); ctx.fillStyle = '#5a8a3a'; for (let i=-1;i<=1;i++) ell(i*8, -12, 4, 4); ctx.fillStyle = '#8aaa5a'; ell(d*15, -8, 6, 5); ctx.fillStyle = '#000'; circle(d*17, -9, 1.5);
+      ctx.fillStyle = '#6a8a4a'; ell(-9, -1, 4, 3); ell(9, -1, 4, 3); break;
+    case 'mosquito': case 'gull': case 'crow': case 'pigeon': case 'storm': {
+      const fl = Math.sin(t*20 + e.seed)*6;
+      if (e.kind === 'storm'){ ctx.fillStyle = '#4a5a7a'; ell(0, -10, 18, 10); ell(-10, -14, 10, 8); ell(9, -16, 11, 9); ctx.fillStyle = '#ffe94a'; ctx.beginPath(); ctx.moveTo(-2, -2); ctx.lineTo(4, 6); ctx.lineTo(0, 6); ctx.lineTo(5, 16); ctx.lineTo(-4, 4); ctx.lineTo(0, 4); ctx.fill();
+        ctx.fillStyle = '#fff'; circle(-5, -11, 2.5); circle(5, -11, 2.5); ctx.fillStyle = '#000'; circle(-5, -10.5, 1.2); circle(5, -10.5, 1.2); break; }
+      const body = { mosquito:'#3a3a3a', gull:'#f4f4f4', crow:'#1a1a22', pigeon:'#8a8aa0' }[e.kind];
+      ctx.fillStyle = 'rgba(220,240,255,.7)'; ell(-4, -14 - fl*0.5, 8, 3 + Math.abs(fl)*0.3); ell(4, -14 + fl*0.5, 8, 3 + Math.abs(fl)*0.3);
+      if (e.kind !== 'mosquito'){ ctx.fillStyle = e.kind === 'gull' ? '#c8c8c8' : body; ell(-6, -10 - fl, 9, 4); ell(6, -10 + fl, 9, 4); }
+      ctx.fillStyle = body; ell(0, -8, e.kind === 'mosquito' ? 6 : 10, e.kind === 'mosquito' ? 4 : 6); circle(d*8, -12, e.kind === 'mosquito' ? 4 : 5);
+      ctx.fillStyle = e.kind === 'mosquito' ? '#222' : '#f0a020'; ctx.beginPath(); ctx.moveTo(d*12, -12); ctx.lineTo(d*(e.kind === 'mosquito' ? 22 : 18), -11); ctx.lineTo(d*12, -10); ctx.fill();
+      ctx.fillStyle = '#ff3030'; circle(d*9, -13, 1.6); break; }
+    case 'crab': ctx.fillStyle = '#e04a2a'; ell(0, -8, 14, 9); ctx.strokeStyle = '#c03a1a'; ctx.lineWidth = 2; for (const s of [-1,1]){ for (let l=0;l<3;l++){ ctx.beginPath(); ctx.moveTo(s*8, -4); ctx.lineTo(s*(14 + l*2), 0); ctx.stroke(); } }
+      ctx.fillStyle = '#e04a2a'; const cl = Math.sin(t*8 + e.seed)*3; ell(-16, -14 - cl, 5, 4); ell(16, -14 + cl, 5, 4); ctx.fillStyle = '#fff'; circle(-4, -17, 3); circle(4, -17, 3); ctx.fillStyle = '#000'; circle(-4, -17, 1.5); circle(4, -17, 1.5); break;
+    case 'barrel': case 'basket': case 'tire': ctx.rotate(e.x*0.06*d);
+      if (e.kind === 'barrel'){ ctx.fillStyle = '#9a6a3a'; circle(0, -12, 13); ctx.strokeStyle = '#4a3a2a'; ctx.lineWidth = 3; ctx.beginPath(); ctx.arc(0, -12, 13, 0, Math.PI*2); ctx.stroke(); ctx.beginPath(); ctx.moveTo(-13, -12); ctx.lineTo(13, -12); ctx.moveTo(0, -25); ctx.lineTo(0, 1); ctx.stroke(); }
+      else if (e.kind === 'basket'){ ctx.fillStyle = '#d9a35f'; circle(0, -12, 13); ctx.strokeStyle = '#8a5a2a'; ctx.lineWidth = 2; for (let i=-2;i<=2;i++){ ctx.beginPath(); ctx.moveTo(i*5, -24); ctx.lineTo(i*5, 0); ctx.stroke(); } ctx.fillStyle = '#e02a3a'; circle(-4, -16, 4); circle(4, -14, 4); }
+      else { ctx.fillStyle = '#1a1a1a'; circle(0, -12, 13); ctx.fillStyle = '#8a8a8a'; circle(0, -12, 6); ctx.strokeStyle = '#3a3a3a'; ctx.lineWidth = 2; for (let i=0;i<8;i++){ const a = i*Math.PI/4; ctx.beginPath(); ctx.moveTo(Math.cos(a)*9, -12 + Math.sin(a)*9); ctx.lineTo(Math.cos(a)*12, -12 + Math.sin(a)*12); ctx.stroke(); } }
+      ctx.rotate(-e.x*0.06*d); ctx.fillStyle = '#fff'; circle(-4, -14, 3); circle(4, -14, 3); ctx.fillStyle = '#000'; circle(-4 + d, -14, 1.5); circle(4 + d, -14, 1.5); break;
+    case 'wave': ctx.fillStyle = '#3a7ac8'; ctx.beginPath(); ctx.moveTo(-16, 0); ctx.quadraticCurveTo(-14, -26, d*12, -22); ctx.quadraticCurveTo(d*2, -14, d*6, -10); ctx.quadraticCurveTo(d*14, -4, 16, 0); ctx.fill();
+      ctx.fillStyle = '#d8ecff'; ell(d*6, -22, 7, 3); ctx.fillStyle = '#fff'; circle(-3, -12, 3); ctx.fillStyle = '#000'; circle(-3 + d, -12, 1.4); break;
+    case 'slug': ctx.fillStyle = '#8a9a3a'; ell(0, -6, 15, 7); ctx.strokeStyle = '#8a9a3a'; ctx.lineWidth = 2; ctx.beginPath(); ctx.moveTo(d*9, -10); ctx.lineTo(d*12, -20); ctx.moveTo(d*5, -10); ctx.lineTo(d*6, -19); ctx.stroke();
+      ctx.fillStyle = '#000'; circle(d*12, -20, 2); circle(d*6, -19, 2); break;
+    case 'jalopy': ctx.fillStyle = '#2a2a3a'; rr(-17, -18, 34, 12, 4); ctx.fill(); rr(-9, -27, 18, 10, 3); ctx.fill(); ctx.fillStyle = '#9ad0ff'; ctx.fillRect(-6, -25, 12, 6);
+      ctx.fillStyle = '#111'; circle(-10, -5, 6); circle(10, -5, 6); ctx.fillStyle = '#888'; circle(-10, -5, 2.5); circle(10, -5, 2.5); ctx.fillStyle = '#ffe94a'; circle(d*17, -13, 3); break;
+    case 'bot': ctx.fillStyle = '#7a8a9a'; rr(-12, -26, 24, 22, 4); ctx.fill(); ctx.fillStyle = '#4a5a6a'; ctx.fillRect(-12, -6, 24, 6); ctx.fillStyle = '#ff4a3a'; ctx.fillRect(-8, -20, 16, 5);
+      ctx.strokeStyle = '#4a5a6a'; ctx.lineWidth = 3; ctx.beginPath(); ctx.moveTo(d*12, -14); ctx.lineTo(d*20, -10 + Math.sin(t*10)*4); ctx.stroke(); break;
+    case 'fogling': ctx.globalAlpha = 0.9; ctx.fillStyle = '#8a8a9a'; ell(0, -11, 14, 11); ell(-8, -6, 8, 6); ell(8, -6, 8, 6); ctx.globalAlpha = 1;
+      ctx.fillStyle = '#2a2a3a'; ell(-4, -13, 3, 4); ell(4, -13, 3, 4); ctx.fillStyle = '#d0d0ff'; circle(-4, -14, 1); circle(4, -14, 1); break;
+  }
+  ctx.restore();
+}
+const FLYERS = new Set(['mosquito','gull','crow','pigeon','storm']);
+const ROLLERS = new Set(['barrel','basket','tire']);
+
+// ------------------------------------------------------------------ level generation
+function buildLevel(wi){
+  const w = WORLDS[wi], th = THEMES[w.theme], R = rng(wi*7919 + 13), d = wi/6;
+  const ents = [];
+  if (w.boss){
+    const cols = 30, g = [];
+    for (let r=0;r<ROWS;r++){ g.push(Array(cols).fill('.')); }
+    for (let c=0;c<cols;c++) for (let r=14;r<ROWS;r++) g[r][c] = '#';
+    for (let r=0;r<ROWS;r++){ g[r][0] = '#'; g[r][cols-1] = '#'; }
+    for (const [c, r] of [[6,10],[7,10],[22,10],[23,10]]) g[r][c] = '=';
+    g[10][14] = '?'; g[10][15] = '?';
+    return { g, cols, ents, start:[3, 13], goal:null, theme:w.theme, boss:true };
+  }
+  const cols = 150 + wi*14, g = [];
+  for (let r=0;r<ROWS;r++) g.push(Array(cols).fill('.'));
+  for (let c=0;c<cols;c++) for (let r=14;r<ROWS;r++) g[r][c] = '#';
+  const scrollAt = Math.floor(cols*0.55);
+  let x = 14, qCount = 0;
+  const foe = (c, r, kind) => ents.push({ type:'foe', kind, x:c*T + 16, y:r*T, vx:-1, seed:R()*10 });
+  while (x < cols - 26){
+    if (Math.abs(x - scrollAt) < 6){
+      for (let c=scrollAt-2;c<=scrollAt+1;c++) g[11][c] = '=';
+      ents.push({ type:'scroll', x:scrollAt*T, y:9*T + 16 }); x = scrollAt + 6; continue;
+    }
+    const roll = R();
+    if (roll < 0.22){ // gap
+      const gw = 2 + Math.floor(R()*(1.6 + d*2));
+      for (let c=x;c<x+gw;c++) for (let r=14;r<ROWS;r++) g[r][c] = r === 16 ? 'w' : '.';
+      if (R() < 0.5) for (let c=x;c<x+gw;c++) ents.push({ type:'acorn', x:c*T + 16, y:10*T + 16 });
+      x += gw + 3;
+    } else if (roll < 0.42){ // floating platform with acorns
+      const len = 3 + Math.floor(R()*3), row = R() < 0.5 ? 11 : 10;
+      for (let c=x;c<x+len;c++){ g[row][c] = '='; ents.push({ type:'acorn', x:c*T + 16, y:(row-1)*T + 16 }); }
+      if (R() < 0.4 + d*0.4) foe(x + len - 1, 14, th.foes[0]);
+      x += len + 3;
+    } else if (roll < 0.58){ // question blocks
+      const row = 10, n = 1 + Math.floor(R()*3);
+      for (let c=x;c<x+n+2;c++) g[row][c] = 'b';
+      for (let i=0;i<n;i++){ g[row][x + 1 + i] = '?'; qCount++; }
+      if (R() < 0.6) foe(x + 2, 14, th.foes[2]);
+      x += n + 6;
+    } else if (roll < 0.72){ // stairs up and down
+      const h = 2 + Math.floor(R()*(1 + d*2));
+      for (let i=0;i<h;i++) for (let r=13-i;r<14;r++){ g[r][x + i] = 'b'; g[r][x + 2*h - i] = 'b'; }
+      for (let r=13-h+1;r<14;r++) g[r][x + h] = 'b';
+      ents.push({ type:'acorn', x:(x + h)*T + 16, y:(13 - h)*T - 4 });
+      x += 2*h + 4;
+    } else if (roll < 0.86){ // enemies on open ground
+      const n = 1 + Math.floor(R()*(1 + d*2.5));
+      for (let i=0;i<n;i++) foe(x + 2 + i*3, 14, th.foes[i % 2 === 0 ? 0 : 2]);
+      x += n*3 + 4;
+    } else { // flying foe over a pillar
+      const ph = 2 + Math.floor(R()*2);
+      for (let r=14-ph;r<14;r++){ g[r][x] = 'b'; g[r][x+1] = 'b'; }
+      ents.push({ type:'foe', kind:th.foes[1], x:(x + 6)*T, y:(8 + Math.floor(R()*3))*T, vx:-1, seed:R()*10, fly:true, baseY:(9 + R()*2)*T });
+      x += 9;
+    }
+  }
+  const goal = cols - 9;
+  return { g, cols, ents, start:[3, 13], goal, theme:w.theme, qCount };
+}
+
+// ------------------------------------------------------------------ game state
+let state = 'title', mapSel = 0, mapHero = { x:0, y:0 }, lives = 5, acorns = 0, cur = -1, lvl = null, hero = null, foes = [], items = [], parts = [], camX = 0, gt = 0, endT = 0, boss = null, gotScroll = false;
+const unlocked = i => i === 0 || save.cleared.includes(i - 1) || save.cleared.includes(i);
+function startLevel(i){
+  cur = i; lvl = buildLevel(i); gt = 0; gotScroll = false; endT = 0; parts = [];
+  hero = { x:lvl.start[0]*T + 16, y:lvl.start[1]*T + 31, vx:0, vy:0, w:20, h:40, dir:1, onG:false, powered: hero ? hero.powered : false, inv:0, coyote:0, jbuf:0, dead:false, dieT:0, win:false };
+  foes = []; items = [];
+  for (const e of lvl.ents){
+    if (e.type === 'foe') foes.push(Object.assign({ alive:true, w: 26, h: 22, vy:0 }, e, { vx: e.fly ? -60 : ROLLERS.has(e.kind) ? -130 : -45 }));
+    else items.push(Object.assign({ alive:true }, e));
+  }
+  boss = lvl.boss ? { x:22*T, y:6*T, hp:3, hitT:0, mode:'float', mt:0, fireT:2, vx:-80, dead:false, deadT:0, spawnT:4 } : null;
+  if (lvl.boss){ items.push({ type:'acorn', x:6.5*T + 16, y:9*T + 16, alive:true }, { type:'acorn', x:22.5*T + 16, y:9*T + 16, alive:true }); }
+  mTheme = lvl.theme; state = 'play'; hideOv();
+}
+function tileAt(c, r){ if (!lvl || c < 0 || c >= lvl.cols) return '#'; if (r < 0) return '.'; if (r >= ROWS) return '.'; return lvl.g[r][c]; }
+const solid = ch => ch === '#' || ch === 'b' || ch === '=' || ch === '?' || ch === 'u';
+
+// ------------------------------------------------------------------ physics
+function moveBody(b, dt, isHero){
+  // horizontal
+  b.x += b.vx*dt;
+  let top = b.y - b.h + 2, bot = b.y - 2;
+  const hx = b.vx > 0 ? b.x + b.w/2 : b.x - b.w/2;
+  for (let yy = top; yy <= bot; yy += 10){ const c = Math.floor(hx/T), r = Math.floor(Math.min(yy, bot)/T);
+    if (solid(tileAt(c, r))){ b.x = b.vx > 0 ? c*T - b.w/2 - 0.01 : (c+1)*T + b.w/2 + 0.01; b.hitWall = true; b.vx = isHero ? 0 : b.vx; break; } }
+  // vertical
+  b.vy = Math.min(b.vy + 1900*dt, 900); b.y += b.vy*dt; b.onG = false;
+  const cs = [Math.floor((b.x - b.w/2 + 2)/T), Math.floor((b.x + b.w/2 - 2)/T)];
+  if (b.vy > 0){ const r = Math.floor(b.y/T); for (const c of cs) if (solid(tileAt(c, r)) && b.y - b.vy*dt <= r*T + 4){ b.y = r*T; b.vy = 0; b.onG = true; break; } }
+  else if (b.vy < 0){ const r = Math.floor((b.y - b.h)/T);
+    for (const c of [Math.floor(b.x/T), ...cs]) if (solid(tileAt(c, r))){ b.y = (r+1)*T + b.h; b.vy = 40; if (isHero) bumpBlock(c, r); break; } }
+}
+function bumpBlock(c, r){
+  const ch = tileAt(c, r);
+  if (ch === '?'){
+    lvl.g[r][c] = 'u'; sfx.coin();
+    const qn = (c*7 + r) % 3;
+    if (qn === 0 && !hero.powered) items.push({ type:'leaf', x:c*T + 16, y:r*T - 2, vy:-120, alive:true, rise:0.4 });
+    else { acorns++; addAcornLife(); parts.push({ kind:'acornpop', x:c*T + 16, y:r*T, t:0 }); }
+  } else sfx.bump();
+  for (const f of foes) if (f.alive && Math.abs(f.x - (c*T + 16)) < 26 && Math.abs(f.y - r*T) < 8){ killFoe(f, true); }
+}
+function addAcornLife(){ if (acorns >= 100){ acorns -= 100; lives++; sfx.power(); toast('100 acorns! +1 life 🌰'); } }
+let toastMsg = '', toastT = 0;
+function toast(m){ toastMsg = m; toastT = 2.6; }
+function killFoe(f, flip){ f.alive = false; f.deadT = 0; f.squash = !flip; f.flip = flip; sfx.stomp(); parts.push({ kind:'puff', x:f.x, y:f.y - 10, t:0 }); }
+function hurtHero(){
+  if (hero.inv > 0 || hero.dead || hero.win) return;
+  if (hero.powered){ hero.powered = false; hero.inv = 1.6; sfx.hurt(); toast('Ouch! Lost your Maple Leaf cape'); return; }
+  heroDie();
+}
+function heroDie(){ if (hero.dead) return; hero.dead = true; hero.dieT = 0; hero.vy = -520; hero.powered = false; sfx.die(); }
+
+function update(dt){
+  gt += dt; if (toastT > 0) toastT -= dt;
+  for (const p of parts) p.t += dt; parts = parts.filter(p => p.t < 0.8);
+  if (hero.dead){
+    hero.dieT += dt; hero.vy += 1500*dt; hero.y += hero.vy*dt;
+    if (hero.dieT > 2.2){ lives--; if (lives <= 0){ lives = 5; acorns = 0; gameOver(); } else startLevel(cur); }
+    return;
+  }
+  if (hero.win){ endT += dt; hero.vx = 0; moveBody(hero, dt, true); if (endT > 2.2 && state === 'play'){ state = 'done'; levelDone(); } return; }
+  // hero control
+  const acc = hero.onG ? 1500 : 1000, maxV = 230;
+  if (left() && !right()){ hero.vx = Math.max(-maxV, hero.vx - acc*dt); hero.dir = -1; }
+  else if (right() && !left()){ hero.vx = Math.min(maxV, hero.vx + acc*dt); hero.dir = 1; }
+  else { const f = (hero.onG ? 1300 : 300)*dt; hero.vx = Math.abs(hero.vx) < f ? 0 : hero.vx - Math.sign(hero.vx)*f; }
+  hero.coyote = hero.onG ? 0.1 : hero.coyote - dt;
+  if (pressed[' '] || pressed['arrowup'] || pressed['w'] || pressed['z'] || pressed.touchjump) hero.jbuf = 0.12; else hero.jbuf -= dt;
+  if (hero.jbuf > 0 && hero.coyote > 0){ hero.vy = -650; hero.coyote = 0; hero.jbuf = 0; sfx.jump(); }
+  if (!jumpHeld() && hero.vy < -260) hero.vy = -260;
+  moveBody(hero, dt, true);
+  if (hero.x < 16) hero.x = 16; if (hero.x > lvl.cols*T - 16) hero.x = lvl.cols*T - 16;
+  if (hero.inv > 0) hero.inv -= dt;
+  if (hero.y > ROWS*T + 40) heroDie();
+  // spikes of water at the bottom of gaps
+  // items
+  for (const it of items){
+    if (!it.alive) continue;
+    if (it.type === 'leaf'){ if (it.rise > 0){ it.rise -= dt; it.y -= 70*dt; } else { it.vx = it.vx || 70; const b = { x:it.x, y:it.y, w:20, h:20, vx:it.vx, vy:it.vy || 0 }; moveBody(b, dt, false); if (b.hitWall) b.vx = -b.vx; Object.assign(it, { x:b.x, y:b.y, vx:b.vx, vy:b.vy }); if (it.y > ROWS*T + 40) it.alive = false; } }
+    const iy = it.type === 'leaf' ? it.y - 10 : it.y;
+    if (Math.abs(it.x - hero.x) < 22 && Math.abs(iy - (hero.y - 20)) < 30){
+      it.alive = false;
+      if (it.type === 'acorn'){ acorns++; sfx.coin(); addAcornLife(); }
+      else if (it.type === 'leaf'){ hero.powered = true; sfx.power(); toast('Maple Leaf cape! You can take one extra hit 🍁'); }
+      else if (it.type === 'scroll'){ gotScroll = true; sfx.scroll(); toast('📜 You found a History Scroll!'); }
+    }
+  }
+  // foes
+  for (const f of foes){
+    if (!f.alive){ f.deadT += dt; if (f.flip){ f.vy += 1500*dt; f.y += f.vy*dt; } continue; }
+    if (Math.abs(f.x - hero.x) > W) continue;
+    if (f.ball){ /* moved in updateBoss */ }
+    else if (f.fly){ f.x += f.vx*dt; f.y = f.baseY + Math.sin(gt*2.5 + f.seed)*40; if (Math.abs(f.x - f.home) > 160 || !f.home){ if (!f.home) f.home = f.x; else f.vx = -f.vx; f.x += f.vx*dt*2; } }
+    else {
+      const b = { x:f.x, y:f.y, w:f.w, h:f.h, vx:f.vx, vy:f.vy }; moveBody(b, dt, false);
+      if (b.hitWall) b.vx = -b.vx;
+      // walkers turn around at ledges (rollers don't)
+      if (!ROLLERS.has(f.kind) && b.onG){ const ahead = Math.floor((b.x + Math.sign(b.vx)*f.w/2)/T), below = Math.floor((b.y + 4)/T); if (!solid(tileAt(ahead, below))) b.vx = -b.vx; }
+      Object.assign(f, { x:b.x, y:b.y, vx:b.vx, vy:b.vy });
+      if (f.y > ROWS*T + 60) f.alive = false;
+    }
+    // collide with hero
+    const fy = f.y - f.h/2;
+    if (Math.abs(f.x - hero.x) < (f.w + hero.w)/2 - 2 && Math.abs(fy - (hero.y - hero.h/2)) < (f.h + hero.h)/2 - 2){
+      if (hero.vy > 60 && hero.y - 8 < f.y - f.h + 8){ killFoe(f, false); hero.vy = jumpHeld() ? -560 : -360; acorns++; addAcornLife(); }
+      else hurtHero();
+    }
+  }
+  // boss: the Fog of Forgetting
+  if (boss) updateBoss(dt);
+  // goal plaque
+  if (lvl.goal && hero.x > lvl.goal*T + 6 && !hero.win){ hero.win = true; endT = 0; sfx.clear(); }
+  // camera
+  const target = hero.x - W*0.4; camX += (Math.max(0, Math.min(lvl.cols*T - W, target)) - camX)*Math.min(1, dt*8);
+}
+function updateBoss(dt){
+  const b = boss;
+  if (b.dead){ b.deadT += dt; if (b.deadT > 1.5 && !lvl.goal){ lvl.goal = 14.5; sfx.power(); toast('The fog lifts! Touch the heritage plaque!'); } return; }
+  b.mt += dt; b.hitT -= dt;
+  const angry = 3 - b.hp;
+  if (b.mode === 'float'){
+    b.x += b.vx*(1 + angry*0.35)*dt; b.y = 5*T + Math.sin(gt*2)*20;
+    if (b.x < 3*T || b.x > 27*T){ b.vx = -b.vx; b.x = Math.max(3*T, Math.min(27*T, b.x)); }
+    b.fireT -= dt;
+    if (b.fireT <= 0){ b.fireT = 1.8 - angry*0.3; const a = Math.atan2(hero.y - 20 - b.y, hero.x - b.x); foes.push({ kind:'fogball', alive:true, x:b.x, y:b.y + 16, vx:Math.cos(a)*190, vy:Math.sin(a)*190, w:18, h:18, ball:true, fly:true, baseY:0, seed:0, life:4 }); sfx.boss(); }
+    b.spawnT -= dt;
+    if (b.spawnT <= 0){ b.spawnT = 6; if (foes.filter(f => f.alive && f.kind === 'fogling').length < 2) foes.push({ kind:'fogling', alive:true, x:b.x, y:6*T, vx:-50, vy:0, w:24, h:22, seed:Math.random()*9 }); }
+    if (b.mt > 5 - angry){ b.mode = 'dive'; b.mt = 0; b.tx = hero.x; }
+  } else if (b.mode === 'dive'){
+    b.x += (b.tx - b.x)*Math.min(1, dt*3); b.y += (14*T - 30 - b.y)*Math.min(1, dt*3);
+    if (b.mt > 0.9){ b.mode = 'rest'; b.mt = 0; parts.push({ kind:'puff', x:b.x, y:b.y + 20, t:0 }); }
+  } else if (b.mode === 'rest'){
+    if (b.mt > 1.8){ b.mode = 'float'; b.mt = 0; }
+  }
+  // fog balls
+  for (const f of foes) if (f.ball && f.alive){ f.x += f.vx*dt; f.y += f.vy*dt; f.life -= dt; if (f.life <= 0 || solid(tileAt(Math.floor(f.x/T), Math.floor(f.y/T)))) f.alive = false; }
+  // touching the boss
+  const dx = hero.x - b.x, dy = (hero.y - 20) - b.y;
+  if (Math.abs(dx) < 46 && Math.abs(dy) < 40){
+    if (hero.vy > 50 && hero.y < b.y && b.hitT <= 0 && b.mode !== 'float'){
+      b.hp--; b.hitT = 1; hero.vy = -620; sfx.stomp(); sfx.boss(); b.mode = 'float'; b.mt = 0; b.y -= 30;
+      if (b.hp <= 0){ b.dead = true; b.deadT = 0; sfx.clear(); for (let i=0;i<20;i++) parts.push({ kind:'puff', x:b.x + (Math.random()-0.5)*80, y:b.y + (Math.random()-0.5)*60, t:Math.random()*0.3 }); }
+      else toast(b.hp === 2 ? 'The fog is fading! Hit it again when it swoops down!' : 'One more hit!');
+    } else if (b.hitT <= 0) hurtHero();
+  }
+}
+function drawBoss(t){
+  const b = boss; if (b.dead && b.deadT > 1.2) return;
+  ctx.save(); ctx.translate(b.x - camX, b.y);
+  if (b.dead){ ctx.globalAlpha = Math.max(0, 1 - b.deadT/1.2); ctx.scale(1 + b.deadT, 1 + b.deadT); }
+  if (b.hitT > 0 && Math.sin(t*40) > 0) ctx.globalAlpha = 0.4;
+  for (let i=0;i<9;i++){ const a = i/9*Math.PI*2 + t*0.6, r = 40 + Math.sin(t*2 + i)*6; ctx.fillStyle = `rgba(${120 + i*6},${120 + i*6},${140 + i*6},.85)`; ell(Math.cos(a)*r*0.9, Math.sin(a)*r*0.55, 28, 22); }
+  ctx.fillStyle = '#9a9aae'; ell(0, 0, 48, 36);
+  ctx.save(); ctx.shadowColor = '#c040ff'; ctx.shadowBlur = 14; ctx.fillStyle = '#e080ff'; ell(-16, -6, 9, 6); ell(16, -6, 9, 6); ctx.restore();
+  ctx.fillStyle = '#2a1a3a'; circle(-16, -6, 3); circle(16, -6, 3);
+  ctx.strokeStyle = '#4a3a5a'; ctx.lineWidth = 3; ctx.beginPath(); ctx.moveTo(-26, -18); ctx.lineTo(-8, -12); ctx.moveTo(26, -18); ctx.lineTo(8, -12); ctx.stroke();
+  ctx.fillStyle = '#2a1a3a'; ctx.beginPath(); ctx.ellipse(0, 14, 16, b.mode === 'dive' ? 10 : 5, 0, 0, Math.PI*2); ctx.fill();
+  ctx.restore();
+  // health
+  if (!b.dead){ ctx.fillStyle = 'rgba(0,0,0,.5)'; rr(W/2 - 120, 52, 240, 34, 10); ctx.fill(); ctx.fillStyle = '#fff'; ctx.font = 'bold 13px "Trebuchet MS"'; ctx.textAlign = 'center'; ctx.fillText('THE FOG OF FORGETTING', W/2, 66);
+    for (let i=0;i<3;i++){ ctx.fillStyle = i < b.hp ? '#c040ff' : '#444'; rr(W/2 - 54 + i*38, 71, 32, 9, 4); ctx.fill(); } ctx.textAlign = 'left'; }
+}
+
+// ------------------------------------------------------------------ drawing a level
+function drawLevel(){
+  const th = THEMES[lvl.theme], t = gt;
+  drawBackground(lvl.theme, camX, t);
+  const c0 = Math.floor(camX/T), c1 = Math.min(lvl.cols - 1, c0 + Math.ceil(W/T) + 1);
+  for (let c=c0;c<=c1;c++) for (let r=0;r<ROWS;r++){
+    const ch = lvl.g[r][c], x = c*T - camX, y = r*T;
+    if (ch === '#'){
+      const topGround = r === 0 || !solid(lvl.g[r-1][c]);
+      ctx.fillStyle = th.dirt; ctx.fillRect(x, y, T, T);
+      ctx.fillStyle = 'rgba(0,0,0,.12)'; ctx.fillRect(x + (hash(c*31 + r)*24|0), y + (hash(c + r*17)*24|0), 5, 4);
+      if (topGround){ ctx.fillStyle = th.ground; ctx.fillRect(x, y, T, 10); ctx.fillStyle = 'rgba(255,255,255,.18)'; ctx.fillRect(x, y, T, 3); }
+    } else if (ch === 'b' || ch === '='){
+      ctx.fillStyle = th.block; ctx.fillRect(x, y, T, T); ctx.fillStyle = 'rgba(0,0,0,.22)'; ctx.fillRect(x, y + T - 4, T, 4); ctx.fillRect(x + T - 3, y, 3, T);
+      ctx.fillStyle = 'rgba(255,255,255,.18)'; ctx.fillRect(x, y, T, 3);
+      ctx.strokeStyle = 'rgba(0,0,0,.18)'; ctx.lineWidth = 1; ctx.beginPath(); ctx.moveTo(x, y + T/2); ctx.lineTo(x + T, y + T/2); ctx.moveTo(x + (r%2 ? T/2 : 0) + 0.5, y); ctx.lineTo(x + (r%2 ? T/2 : 0) + 0.5, y + T/2); ctx.stroke();
+    } else if (ch === '?' || ch === 'u'){
+      ctx.fillStyle = ch === '?' ? '#f0b020' : '#8a7a5a'; rr(x + 1, y + 1, T - 2, T - 2, 5); ctx.fill();
+      ctx.fillStyle = 'rgba(0,0,0,.25)'; ctx.fillRect(x + 3, y + T - 5, T - 6, 3);
+      if (ch === '?'){ ctx.fillStyle = '#d62828'; leafPath(x + 16, y + 15 + Math.sin(t*4 + c)*1.5, 9); ctx.fill(); }
+    } else if (ch === 'w'){
+      ctx.fillStyle = lvl.theme === 'freedom' ? '#1a3a6a' : '#3a8ac8'; ctx.fillRect(x, y + 6, T, T - 6); ctx.fillStyle = 'rgba(255,255,255,.4)'; ctx.fillRect(x + ((t*30 + c*9) % 24), y + 8, 8, 2);
+    }
+  }
+  // goal: an Oakville heritage plaque on a post with a flag
+  if (lvl.goal){
+    const gx = lvl.goal*T - camX, gy = 14*T;
+    ctx.fillStyle = '#5a3a1a'; ctx.fillRect(gx + 12, gy - 150, 6, 150);
+    ctx.fillStyle = '#2e8b3e'; ctx.beginPath(); ctx.moveTo(gx + 18, gy - 150); ctx.lineTo(gx + 60 + Math.sin(t*6)*4, gy - 136); ctx.lineTo(gx + 18, gy - 122); ctx.fill();
+    ctx.fillStyle = '#fff'; leafPath(gx + 34, gy - 136, 8); ctx.fill();
+    ctx.fillStyle = '#1a3a7a'; rr(gx - 18, gy - 72, 66, 46, 6); ctx.fill(); ctx.strokeStyle = '#d9c070'; ctx.lineWidth = 2; ctx.stroke();
+    ctx.fillStyle = '#ffe9b0'; ctx.font = 'bold 9px "Trebuchet MS"'; ctx.textAlign = 'center'; ctx.fillText('HERITAGE', gx + 15, gy - 55); ctx.fillText('OAKVILLE', gx + 15, gy - 43); ctx.fillText(WORLDS[cur].year.slice(0, 11), gx + 15, gy - 31); ctx.textAlign = 'left';
+  }
+  // items
+  for (const it of items){
+    if (!it.alive) continue;
+    const x = it.x - camX; if (x < -40 || x > W + 40) continue;
+    if (it.type === 'acorn'){ const s = Math.abs(Math.cos(t*3 + it.x*0.05)); ctx.save(); ctx.translate(x, it.y); ctx.scale(0.4 + s*0.6, 1);
+      ctx.fillStyle = '#c9893a'; ell(0, 3, 7, 8); ctx.fillStyle = '#6b4423'; ctx.beginPath(); ctx.ellipse(0, -2, 8, 5, 0, Math.PI, 0); ctx.lineTo(8, -1); ctx.lineTo(-8, -1); ctx.fill(); ctx.fillRect(-1, -9, 2, 4); ctx.restore(); }
+    else if (it.type === 'leaf'){ ctx.save(); ctx.shadowColor = '#ff6040'; ctx.shadowBlur = 10; ctx.fillStyle = '#d62828'; leafPath(x, it.y - 12, 13); ctx.fill(); ctx.restore(); }
+    else if (it.type === 'scroll'){ const by = it.y + Math.sin(t*3)*4; ctx.save(); ctx.shadowColor = '#ffe070'; ctx.shadowBlur = 18;
+      ctx.fillStyle = '#f4e4b8'; ctx.fillRect(x - 12, by - 14, 24, 28); ctx.fillStyle = '#c9a060'; ell(x, by - 14, 14, 4); ell(x, by + 14, 14, 4); ctx.restore();
+      ctx.strokeStyle = '#8a6a3a'; ctx.lineWidth = 1.5; for (let i=0;i<3;i++){ ctx.beginPath(); ctx.moveTo(x - 7, by - 6 + i*6); ctx.lineTo(x + 7, by - 6 + i*6); ctx.stroke(); } }
+  }
+  // foes
+  for (const f of foes){
+    if (!f.alive && (f.deadT > 0.6 || !f.flip && f.deadT > 0.35)) continue;
+    const x = f.x - camX; if (x < -60 || x > W + 60) continue;
+    if (f.ball){ const g = ctx.createRadialGradient(x, f.y, 2, x, f.y, 14); g.addColorStop(0, '#f0d0ff'); g.addColorStop(1, 'rgba(150,120,180,0)'); ctx.fillStyle = g; circle(x, f.y, 14); continue; }
+    ctx.save(); ctx.translate(-camX, 0); if (f.flip){ ctx.translate(f.x, f.y - 10); ctx.scale(1, -1); ctx.translate(-f.x, -(f.y - 10)); } drawFoe(f, t); ctx.restore();
+  }
+  if (boss) drawBoss(t);
+  // hero
+  const moving = Math.abs(hero.vx) > 20;
+  drawHero(hero.x - camX, hero.y, hero.dir, t, moving, !hero.onG, hero.powered, hero.inv > 0);
+  // particles
+  for (const p of parts){
+    const x = p.x - camX;
+    if (p.kind === 'puff'){ ctx.fillStyle = `rgba(255,255,255,${1 - p.t/0.8})`; for (let i=0;i<5;i++) circle(x + Math.cos(i*1.3)*p.t*40, p.y + Math.sin(i*1.3)*p.t*30, 6*(1 - p.t)); }
+    if (p.kind === 'acornpop'){ ctx.fillStyle = '#c9893a'; ell(x, p.y - 20 - p.t*60, 6, 7); }
+  }
+  if (lvl.theme === 'today' && boss && !boss.dead){ ctx.fillStyle = 'rgba(160,160,180,.15)'; ctx.fillRect(0, 0, W, H); }
+  // HUD
+  ctx.fillStyle = 'rgba(0,0,0,.45)'; rr(10, 44, 330, 36, 10); ctx.fill();
+  ctx.fillStyle = '#fff'; ctx.font = 'bold 17px "Trebuchet MS"';
+  ctx.save(); ctx.translate(30, 77); ctx.scale(0.5, 0.5); drawHero(0, 0, 1, 0, false, false, false, false); ctx.restore();
+  ctx.fillStyle = '#fff'; ctx.fillText('× ' + lives, 46, 68);
+  ctx.fillStyle = '#c9893a'; ell(110, 64, 7, 8); ctx.fillStyle = '#6b4423'; ctx.beginPath(); ctx.ellipse(110, 59, 8, 5, 0, Math.PI, 0); ctx.fill();
+  ctx.fillStyle = '#fff'; ctx.fillText('× ' + acorns, 124, 68);
+  ctx.fillText(gotScroll ? '📜 ✓' : '📜 ?', 196, 68);
+  ctx.fillStyle = hero.powered ? '#ff6a5a' : 'rgba(255,255,255,.35)'; leafPath(270, 62, 10); ctx.fill();
+  ctx.fillStyle = 'rgba(0,0,0,.45)'; rr(W - 330, 44, 320, 36, 10); ctx.fill();
+  ctx.fillStyle = '#ffe9b0'; ctx.font = 'bold 15px "Trebuchet MS"'; ctx.textAlign = 'right'; ctx.fillText(`World ${cur + 1}: ${WORLDS[cur].name}`, W - 22, 67); ctx.textAlign = 'left';
+  if (toastT > 0){ ctx.globalAlpha = Math.min(1, toastT*2); ctx.font = 'bold 17px "Trebuchet MS"'; const tw = ctx.measureText(toastMsg).width + 34;
+    ctx.fillStyle = 'rgba(0,0,0,.6)'; rr(W/2 - tw/2, H - 64, tw, 38, 12); ctx.fill(); ctx.fillStyle = '#fff'; ctx.textAlign = 'center'; ctx.fillText(toastMsg, W/2, H - 39); ctx.textAlign = 'left'; ctx.globalAlpha = 1; }
+  if (hero.win){ ctx.fillStyle = '#ffe94a'; ctx.font = 'bold 54px "Trebuchet MS"'; ctx.textAlign = 'center'; ctx.lineWidth = 7; ctx.strokeStyle = '#3a2a14';
+    ctx.strokeText('WORLD CLEAR!', W/2, 200); ctx.fillText('WORLD CLEAR!', W/2, 200); ctx.textAlign = 'left'; }
+  if (gt < 2.5){ ctx.globalAlpha = Math.max(0, Math.min(1, 2.5 - gt)); ctx.fillStyle = '#fff'; ctx.font = 'bold 36px "Trebuchet MS"'; ctx.textAlign = 'center'; ctx.lineWidth = 6; ctx.strokeStyle = '#000';
+    const s = `World ${cur + 1}: ${WORLDS[cur].name}`; ctx.strokeText(s, W/2, 170); ctx.fillText(s, W/2, 170); ctx.font = 'bold 20px "Trebuchet MS"'; ctx.strokeText(WORLDS[cur].year, W/2, 204); ctx.fillText(WORLDS[cur].year, W/2, 204); ctx.textAlign = 'left'; ctx.globalAlpha = 1; }
+}
+
+// ------------------------------------------------------------------ world map of Oakville
+function drawMap(t){
+  // land
+  const g = ctx.createLinearGradient(0, 0, 0, H); g.addColorStop(0, '#7cc46a'); g.addColorStop(1, '#a8d880'); ctx.fillStyle = g; ctx.fillRect(0, 0, W, H);
+  for (let i=0;i<60;i++){ ctx.fillStyle = 'rgba(40,110,40,.35)'; circle(hash(i)*W, hash(i+3)*300 + 10, 10 + hash(i+5)*14); }
+  // Lake Ontario
+  ctx.fillStyle = '#3a8ac8'; ctx.beginPath(); ctx.moveTo(0, 470); ctx.bezierCurveTo(220, 450, 420, 410, 600, 375); ctx.bezierCurveTo(760, 345, 880, 315, 960, 300); ctx.lineTo(960, 540); ctx.lineTo(0, 540); ctx.fill();
+  ctx.strokeStyle = '#f0e0a0'; ctx.lineWidth = 5; ctx.beginPath(); ctx.moveTo(0, 470); ctx.bezierCurveTo(220, 450, 420, 410, 600, 375); ctx.bezierCurveTo(760, 345, 880, 315, 960, 300); ctx.stroke();
+  ctx.fillStyle = 'rgba(255,255,255,.35)'; for (let i=0;i<14;i++){ const x = (hash(i)*W + t*12) % W, y = 460 + hash(i+7)*70 - x*0.15; ctx.fillRect(x, y, 22, 2); }
+  ctx.fillStyle = 'rgba(255,255,255,.85)'; ctx.font = 'italic bold 22px Georgia, serif'; ctx.fillText('Lake Ontario', 700, 470);
+  // creeks
+  const creek = (pts, label, lx, ly) => { ctx.strokeStyle = '#3a8ac8'; ctx.lineWidth = 10; ctx.lineCap = 'round'; ctx.beginPath(); pts.forEach(([x, y], i) => i ? ctx.lineTo(x, y) : ctx.moveTo(x, y)); ctx.stroke();
+    ctx.fillStyle = '#1a4a7a'; ctx.font = 'italic 13px Georgia, serif'; ctx.fillText(label, lx, ly); };
+  creek([[585,0],[565,60],[590,130],[560,200],[575,270],[552,340],[560,380]], 'Sixteen Mile Creek', 600, 120);
+  creek([[170,0],[195,90],[165,180],[200,280],[180,360],[200,445]], 'Bronte Creek', 210, 210);
+  // QEW + Lakeshore Rd
+  ctx.strokeStyle = '#8a8a8a'; ctx.lineWidth = 8; ctx.beginPath(); ctx.moveTo(0, 270); ctx.lineTo(960, 100); ctx.stroke(); ctx.strokeStyle = '#ffe070'; ctx.lineWidth = 1.5; ctx.setLineDash([10, 10]); ctx.beginPath(); ctx.moveTo(0, 270); ctx.lineTo(960, 100); ctx.stroke(); ctx.setLineDash([]);
+  ctx.fillStyle = '#4a4a4a'; ctx.font = 'bold 12px "Trebuchet MS"'; ctx.fillText('QEW', 60, 252);
+  // landmarks
+  ctx.fillStyle = '#f4f0e8'; ctx.fillRect(590, 350, 8, 20); ctx.fillStyle = '#c0392b'; ctx.fillRect(588, 346, 12, 5); // lighthouse
+  for (let i=0;i<10;i++){ ctx.fillStyle = '#2e7a2a'; ell(790 + (i%5)*18, 175 + Math.floor(i/5)*16, 7, 4); ctx.fillStyle = '#e02a3a'; circle(793 + (i%5)*18, 175 + Math.floor(i/5)*16, 2.5); }
+  for (let i=0;i<5;i++){ ctx.fillStyle = ['#b5523a','#9a4a3a','#c9733a','#a05a4a','#b5523a'][i]; ctx.fillRect(675 + i*12, 302 - (i%2)*6, 10, 16); }
+  ctx.fillStyle = '#5a6a7a'; ctx.fillRect(370, 205, 60, 22); ctx.fillStyle = '#7a8a9a'; ctx.fillRect(380, 190, 12, 15); ctx.fillRect(405, 185, 12, 20);
+  // compass
+  ctx.save(); ctx.translate(70, 70); ctx.fillStyle = 'rgba(255,255,255,.8)'; circle(0, 0, 28); ctx.fillStyle = '#c0392b'; ctx.beginPath(); ctx.moveTo(0, -24); ctx.lineTo(7, 0); ctx.lineTo(-7, 0); ctx.fill(); ctx.fillStyle = '#333'; ctx.beginPath(); ctx.moveTo(0, 24); ctx.lineTo(7, 0); ctx.lineTo(-7, 0); ctx.fill(); ctx.font = 'bold 12px "Trebuchet MS"'; ctx.textAlign = 'center'; ctx.fillText('N', 0, -30); ctx.restore(); ctx.textAlign = 'left';
+  // the path between worlds
+  ctx.strokeStyle = 'rgba(122,74,26,.85)'; ctx.lineWidth = 5; ctx.setLineDash([2, 10]); ctx.lineCap = 'round';
+  for (let i=0;i<WORLDS.length - 1;i++){ const [x1, y1] = WORLDS[i].node, [x2, y2] = WORLDS[i+1].node; ctx.globalAlpha = unlocked(i+1) ? 1 : 0.35; ctx.beginPath(); ctx.moveTo(x1, y1); ctx.quadraticCurveTo((x1 + x2)/2 + (i%2 ? 40 : -40), (y1 + y2)/2 - 30, x2, y2); ctx.stroke(); }
+  ctx.setLineDash([]); ctx.globalAlpha = 1;
+  // nodes
+  WORLDS.forEach((w, i) => {
+    const [x, y] = w.node, done = save.cleared.includes(i), open = unlocked(i);
+    ctx.fillStyle = 'rgba(0,0,0,.25)'; ell(x, y + 14, 22, 7);
+    ctx.fillStyle = done ? '#f0b020' : open ? '#d62828' : '#7a7a7a'; circle(x, y, 18);
+    ctx.strokeStyle = '#fff'; ctx.lineWidth = 3; ctx.beginPath(); ctx.arc(x, y, 18, 0, Math.PI*2); ctx.stroke();
+    ctx.fillStyle = '#fff'; ctx.font = 'bold 16px "Trebuchet MS"'; ctx.textAlign = 'center';
+    ctx.fillText(w.boss ? '★' : done ? '✓' : open ? String(i + 1) : '🔒', x, y + 6);
+    if (save.scrolls.includes(i)){ ctx.font = '14px sans-serif'; ctx.fillText('📜', x + 20, y - 14); }
+    ctx.font = 'bold 13px "Trebuchet MS"'; ctx.lineWidth = 4; ctx.strokeStyle = 'rgba(0,0,0,.6)'; ctx.strokeText(w.name, x, y + 36); ctx.fillStyle = mapSel === i ? '#ffe94a' : '#fff'; ctx.fillText(w.name, x, y + 36);
+    ctx.textAlign = 'left';
+  });
+  // hero walking on the map
+  const [tx, ty] = WORLDS[mapSel].node;
+  mapHero.x += (tx - mapHero.x)*0.12; mapHero.y += (ty - mapHero.y)*0.12;
+  const moving = Math.hypot(tx - mapHero.x, ty - mapHero.y) > 3;
+  drawHero(mapHero.x, mapHero.y - 16 - (moving ? 0 : Math.abs(Math.sin(t*4))*4), tx < mapHero.x ? -1 : 1, t, moving, false, false, false);
+  // banner
+  ctx.fillStyle = 'rgba(58,42,20,.85)'; rr(W/2 - 250, 8, 500, 64, 14); ctx.fill();
+  ctx.fillStyle = '#ffe9b0'; ctx.font = 'bold 26px "Trebuchet MS"'; ctx.textAlign = 'center'; ctx.fillText('🌰 OAKVILLE QUEST 🍁', W/2, 38);
+  ctx.font = '14px "Trebuchet MS"'; ctx.fillStyle = '#fff'; ctx.fillText(isTouch ? 'Tap a world to choose it, tap again to play' : '◀ ▶ choose a world  ·  ENTER to play  ·  H for the History Book', W/2, 60);
+  ctx.textAlign = 'left';
+  ctx.fillStyle = 'rgba(58,42,20,.85)'; rr(W - 170, 488, 160, 40, 10); ctx.fill(); ctx.fillStyle = '#fff'; ctx.font = 'bold 15px "Trebuchet MS"';
+  ctx.fillText(`Worlds: ${save.cleared.length}/7   📜 ${save.scrolls.length}/6`, W - 160, 513);
+}
+function onKey(k){
+  if (state === 'map'){
+    if ((k === 'arrowright' || k === 'd' || k === 'arrowup') && mapSel < WORLDS.length - 1 && unlocked(mapSel + 1)){ mapSel++; sfx.bump(); }
+    if ((k === 'arrowleft' || k === 'a' || k === 'arrowdown') && mapSel > 0){ mapSel--; sfx.bump(); }
+    if (k === 'enter' || k === ' ') openIntro(mapSel);
+    if (k === 'h') historyBook();
+  } else if (state === 'play' && k === 'escape'){ toMap(); }
+  else if ((state === 'title' || state === 'card') && k === 'enter'){ const b = ov.querySelector('button'); if (b) b.click(); }
+}
+
+// ------------------------------------------------------------------ cards
+function showOv(html){ ov.innerHTML = `<div class="card">${html}</div>`; ov.classList.remove('hidden'); }
+function hideOv(){ ov.classList.add('hidden'); }
+function bind(id, fn){ const el = document.getElementById(id); if (el) el.onclick = e => { e.stopPropagation(); audio(); fn(); }; }
+function title(){
+  state = 'title'; mTheme = 'map';
+  showOv(`<h1>🌰 Oakville Quest 🍁</h1><p class="year">A history adventure</p>
+    <p>Meet <b>Sprout</b>, a brave little acorn explorer! Travel across the map of Oakville, Ontario, and jump through <b>7 worlds</b> of real town history, from the Sixteen Mile Creek to the town of today.</p>
+    <p>Find the hidden <b>📜 History Scroll</b> in each world, collect acorns, grab <b>🍁 Maple Leaf</b> capes from the leaf blocks, and reach the <b>heritage plaque</b> to clear each world. Then defeat the <b>Fog of Forgetting</b> to conquer Oakville!</p>
+    <p class="small">Move: ◀ ▶ or A/D · Jump: SPACE, ↑ or W (hold to jump higher) · Stomp critters from above · ESC: back to map</p>
+    <button id="bGo">Start the adventure ▶</button><button class="alt" id="bBook">📖 History Book</button>
+    ${save.cleared.length ? '<br><button class="alt" id="bReset" style="font-size:13px;padding:6px 12px">Start over</button>' : ''}`);
+  bind('bGo', toMap); bind('bBook', historyBook);
+  bind('bReset', () => { save = { cleared:[], scrolls:[] }; store(); mapSel = 0; title(); });
+}
+function toMap(){
+  state = 'map'; mTheme = 'map'; hideOv(); lvl = null;
+  if (!mapHero.x){ mapHero.x = WORLDS[mapSel].node[0]; mapHero.y = WORLDS[mapSel].node[1]; }
+}
+function openIntro(i){
+  if (!unlocked(i)) return;
+  const w = WORLDS[i]; state = 'card';
+  showOv(`<h2>World ${i + 1}: ${w.name}</h2><span class="year">${w.year}</span><p>${w.intro}</p>
+    ${w.boss ? '<p class="small">Boss: the fog floats out of reach, so wait for it to <b>swoop down</b>, then jump on its head 3 times. Dodge its fog balls!</p>' : '<p class="small">Find the hidden 📜 History Scroll for a bonus fact!</p>'}
+    <button id="bPlay">Play ▶</button><button class="alt" id="bBack">Back to map</button>`);
+  bind('bPlay', () => { hero = null; startLevel(i); }); bind('bBack', toMap);
+}
+function levelDone(){
+  const i = cur, w = WORLDS[i], first = !save.cleared.includes(i);
+  if (first) save.cleared.push(i); if (gotScroll && !save.scrolls.includes(i)) save.scrolls.push(i); store();
+  if (i < WORLDS.length - 1 && mapSel === i) mapSel = Math.min(WORLDS.length - 1, i + 1);
+  state = 'card'; mTheme = 'map';
+  if (w.boss){
+    showOv(`<h1>🏆 You conquered Oakville! 🏆</h1><p class="year">The Fog of Forgetting is gone</p>
+      <div class="fact">${w.fact}</div><div class="fact">🌳 <b>Fun fact:</b> ${w.bonus}</div>
+      <p>Sprout is now the official <b>Keeper of Oakville's History</b>! 🌰🍁</p>
+      <p class="small">History Scrolls found: ${save.scrolls.length}/6. ${save.scrolls.length < 6 ? 'Replay worlds to find the rest!' : 'You found them all. Amazing!'}</p>
+      <button id="bMap">Back to the map</button><button class="alt" id="bBook">📖 History Book</button>`);
+  } else {
+    showOv(`<h2>🎉 World ${i + 1} clear!</h2><span class="year">${w.name} · ${w.year}</span>
+      <div class="fact">🏛️ <b>History unlocked:</b><br>${w.fact}</div>
+      ${gotScroll ? `<div class="fact">📜 <b>History Scroll bonus:</b><br>${w.bonus}</div>` : '<p class="small">You missed the 📜 History Scroll in this world. Play again to find its bonus fact!</p>'}
+      <p class="small">Acorns: ${acorns} · Lives: ${lives}</p>
+      <button id="bMap">Continue ▶</button>`);
+  }
+  bind('bMap', toMap); bind('bBook', historyBook);
+}
+function gameOver(){
+  state = 'card'; mTheme = 'map';
+  showOv(`<h2>Out of lives!</h2><p>Don't worry, Sprout never gives up. Your cleared worlds are saved, and you get 5 fresh lives.</p><button id="bMap">Back to the map</button>`);
+  bind('bMap', toMap);
+}
+function historyBook(){
+  const prev = state; state = 'card';
+  const items = WORLDS.map((w, i) => save.cleared.includes(i)
+    ? `<li><b>${w.name} (${w.year}):</b> ${w.fact}${save.scrolls.includes(i) ? `<br>📜 ${w.bonus}` : ''}</li>`
+    : `<li style="opacity:.55"><b>${w.name}</b>: 🔒 Clear this world to unlock its story.</li>`).join('');
+  showOv(`<h2>📖 Oakville History Book</h2><ol>${items}</ol>
+    <p class="small">Sources: ${SOURCES.map(([n, u]) => `<a href="${u}" target="_blank" rel="noopener">${n}</a>`).join(' · ')}</p>
+    <button id="bClose">Close</button>`);
+  bind('bClose', () => { if (prev === 'map') toMap(); else title(); });
+}
+
+// ------------------------------------------------------------------ main loop
+let last = performance.now();
+function frame(now){
+  const dt = Math.min(0.033, (now - last)/1000); last = now;
+  ctx.clearRect(0, 0, W, H);
+  if (state === 'play' || state === 'done'){ if (state === 'play') update(dt); if (lvl) drawLevel(); }
+  else { drawMap(now/1000); }
+  for (const k in pressed) delete pressed[k];
+  requestAnimationFrame(frame);
+}
+mapHero.x = WORLDS[0].node[0]; mapHero.y = WORLDS[0].node[1];
+title();
+requestAnimationFrame(frame);
+window.__oq = { get state(){ return state; }, get hero(){ return hero; }, get lvl(){ return lvl; }, get boss(){ return boss; }, get foes(){ return foes; }, startLevel, toMap, get save(){ return save; }, buildLevel };
+</script>
+</body>
+</html>

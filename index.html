@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>FunKid Games</title>
-<meta name="description" content="Free browser games: Lights Out Sleepover, Chess and more.">
+<meta name="description" content="Free browser games: Lights Out Sleepover, Chess, Oakville Quest and more.">
 <style>
   :root{ --bg:#120f26; --ink:#f4f0ff; --muted:#aaa3d8; --accent:#ffd23f; }
   *{box-sizing:border-box}
@@ -55,6 +55,14 @@
     font-family:"Segoe UI Symbol","Noto Sans Symbols 2","DejaVu Sans",serif;animation:bob 3s ease-in-out infinite}
   .t-chess .big.b{left:22px;right:auto;color:#1c1830;text-shadow:0 0 2px #fff8,0 6px 12px rgba(0,0,0,.6);animation-delay:-1.5s}
   @keyframes bob{50%{transform:translateY(-8px)}}
+  /* Oakville Quest thumbnail */
+  .t-oak{background:linear-gradient(#8fd3ff,#cdeeff 60%,#3a8ac8 60%)}
+  .t-oak .ground{position:absolute;left:0;right:0;bottom:0;height:44px;background:#7a4f2a;border-top:8px solid #5cb83a}
+  .t-oak .blk{position:absolute;top:70px;width:30px;height:30px;border-radius:4px;background:#f0b020;box-shadow:inset 0 -4px 0 #b07810;display:flex;align-items:center;justify-content:center;font-size:18px}
+  .t-oak .acorn{position:absolute;bottom:50px;left:60px;font-size:54px;animation:bob 1.6s ease-in-out infinite}
+  .t-oak .plaque{position:absolute;bottom:44px;right:40px;width:46px;height:34px;background:#1d4f8a;border:3px solid #e8c45a;border-radius:4px}
+  .t-oak .plaque:after{content:"";position:absolute;left:19px;top:31px;width:5px;height:40px;background:#4a3a2a}
+  .t-oak .title{position:absolute;top:14px;left:16px;font-weight:900;font-size:22px;color:#fff;text-shadow:0 3px 0 #3a2a14;line-height:1.05}
   .soon{border:2px dashed rgba(255,255,255,.18);background:transparent;box-shadow:none;cursor:default}
   .soon:hover{transform:none;box-shadow:none}
   .soon .thumb{font-size:64px;opacity:.6}
@@ -101,6 +109,20 @@
       <h2>Chess</h2>
       <p>Classic chess with all the rules. Play a friend on the same screen, or challenge the computer on Easy, Medium or Hard.</p>
       <div class="tags"><span class="tag">♟ Strategy</span><span class="tag">🤖 vs Computer</span><span class="tag">👫 2 players</span></div>
+    </div>
+  </a>
+
+  <a class="game" href="/games/oakville-quest/">
+    <div class="thumb t-oak">
+      <div class="title">OAKVILLE<br>QUEST</div>
+      <div class="blk" style="left:150px">🍁</div><div class="blk" style="left:184px">🍁</div>
+      <div class="acorn">🌰</div><div class="plaque"></div><div class="ground"></div>
+    </div>
+    <div class="info">
+      <span class="play">Play ▶</span>
+      <h2>Oakville Quest</h2>
+      <p>Jump and run across the map of Oakville, Ontario! Clear 7 worlds of real town history, find the History Scrolls and beat the Fog of Forgetting.</p>
+      <div class="tags"><span class="tag">🍁 History</span><span class="tag">🏃 Platformer</span><span class="tag">👤 1 player</span></div>
     </div>
   </a>
 
