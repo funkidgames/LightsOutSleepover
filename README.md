@@ -1,31 +1,38 @@
-# Lights Out Sleepover 🔦👹
+# FunKid Games 🎮
 
-A spooky browser game about a sleepover where the lights go out and the monsters come in.
-Find your friends, escape the goo monsters, dive into the underworld to save Sam,
-then battle the Devil King, the Devil Prince and the Candy Man.
+A small multi-game website. The landing page (`index.html`) lets players pick a game, and each game lives in its own folder under `games/`.
 
-Everything (graphics, music and sound) is drawn and synthesized in code, in one `index.html` file.
+| Game | Folder | What it is |
+|------|--------|------------|
+| 👻 Lights Out Sleepover | `games/lights-out-sleepover/` | A spooky action game. Escape the goo monsters, save Sam from the underworld, and beat the Devil King, the Devil Prince and the Candy Man. 1–2 players. |
+| ♟ Chess | `games/chess/` | Full-rules chess (castling, en passant, promotion, checkmate, stalemate and draws). Play a friend on the same screen, or the computer on Easy, Medium or Hard. |
+
+Every game is a single self-contained `index.html`. Graphics, music and sound are drawn and synthesized in code.
 There is no build step and there are no dependencies.
 
-## Play locally
+## Add a new game
 
-Open `index.html` in any modern browser.
+1. Create `games/<your-game>/index.html`.
+2. Add a card for it in the root `index.html`, linking to `/games/<your-game>/`.
+3. Add a "⬅ All games" link back to `/` inside the game.
 
-## Controls
+## Run locally
 
-| Mode | Move | Flash / Shoot |
-|------|------|---------------|
-| Solo | Arrows or WASD | Space |
-| 2 players, same keyboard | P1: WASD / P2: Arrows | P1: Space / P2: Enter |
-| Phone or tablet | Drag on screen | On-screen button |
+Serve the folder with any static server so the `/games/...` links work, for example:
 
-Online invite-only rooms only work when the game is opened on claude.ai, because they use claude.ai's
-room service. Solo and 2-player work everywhere, including on Vercel.
+```bash
+python3 -m http.server 8000
+# then open http://localhost:8000
+```
 
 ## Deploy to Vercel
 
-1. Push this repository to GitHub.
-2. In Vercel, choose **Add New → Project** and import the repository.
-3. Leave **Framework Preset** as **Other**, with no build command and no output directory, then click **Deploy**.
+1. In Vercel, choose **Add New → Project** and import this repository.
+2. Leave **Framework Preset** as **Other**, with no build command and no output directory, then click **Deploy**.
 
 Or from a terminal: `npx vercel --prod`.
+
+## Notes
+
+Online invite-only rooms in Lights Out Sleepover only work when the game is opened on claude.ai.
+Solo and 2-player work everywhere, including on Vercel.
