@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>FunKid Games</title>
-<meta name="description" content="Free browser games: Lights Out Sleepover, Chess, Oakville Quest, Rise to the Rim and more.">
+<meta name="description" content="Free browser games: Lights Out Sleepover, Chess, Oakville Quest, Rise to the Rim, Upside Down Merge and more.">
 <style>
   :root{ --bg:#120f26; --ink:#f4f0ff; --muted:#aaa3d8; --accent:#ffd23f; }
   *{box-sizing:border-box}
@@ -73,6 +73,16 @@
   .t-rim .ball{position:absolute;left:62px;top:40px;font-size:46px;animation:arc 2.2s ease-in-out infinite}
   @keyframes arc{0%{transform:translate(0,90px)}50%{transform:translate(90px,-10px) rotate(180deg)}100%{transform:translate(170px,40px) rotate(360deg);opacity:0}}
   .t-rim .title{position:absolute;bottom:14px;left:16px;font-weight:900;font-size:24px;color:#fff;text-shadow:0 3px 0 #9c3a05;line-height:1}
+  /* Upside Down Merge thumbnail */
+  .t-udm{background:radial-gradient(260px 160px at 50% 0%,#5a1238,transparent 70%),linear-gradient(#1a0b26,#08141f)}
+  .t-udm .orb{position:absolute;border-radius:50%;display:flex;align-items:center;justify-content:center;border:2px solid #fff8}
+  .t-udm .o1{width:44px;height:44px;left:40px;bottom:10px;background:#4fd1ff;box-shadow:0 0 14px #4fd1ff;font-size:22px}
+  .t-udm .o2{width:62px;height:62px;left:86px;bottom:6px;background:#ff5a4f;box-shadow:0 0 14px #ff5a4f;font-size:30px}
+  .t-udm .o3{width:104px;height:104px;right:34px;bottom:4px;background:#ffe46b;box-shadow:0 0 26px #ffe46b;font-size:52px;animation:bob 2.4s ease-in-out infinite}
+  .t-udm .drop{width:36px;height:36px;left:150px;top:76px;background:#ffb03a;box-shadow:0 0 12px #ffb03a;font-size:18px;animation:bob 1.4s ease-in-out infinite}
+  .t-udm .line{position:absolute;left:0;right:0;top:66px;border-top:2px dashed #ff3c50aa}
+  .t-udm .title{position:absolute;top:12px;left:16px;font-weight:900;font-size:22px;letter-spacing:1px;color:#ff4fa3;text-shadow:0 0 8px #ff4fa3;line-height:1.05}
+  .t-udm .title span{color:#5ff2ff;text-shadow:0 0 8px #5ff2ff}
   .soon{border:2px dashed rgba(255,255,255,.18);background:transparent;box-shadow:none;cursor:default}
   .soon:hover{transform:none;box-shadow:none}
   .soon .thumb{font-size:64px;opacity:.6}
@@ -146,6 +156,19 @@
       <h2>Rise to the Rim</h2>
       <p>Create your own basketball player, train, and play 3-on-3 games with your team. Climb from Rookie all the way to Legend, then win championships!</p>
       <div class="tags"><span class="tag">🏀 Sports</span><span class="tag">📈 Career</span><span class="tag">👤 1 player</span></div>
+    </div>
+  </a>
+
+  <a class="game" href="/games/upside-down-merge/">
+    <div class="thumb t-udm">
+      <div class="line"></div><div class="title">UPSIDE <span>DOWN</span><br>MERGE</div>
+      <div class="orb drop">🧢</div><div class="orb o1">🚲</div><div class="orb o2">🛹</div><div class="orb o3">🧇</div>
+    </div>
+    <div class="info">
+      <span class="play">Play ▶</span>
+      <h2>Upside Down Merge</h2>
+      <p>Drop Stranger Things characters into the jar. Two of the same merge into the next one. Can you merge all the way up to Eleven?</p>
+      <div class="tags"><span class="tag">🧇 Merge</span><span class="tag">🧩 Puzzle</span><span class="tag">👤 1 player</span></div>
     </div>
   </a>
 

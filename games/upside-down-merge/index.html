@@ -1,0 +1,450 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<title>Upside Down Merge</title>
+<style>
+  html,body{margin:0;height:100%;overflow:hidden;font-family:"Trebuchet MS",Verdana,system-ui,sans-serif;color:#fff;-webkit-user-select:none;user-select:none;
+    background:radial-gradient(800px 500px at 50% -10%,#5a1238 0%,transparent 60%),radial-gradient(700px 500px at 50% 110%,#0c3a52 0%,transparent 60%),#07060f}
+  #app{position:fixed;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:flex-start;padding:6px 6px 8px;box-sizing:border-box}
+  #top{display:flex;align-items:center;gap:8px;width:100%;max-width:520px;justify-content:space-between}
+  #back{white-space:nowrap;color:#9fe8ff;text-decoration:none;font-weight:bold;font-size:14px;padding:6px 10px;border-radius:10px;background:rgba(255,255,255,.08)}
+  h1{margin:0;font-size:clamp(18px,4.6vw,26px);letter-spacing:2px;font-weight:900;color:#ff4fa3;text-shadow:0 0 8px #ff4fa3,0 0 18px #ff2a7a88;white-space:nowrap}
+  h1 span{color:#5ff2ff;text-shadow:0 0 8px #5ff2ff,0 0 18px #2ac6ff88}
+  .ib{font:inherit;font-size:16px;border:0;border-radius:10px;padding:6px 10px;background:rgba(255,255,255,.08);color:#fff;cursor:pointer}
+  #hud{display:flex;gap:10px;width:100%;max-width:520px;justify-content:space-between;align-items:center;margin:6px 0 4px;font-weight:bold}
+  .stat{background:rgba(255,255,255,.06);border:1px solid #ffffff22;border-radius:12px;padding:4px 12px;font-size:14px;text-align:center;min-width:70px}
+  .stat b{display:block;font-size:20px;color:#ffe46b;text-shadow:0 0 8px #ffbf2a88}
+  #nextBox{display:flex;align-items:center;gap:6px}
+  #nextC{width:44px;height:44px}
+  #stage{position:relative;flex:1;width:100%;display:flex;align-items:flex-start;justify-content:center;min-height:0}
+  canvas#c{display:block;touch-action:none;border-radius:14px;box-shadow:0 0 0 2px #5ff2ff55,0 0 24px #5ff2ff33,0 0 40px #ff4fa333 inset}
+  #ladder{display:flex;flex-wrap:wrap;gap:4px;justify-content:center;max-width:520px;margin-top:6px}
+  .rung{display:flex;align-items:center;gap:3px;font-size:11px;padding:2px 6px 2px 2px;border-radius:999px;background:rgba(255,255,255,.06);opacity:.45}
+  .rung.seen{opacity:1}
+  .rung i{display:inline-flex;width:18px;height:18px;border-radius:50%;align-items:center;justify-content:center;font-style:normal;font-size:11px}
+  .ov{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;background:rgba(5,3,14,.78);z-index:5;padding:14px;box-sizing:border-box}
+  .ov.hidden{display:none}
+  .card{background:#140f2a;border:2px solid #ff4fa3;box-shadow:0 0 30px #ff4fa366,0 0 60px #5ff2ff33;border-radius:20px;max-width:440px;width:100%;padding:22px 22px;text-align:center;max-height:94vh;overflow:auto;box-sizing:border-box}
+  .card h2{margin:4px 0 10px;font-size:30px;color:#ff4fa3;text-shadow:0 0 10px #ff4fa3}
+  .card p{line-height:1.45;margin:8px 0;color:#e6e0ff}
+  .card .small{font-size:13px;color:#aaa3d8}
+  .btn{font:inherit;font-weight:bold;font-size:18px;border:0;border-radius:14px;padding:12px 20px;margin:6px;cursor:pointer;background:#ff4fa3;color:#fff;box-shadow:0 4px 0 #a3185e,0 0 18px #ff4fa366}
+  .btn.alt{background:#2a8fb8;box-shadow:0 4px 0 #165a78,0 0 18px #5ff2ff55}
+  .btn:active{transform:translateY(2px)}
+  #winCard{border-color:#ffe46b;box-shadow:0 0 40px #ffe46b88,0 0 80px #ff4fa355}
+  #winCard h2{font-size:34px;color:#ffe46b;text-shadow:0 0 12px #ffbf2a}
+  .bigEl{font-size:70px;line-height:1;margin:6px 0;animation:pulse 1s ease-in-out infinite}
+  @keyframes pulse{50%{transform:scale(1.12) rotate(-4deg)}}
+  .shout{font-size:20px;font-weight:bold;color:#fff;background:linear-gradient(90deg,#ff4fa3,#7a5cff,#2ac6ff);padding:12px 14px;border-radius:14px;margin:14px 0 8px;line-height:1.35;box-shadow:0 0 22px #7a5cff88}
+  .shout .names{color:#ffe46b;text-shadow:0 2px 0 #0005}
+  #fx{position:fixed;inset:0;pointer-events:none;z-index:6}
+  .tierList{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin:10px 0}
+  .tierList div{font-size:11px;display:flex;flex-direction:column;align-items:center;gap:2px}
+  .tierList i{display:flex;width:34px;height:34px;border-radius:50%;align-items:center;justify-content:center;font-style:normal;font-size:18px}
+  .arrow{color:#aaa3d8}
+</style>
+</head>
+<body>
+<div id="app">
+  <div id="top">
+    <a id="back" href="/">⬅ All games</a>
+    <h1>UPSIDE <span>DOWN</span> MERGE</h1>
+    <button class="ib" id="muteBtn" title="Sound on/off">🔊</button>
+  </div>
+  <div id="hud">
+    <div class="stat">Score<b id="score">0</b></div>
+    <div class="stat" id="nextBox"><div>Next</div><canvas id="nextC" width="88" height="88"></canvas></div>
+    <div class="stat">Best<b id="best">0</b></div>
+  </div>
+  <div id="stage"><canvas id="c"></canvas></div>
+  <div id="ladder"></div>
+</div>
+
+<div class="ov" id="startOv">
+  <div class="card">
+    <h2>Upside Down Merge</h2>
+    <p>Drop the characters into the jar. When <b>two of the same</b> touch, they merge into the <b>next</b> character!</p>
+    <div class="tierList" id="tierList"></div>
+    <p>Keep merging all the way up to <b style="color:#ffe46b">Eleven 🧇</b>, the last character!</p>
+    <p class="small">Tap or click to drop. On a computer you can also use ← → and Space.<br>Don't let the pile go over the red line!</p>
+    <button class="btn" id="startBtn">Play ▶</button>
+  </div>
+</div>
+
+<div class="ov hidden" id="winOv">
+  <div class="card" id="winCard">
+    <h2>YOU MADE ELEVEN!</h2>
+    <div class="bigEl">🧇</div>
+    <p>You merged your way to the very last character. Amazing!</p>
+    <div class="shout">Thanks to <span class="names">Alessandro</span> and <span class="names">Chiara</span> for helping me make this game! 💖</div>
+    <p class="small">Score: <b id="winScore">0</b></p>
+    <button class="btn" id="keepBtn">Keep playing</button>
+    <button class="btn alt" id="newBtn1">New game</button>
+  </div>
+</div>
+
+<div class="ov hidden" id="overOv">
+  <div class="card">
+    <h2>The Upside Down got you!</h2>
+    <p>The pile went over the red line.</p>
+    <p>Score: <b id="overScore" style="color:#ffe46b;font-size:24px">0</b></p>
+    <p class="small" id="overBest"></p>
+    <p class="small" id="overHigh"></p>
+    <button class="btn" id="newBtn2">Play again</button>
+  </div>
+</div>
+
+<canvas id="fx"></canvas>
+
+<script>
+(() => {
+  // ---------- Character ladder (original simple designs: colored circles, emoji icons, names) ----------
+  const TIERS = [
+    { name: "Will",     icon: "🚲", col: "#4fd1ff", r: 17 },
+    { name: "Dustin",   icon: "🧢", col: "#ffb03a", r: 23 },
+    { name: "Lucas",    icon: "🏹", col: "#3ad17a", r: 29 },
+    { name: "Mike",     icon: "📻", col: "#5a7bff", r: 36 },
+    { name: "Max",      icon: "🛹", col: "#ff5a4f", r: 43 },
+    { name: "Erica",    icon: "🍦", col: "#ff7ad9", r: 51 },
+    { name: "Robin",    icon: "📼", col: "#b07aff", r: 59 },
+    { name: "Steve",    icon: "🏏", col: "#3fe0c5", r: 68 },
+    { name: "Nancy",    icon: "📰", col: "#ff9a6b", r: 77 },
+    { name: "Hopper",   icon: "☕", col: "#c9a46b", r: 87 },
+    { name: "Eleven",   icon: "🧇", col: "#ffe46b", r: 98 },
+  ];
+  const TOP = TIERS.length - 1;
+  const POINTS = TIERS.map((_, i) => (i + 1) * (i + 2) / 2);
+
+  // ---------- Setup ----------
+  const W = 420, H = 620, LINE_Y = 96, DROP_Y = 48;
+  const cv = document.getElementById("c"), ctx = cv.getContext("2d");
+  const nextC = document.getElementById("nextC"), nctx = nextC.getContext("2d");
+  const fx = document.getElementById("fx"), fctx = fx.getContext("2d");
+  let scale = 1, dpr = Math.min(window.devicePixelRatio || 1, 2);
+
+  function layout() {
+    const stage = document.getElementById("stage");
+    const sw = stage.clientWidth - 4, sh = stage.clientHeight - 4;
+    scale = Math.max(0.3, Math.min(sw / W, sh / H));
+    cv.style.width = (W * scale) + "px"; cv.style.height = (H * scale) + "px";
+    cv.width = Math.round(W * scale * dpr); cv.height = Math.round(H * scale * dpr);
+    fx.width = innerWidth * dpr; fx.height = innerHeight * dpr;
+    fx.style.width = innerWidth + "px"; fx.style.height = innerHeight + "px";
+  }
+  addEventListener("resize", layout);
+
+  // ladder strip + start card list
+  const ladder = document.getElementById("ladder"), tierList = document.getElementById("tierList");
+  TIERS.forEach((t, i) => {
+    const d = document.createElement("div"); d.className = "rung"; d.id = "rung" + i;
+    d.innerHTML = `<i style="background:${t.col}">${t.icon}</i>${t.name}`;
+    ladder.appendChild(d);
+    const e = document.createElement("div");
+    e.innerHTML = `<i style="background:${t.col};box-shadow:0 0 10px ${t.col}">${t.icon}</i>${i + 1}. ${t.name}`;
+    tierList.appendChild(e);
+  });
+
+  // ---------- Sound (synthesized) ----------
+  let actx = null, muted = localStorage.getItem("upsideDownMergeMute") === "1";
+  const muteBtn = document.getElementById("muteBtn");
+  muteBtn.textContent = muted ? "🔇" : "🔊";
+  muteBtn.onclick = () => { muted = !muted; muteBtn.textContent = muted ? "🔇" : "🔊"; localStorage.setItem("upsideDownMergeMute", muted ? "1" : "0"); };
+  function tone(freq, dur = 0.12, type = "square", vol = 0.06, delay = 0) {
+    if (muted) return;
+    try {
+      actx = actx || new (window.AudioContext || window.webkitAudioContext)();
+      const t0 = actx.currentTime + delay, o = actx.createOscillator(), g = actx.createGain();
+      o.type = type; o.frequency.setValueAtTime(freq, t0);
+      g.gain.setValueAtTime(vol, t0); g.gain.exponentialRampToValueAtTime(0.0001, t0 + dur);
+      o.connect(g); g.connect(actx.destination); o.start(t0); o.stop(t0 + dur + 0.02);
+    } catch (e) {}
+  }
+  const sDrop = () => tone(180, 0.08, "triangle", 0.08);
+  const sMerge = (t) => { const f = 260 * Math.pow(1.122, t); tone(f, 0.1, "square", 0.05); tone(f * 1.5, 0.14, "square", 0.04, 0.06); };
+  const sWin = () => [523, 659, 784, 1047, 784, 1047, 1319].forEach((f, i) => tone(f, 0.22, "square", 0.05, i * 0.13));
+  const sOver = () => [392, 330, 262, 196].forEach((f, i) => tone(f, 0.25, "sawtooth", 0.04, i * 0.18));
+
+  // ---------- Game state ----------
+  let balls, score, best = +(localStorage.getItem("upsideDownMergeBest") || 0), current, next, aimX, cooldown,
+      running = false, paused = false, dangerT, madeEleven, seen, popups, nid = 0, elevenCount = 0;
+  document.getElementById("best").textContent = best;
+
+  function randTier() {
+    // mostly small characters, sometimes medium ones
+    const r = Math.random();
+    return r < 0.32 ? 0 : r < 0.6 ? 1 : r < 0.82 ? 2 : r < 0.95 ? 3 : 4;
+  }
+  function newGame() {
+    balls = []; score = 0; dangerT = 0; madeEleven = false; popups = []; cooldown = 0; elevenCount = 0;
+    seen = new Set();
+    current = randTier(); next = randTier(); aimX = W / 2;
+    TIERS.forEach((_, i) => document.getElementById("rung" + i).classList.remove("seen"));
+    markSeen(current); markSeen(next);
+    updateScore(); drawNext();
+    running = true; paused = false;
+    // test hook: ?test=eleven puts two Hoppers next to each other to check the celebration
+    if (/test=eleven/.test(location.search)) { addBall(W / 2 - 60, H - 100, 9); addBall(W / 2 + 60, H - 300, 9); }
+  }
+  function markSeen(t) { if (!seen.has(t)) { seen.add(t); document.getElementById("rung" + t).classList.add("seen"); } }
+  function updateScore() {
+    document.getElementById("score").textContent = score;
+    if (score > best) { best = score; localStorage.setItem("upsideDownMergeBest", best); }
+    document.getElementById("best").textContent = best;
+  }
+  function addBall(x, y, t, vx = 0, vy = 0) {
+    const b = { id: nid++, x, y, vx, vy, t, r: TIERS[t].r, age: 0, pop: 0, dead: false };
+    balls.push(b); markSeen(t); return b;
+  }
+
+  function drop() {
+    if (!running || paused || cooldown > 0) return;
+    const r = TIERS[current].r;
+    const x = Math.max(r + 2, Math.min(W - r - 2, aimX));
+    addBall(x, DROP_Y, current, 0, 60);
+    sDrop();
+    current = next; next = randTier(); markSeen(next); drawNext();
+    cooldown = 0.45;
+  }
+
+  // ---------- Physics ----------
+  const G = 1400;
+  function step(dt) {
+    for (const b of balls) {
+      b.vy += G * dt;
+      b.vx *= 0.995; b.vy *= 0.999;
+      b.x += b.vx * dt; b.y += b.vy * dt;
+      b.age += dt; if (b.pop > 0) b.pop -= dt;
+    }
+    for (let it = 0; it < 4; it++) {
+      for (let i = 0; i < balls.length; i++) {
+        const a = balls[i]; if (a.dead) continue;
+        for (let j = i + 1; j < balls.length; j++) {
+          const b = balls[j]; if (b.dead) continue;
+          const dx = b.x - a.x, dy = b.y - a.y, rr = a.r + b.r, d2 = dx * dx + dy * dy;
+          if (d2 >= rr * rr) continue;
+          if (a.t === b.t) { merge(a, b); break; }
+          const d = Math.sqrt(d2) || 0.01, nx = dx / d, ny = dy / d, ov = rr - d;
+          const ma = a.r * a.r, mb = b.r * b.r, ta = mb / (ma + mb), tb = ma / (ma + mb);
+          a.x -= nx * ov * ta; a.y -= ny * ov * ta; b.x += nx * ov * tb; b.y += ny * ov * tb;
+          const rv = (b.vx - a.vx) * nx + (b.vy - a.vy) * ny;
+          if (rv < 0) {
+            const jimp = -(1.15) * rv;
+            a.vx -= nx * jimp * ta; a.vy -= ny * jimp * ta; b.vx += nx * jimp * tb; b.vy += ny * jimp * tb;
+            // a little friction along the contact
+            const tx = -ny, ty = nx, tv = (b.vx - a.vx) * tx + (b.vy - a.vy) * ty, f = tv * 0.05;
+            a.vx += tx * f * ta; a.vy += ty * f * ta; b.vx -= tx * f * tb; b.vy -= ty * f * tb;
+          }
+        }
+      }
+      for (const b of balls) {
+        if (b.dead) continue;
+        if (b.x - b.r < 0) { b.x = b.r; if (b.vx < 0) b.vx *= -0.2; }
+        if (b.x + b.r > W) { b.x = W - b.r; if (b.vx > 0) b.vx *= -0.2; }
+        if (b.y + b.r > H) { b.y = H - b.r; if (b.vy > 0) b.vy *= -0.15; b.vx *= 0.98; }
+      }
+      if (balls.some(b => b.dead)) balls = balls.filter(b => !b.dead);
+    }
+  }
+
+  function merge(a, b) {
+    a.dead = b.dead = true;
+    const x = (a.x + b.x) / 2, y = (a.y + b.y) / 2, t = a.t;
+    if (t === TOP) {
+      // two Elevens: super bonus, they vanish in a burst
+      score += 500; burst(x, y, TIERS[TOP].col, 60); popup(x, y, "+500 SUPER!"); sWin(); updateScore(); return;
+    }
+    const nb = addBall(x, y, t + 1, (a.vx + b.vx) / 2, Math.min(a.vy, b.vy) / 2 - 40);
+    nb.pop = 0.25;
+    // keep the new (bigger) one inside the jar
+    nb.x = Math.max(nb.r, Math.min(W - nb.r, nb.x)); nb.y = Math.min(H - nb.r, nb.y);
+    score += POINTS[t + 1]; updateScore();
+    popup(x, y, "+" + POINTS[t + 1]);
+    burst(x, y, TIERS[t + 1].col, 10 + t * 3);
+    sMerge(t + 1);
+    if (t + 1 === TOP) { elevenCount++; if (!madeEleven) { madeEleven = true; setTimeout(celebrate, 450); } }
+  }
+
+  // ---------- Effects ----------
+  let parts = [];
+  function burst(x, y, col, n) {
+    for (let i = 0; i < n; i++) {
+      const a = Math.random() * Math.PI * 2, s = 80 + Math.random() * 260;
+      parts.push({ x, y, vx: Math.cos(a) * s, vy: Math.sin(a) * s - 60, life: 0.6 + Math.random() * 0.4, col });
+    }
+  }
+  function popup(x, y, text) { popups.push({ x, y, text, life: 1 }); }
+
+  let confetti = [];
+  function celebrate() {
+    paused = true; sWin();
+    document.getElementById("winScore").textContent = score;
+    document.getElementById("winOv").classList.remove("hidden");
+    const cols = ["#ff4fa3", "#5ff2ff", "#ffe46b", "#7a5cff", "#3ad17a", "#ff9a6b"];
+    for (let i = 0; i < 220; i++) confetti.push({
+      x: Math.random() * innerWidth, y: -Math.random() * innerHeight, vx: (Math.random() - .5) * 80,
+      vy: 90 + Math.random() * 160, rot: Math.random() * 6, vr: (Math.random() - .5) * 8,
+      w: 6 + Math.random() * 6, h: 10 + Math.random() * 8, col: cols[i % cols.length], life: 6 + Math.random() * 3,
+    });
+  }
+
+  function gameOver() {
+    running = false; sOver();
+    document.getElementById("overScore").textContent = score;
+    document.getElementById("overBest").textContent = "Best: " + best;
+    const top = balls.reduce((m, b) => Math.max(m, b.t), madeEleven ? TOP : -1);
+    document.getElementById("overHigh").textContent = top >= 0 ? `Highest character: ${TIERS[top].icon} ${TIERS[top].name}` + (top < TOP ? ` (Eleven is ${TOP - top} more merge${TOP - top > 1 ? "s" : ""} away!)` : " 🎉") : "";
+    document.getElementById("overOv").classList.remove("hidden");
+  }
+
+  // ---------- Drawing ----------
+  function drawBall(c, x, y, t, r, glow = true) {
+    const T = TIERS[t];
+    c.save();
+    if (glow) { c.shadowColor = T.col; c.shadowBlur = t === TOP ? 30 : 12; }
+    const g = c.createRadialGradient(x - r * 0.35, y - r * 0.4, r * 0.1, x, y, r);
+    g.addColorStop(0, "#ffffff"); g.addColorStop(0.18, T.col); g.addColorStop(1, shade(T.col, -0.45));
+    c.fillStyle = g; c.beginPath(); c.arc(x, y, r, 0, Math.PI * 2); c.fill();
+    c.shadowBlur = 0;
+    c.lineWidth = Math.max(1.5, r * 0.06); c.strokeStyle = "rgba(255,255,255,.7)"; c.stroke();
+    c.textAlign = "center"; c.textBaseline = "middle";
+    const showName = r >= 20;
+    c.font = `${Math.round(r * (showName ? 0.78 : 1.05))}px "Segoe UI Emoji","Apple Color Emoji","Noto Color Emoji",sans-serif`;
+    c.fillText(T.icon, x, y - (showName ? r * 0.18 : 0));
+    if (showName) {
+      const fs = Math.max(8, Math.round(r * 0.3));
+      c.font = `bold ${fs}px "Trebuchet MS",Verdana,sans-serif`;
+      c.lineWidth = Math.max(2, fs * 0.25); c.strokeStyle = "rgba(0,0,0,.65)"; c.fillStyle = "#fff";
+      c.strokeText(T.name, x, y + r * 0.5); c.fillText(T.name, x, y + r * 0.5);
+    } else {
+      // tiny Will: name under the ball is shown on the ladder instead
+    }
+    if (t === TOP) {
+      c.font = `${Math.round(r * 0.3)}px sans-serif`;
+      c.fillText("✨", x + r * 0.62, y - r * 0.62);
+    }
+    c.restore();
+  }
+  function shade(hex, p) {
+    const n = parseInt(hex.slice(1), 16); let r = n >> 16, g = (n >> 8) & 255, b = n & 255;
+    r = Math.round(r * (1 + p)); g = Math.round(g * (1 + p)); b = Math.round(b * (1 + p));
+    return `rgb(${Math.max(0, r)},${Math.max(0, g)},${Math.max(0, b)})`;
+  }
+  function drawNext() {
+    nctx.clearRect(0, 0, 88, 88);
+    const r = Math.min(36, 14 + TIERS[next].r * 0.5);
+    drawBall(nctx, 44, 44, next, r, false);
+  }
+
+  // drifting "spores" in the background
+  const spores = Array.from({ length: 40 }, () => ({ x: Math.random() * W, y: Math.random() * H, s: 1 + Math.random() * 2, v: 6 + Math.random() * 14 }));
+
+  let time = 0;
+  function render() {
+    ctx.setTransform(scale * dpr, 0, 0, scale * dpr, 0, 0);
+    // background jar
+    const bg = ctx.createLinearGradient(0, 0, 0, H);
+    bg.addColorStop(0, "#1a0b26"); bg.addColorStop(1, "#08141f");
+    ctx.fillStyle = bg; ctx.fillRect(0, 0, W, H);
+    // retro grid floor
+    ctx.strokeStyle = "rgba(95,242,255,.08)"; ctx.lineWidth = 1;
+    for (let x = 0; x <= W; x += 30) { ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, H); ctx.stroke(); }
+    for (let y = 0; y <= H; y += 30) { ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(W, y); ctx.stroke(); }
+    ctx.fillStyle = "rgba(255,255,255,.35)";
+    for (const s of spores) { ctx.globalAlpha = 0.25 + 0.25 * Math.sin(time * 2 + s.x); ctx.fillRect(s.x, s.y, s.s, s.s); }
+    ctx.globalAlpha = 1;
+
+    // danger line
+    const danger = dangerT > 0;
+    ctx.save();
+    ctx.setLineDash([10, 8]); ctx.lineWidth = 2;
+    ctx.strokeStyle = danger ? `rgba(255,40,60,${0.6 + 0.4 * Math.sin(time * 16)})` : "rgba(255,60,80,.55)";
+    ctx.shadowColor = "#ff2a4a"; ctx.shadowBlur = danger ? 14 : 6;
+    ctx.beginPath(); ctx.moveTo(0, LINE_Y); ctx.lineTo(W, LINE_Y); ctx.stroke();
+    ctx.restore();
+
+    // aim guide + held character
+    if (running && !paused) {
+      const r = TIERS[current].r, x = Math.max(r + 2, Math.min(W - r - 2, aimX));
+      ctx.strokeStyle = "rgba(255,255,255,.18)"; ctx.setLineDash([4, 6]); ctx.lineWidth = 2;
+      ctx.beginPath(); ctx.moveTo(x, DROP_Y + r); ctx.lineTo(x, H); ctx.stroke(); ctx.setLineDash([]);
+      ctx.globalAlpha = cooldown > 0 ? 0.45 : 1;
+      drawBall(ctx, x, DROP_Y, current, r);
+      ctx.globalAlpha = 1;
+    }
+
+    for (const b of balls) {
+      const s = b.pop > 0 ? 1 + b.pop * 0.8 : 1;
+      drawBall(ctx, b.x, b.y, b.t, b.r * s);
+    }
+    for (const p of parts) {
+      ctx.globalAlpha = Math.max(0, p.life); ctx.fillStyle = p.col;
+      ctx.beginPath(); ctx.arc(p.x, p.y, 3, 0, Math.PI * 2); ctx.fill();
+    }
+    ctx.globalAlpha = 1;
+    ctx.textAlign = "center"; ctx.font = "bold 20px Trebuchet MS,Verdana,sans-serif";
+    for (const p of popups) {
+      ctx.globalAlpha = Math.max(0, p.life); ctx.fillStyle = "#ffe46b"; ctx.strokeStyle = "#000"; ctx.lineWidth = 4;
+      ctx.strokeText(p.text, p.x, p.y); ctx.fillText(p.text, p.x, p.y);
+    }
+    ctx.globalAlpha = 1;
+
+    // confetti layer
+    fctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    fctx.clearRect(0, 0, innerWidth, innerHeight);
+    for (const c of confetti) {
+      fctx.save(); fctx.translate(c.x, c.y); fctx.rotate(c.rot); fctx.fillStyle = c.col;
+      fctx.fillRect(-c.w / 2, -c.h / 2, c.w, c.h); fctx.restore();
+    }
+  }
+
+  // ---------- Loop ----------
+  let last = performance.now(), acc = 0;
+  function frame(now) {
+    let dt = Math.min(0.05, (now - last) / 1000); last = now; time += dt;
+    for (const s of spores) { s.y -= s.v * dt; if (s.y < 0) { s.y = H; s.x = Math.random() * W; } }
+    if (running && !paused) {
+      acc += dt;
+      while (acc >= 1 / 120) { step(1 / 120); acc -= 1 / 120; }
+      cooldown = Math.max(0, cooldown - dt);
+      // danger: a settled character sticking up over the line
+      const over = balls.some(b => b.age > 1.2 && b.y - b.r < LINE_Y && Math.abs(b.vy) < 60);
+      dangerT = over ? dangerT + dt : 0;
+      if (dangerT > 2.2) gameOver();
+    } else acc = 0;
+    for (const p of parts) { p.x += p.vx * dt; p.y += p.vy * dt; p.vy += 500 * dt; p.life -= dt * 1.4; }
+    parts = parts.filter(p => p.life > 0);
+    for (const p of popups) { p.y -= 40 * dt; p.life -= dt; }
+    popups = popups.filter(p => p.life > 0);
+    for (const c of confetti) { c.x += c.vx * dt; c.y += c.vy * dt; c.rot += c.vr * dt; c.life -= dt; }
+    confetti = confetti.filter(c => c.life > 0 && c.y < innerHeight + 30);
+    if (balls) render();
+    requestAnimationFrame(frame);
+  }
+
+  // ---------- Input ----------
+  function toGame(e) { const r = cv.getBoundingClientRect(); return (e.clientX - r.left) / scale; }
+  cv.addEventListener("pointermove", e => { aimX = toGame(e); });
+  cv.addEventListener("pointerdown", e => { aimX = toGame(e); if (e.pointerType !== "mouse") { /* touch: aim follows finger, drop on release */ } else drop(); });
+  cv.addEventListener("pointerup", e => { if (e.pointerType !== "mouse") { aimX = toGame(e); drop(); } });
+  addEventListener("keydown", e => {
+    if (!running || paused) return;
+    if (e.key === "ArrowLeft") { aimX = Math.max(0, aimX - 18); e.preventDefault(); }
+    else if (e.key === "ArrowRight") { aimX = Math.min(W, aimX + 18); e.preventDefault(); }
+    else if (e.key === " " || e.key === "ArrowDown" || e.key === "Enter") { drop(); e.preventDefault(); }
+  });
+
+  document.getElementById("startBtn").onclick = () => { document.getElementById("startOv").classList.add("hidden"); tone(440, 0.05); newGame(); };
+  document.getElementById("keepBtn").onclick = () => { document.getElementById("winOv").classList.add("hidden"); paused = false; };
+  document.getElementById("newBtn1").onclick = () => { document.getElementById("winOv").classList.add("hidden"); confetti = []; newGame(); };
+  document.getElementById("newBtn2").onclick = () => { document.getElementById("overOv").classList.add("hidden"); newGame(); };
+
+  layout();
+  balls = []; current = 0; next = 1; aimX = W / 2; seen = new Set(); popups = [];
+  drawNext();
+  requestAnimationFrame(frame);
+})();
+</script>
+</body>
+</html>

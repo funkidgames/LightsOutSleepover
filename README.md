@@ -8,6 +8,7 @@ A small multi-game website. The landing page (`index.html`) lets players pick a 
 | ♟ Chess | `games/chess/` | Full-rules chess (castling, en passant, promotion, checkmate, stalemate and draws). Play a friend on the same screen, or the computer on Easy, Medium or Hard. |
 | 🌰 Oakville Quest | `games/oakville-quest/` | A side-scrolling platformer about the history of Oakville, Ontario. Walk the town map, clear 7 history worlds, find the History Scrolls and defeat the Fog of Forgetting. Progress is saved in the browser. |
 | 🏀 Rise to the Rim | `games/rise-to-the-rim/` | A basketball career game. Create a player, play 3-on-3 games with your team, train in drills, spend skill points and climb from Rookie to the max ranking, Legend. Then keep playing seasons and win championships. Progress is saved in the browser. |
+| 🧇 Upside Down Merge | `games/upside-down-merge/` | A drop-and-merge puzzle with a Stranger Things character ladder (Will up to Eleven), drawn as original neon circles with emoji icons. Making Eleven shows a thank-you to Alessandro and Chiara. Best score is saved in the browser (localStorage key `upsideDownMergeBest`). |
 
 Every game is a single self-contained `index.html`. Graphics, music and sound are drawn and synthesized in code.
 There is no build step and there are no dependencies.
