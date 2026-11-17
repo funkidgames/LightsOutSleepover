@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>FunKid Games</title>
-<meta name="description" content="Free browser games: Lights Out Sleepover, Chess, Oakville Quest, Rise to the Rim, Upside Down Merge, Gobble King, Karate Bot Clash and more.">
+<meta name="description" content="Free browser games: Lights Out Sleepover, Chess, Oakville Quest, Rise to the Rim, Upside Down Merge, Gobble King, Karate Bot Clash, Tic-Tac-Toe Party and more.">
 <style>
   :root{ --bg:#120f26; --ink:#f4f0ff; --muted:#aaa3d8; --accent:#ffd23f; }
   *{box-sizing:border-box}
@@ -104,6 +104,15 @@
   .t-kbc .bolt{position:absolute;left:118px;bottom:100px;width:30px;height:30px;border-radius:50%;background:#ffe14a;box-shadow:0 0 20px #ffe14a;animation:zap 1.4s linear infinite}
   @keyframes zap{from{transform:translateX(0)}to{transform:translateX(120px);opacity:0}}
   .t-kbc .title{position:absolute;top:12px;left:16px;font-weight:900;font-size:22px;line-height:1.02;color:#fff;text-shadow:0 3px 0 #9c1a05}
+  /* Tic-Tac-Toe Party thumbnail */
+  .t-ttt{background:radial-gradient(220px 150px at 50% 55%,#3b2f86,transparent 70%),linear-gradient(135deg,#2a1a5c,#120f2b)}
+  .t-ttt .tb{display:grid;grid-template-columns:repeat(3,44px);grid-template-rows:repeat(3,44px);gap:6px;padding:6px;border-radius:14px;background:#2c2464;box-shadow:0 12px 24px rgba(0,0,0,.5);margin-left:120px}
+  .t-ttt .tb span{border-radius:9px;background:#120f2b;display:flex;align-items:center;justify-content:center;font-weight:900;font-size:30px}
+  .t-ttt .x{color:#ff5fa2;text-shadow:0 0 8px #ff5fa2}.t-ttt .o{color:#5fe0ff;text-shadow:0 0 8px #5fe0ff}
+  .t-ttt .tb span.w{animation:tttw .7s ease-in-out infinite alternate}
+  @keyframes tttw{to{background:#3b2f86}}
+  .t-ttt .title{position:absolute;top:12px;left:16px;font-weight:900;font-size:22px;line-height:1.02;color:#ffd23f;text-shadow:0 3px 0 #000}
+  .t-ttt .party{position:absolute;left:30px;bottom:30px;font-size:40px;animation:bob 1.6s ease-in-out infinite}
   .soon{border:2px dashed rgba(255,255,255,.18);background:transparent;box-shadow:none;cursor:default}
   .soon:hover{transform:none;box-shadow:none}
   .soon .thumb{font-size:64px;opacity:.6}
@@ -223,6 +232,23 @@
       <h2>Karate Bot Clash</h2>
       <p>Fight the karate bots! Hit them to charge your special move, win fights to earn tokens, and buy new moves, skills and skins.</p>
       <div class="tags"><span class="tag">🥋 Fighting</span><span class="tag">🤖 vs Computer</span><span class="tag">👤 1 player</span></div>
+    </div>
+  </a>
+
+  <a class="game" href="/games/tic-tac-toe/">
+    <div class="thumb t-ttt">
+      <div class="title">TIC-TAC-TOE<br>PARTY</div><span class="party">🎉</span>
+      <div class="tb">
+        <span class="x w">✕</span><span class="o">○</span><span></span>
+        <span class="o">○</span><span class="x w">✕</span><span></span>
+        <span></span><span class="o">○</span><span class="x w">✕</span>
+      </div>
+    </div>
+    <div class="info">
+      <span class="play">Play ▶</span>
+      <h2>Tic-Tac-Toe Party</h2>
+      <p>Get three in a row! Play a friend on the same screen, or take on Robo on Easy, Medium or Hard. Win to set off a confetti party!</p>
+      <div class="tags"><span class="tag">❌ Classic</span><span class="tag">🤖 vs Computer</span><span class="tag">👫 1–2 players</span></div>
     </div>
   </a>
 
