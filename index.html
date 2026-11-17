@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>FunKid Games</title>
-<meta name="description" content="Free browser games: Lights Out Sleepover, Chess, Oakville Quest, Rise to the Rim, Upside Down Merge and more.">
+<meta name="description" content="Free browser games: Lights Out Sleepover, Chess, Oakville Quest, Rise to the Rim, Upside Down Merge, Gobble King and more.">
 <style>
   :root{ --bg:#120f26; --ink:#f4f0ff; --muted:#aaa3d8; --accent:#ffd23f; }
   *{box-sizing:border-box}
@@ -83,6 +83,18 @@
   .t-udm .line{position:absolute;left:0;right:0;top:66px;border-top:2px dashed #ff3c50aa}
   .t-udm .title{position:absolute;top:12px;left:16px;font-weight:900;font-size:22px;letter-spacing:1px;color:#ff4fa3;text-shadow:0 0 8px #ff4fa3;line-height:1.05}
   .t-udm .title span{color:#5ff2ff;text-shadow:0 0 8px #5ff2ff}
+  /* Gobble King thumbnail */
+  .t-gk{background:radial-gradient(240px 150px at 70% 60%,#1f3f6e,transparent 70%),linear-gradient(#0b1626,#13254a)}
+  .t-gk .dots{position:absolute;inset:0;background-image:radial-gradient(circle,#16294a 8px,transparent 9px);background-size:56px 48px;opacity:.9}
+  .t-gk .seg{position:absolute;width:30px;height:30px;border-radius:50%;background:#7be36b;border:3px solid #0006}
+  .t-gk .seg.s{background:radial-gradient(circle,#2f8f3a 55%,#7be36b 58%)}
+  .t-gk .head{width:38px;height:38px;background:#7be36b}
+  .t-gk .head:before,.t-gk .head:after{content:"";position:absolute;top:7px;width:11px;height:11px;border-radius:50%;background:#fff;box-shadow:inset 3px 0 0 3px #111}
+  .t-gk .head:before{left:15px}.t-gk .head:after{left:15px;top:19px}
+  .t-gk .crown{position:absolute;font-size:34px;animation:bob 1.6s ease-in-out infinite}
+  .t-gk .bot{position:absolute;width:22px;height:22px;border-radius:50%;background:#ff7ab6;border:3px solid #0006}
+  .t-gk .food{position:absolute;width:10px;height:10px;border-radius:50%;box-shadow:0 0 8px currentColor;background:currentColor}
+  .t-gk .title{position:absolute;top:14px;left:16px;font-weight:900;font-size:24px;line-height:1.02;color:#ffd23f;text-shadow:0 3px 0 #000}
   .soon{border:2px dashed rgba(255,255,255,.18);background:transparent;box-shadow:none;cursor:default}
   .soon:hover{transform:none;box-shadow:none}
   .soon .thumb{font-size:64px;opacity:.6}
@@ -169,6 +181,26 @@
       <h2>Upside Down Merge</h2>
       <p>Drop Stranger Things characters into the jar. Two of the same merge into the next one. Can you merge all the way up to Eleven?</p>
       <div class="tags"><span class="tag">🧇 Merge</span><span class="tag">🧩 Puzzle</span><span class="tag">👤 1 player</span></div>
+    </div>
+  </a>
+
+  <a class="game" href="/games/gobble-king/">
+    <div class="thumb t-gk">
+      <div class="dots"></div>
+      <div class="title">GOBBLE<br>KING</div>
+      <span class="food" style="left:40px;bottom:30px;color:#ffd23f"></span><span class="food" style="left:96px;bottom:70px;color:#6fd3ff"></span>
+      <span class="food" style="right:40px;top:30px;color:#ff5a4f"></span><span class="food" style="right:110px;bottom:24px;color:#b98cff"></span>
+      <span class="bot" style="right:22px;bottom:60px"></span><span class="bot" style="right:40px;bottom:76px"></span><span class="bot" style="right:60px;bottom:90px"></span>
+      <span class="seg" style="left:60px;top:120px"></span><span class="seg s" style="left:84px;top:110px"></span><span class="seg" style="left:108px;top:104px"></span>
+      <span class="seg s" style="left:132px;top:104px"></span><span class="seg" style="left:156px;top:110px"></span><span class="seg s" style="left:178px;top:120px"></span>
+      <span class="seg head" style="left:200px;top:120px"></span>
+      <span class="crown" style="left:202px;top:78px">👑</span>
+    </div>
+    <div class="info">
+      <span class="play">Play ▶</span>
+      <h2>Gobble King</h2>
+      <p>Slither around the arena, gobble food and trap the other snakes. Gobble a snake to get a 20-second power-up. How long can you stay King?</p>
+      <div class="tags"><span class="tag">🐍 Arcade</span><span class="tag">👑 Be the King</span><span class="tag">👤 1 player</span></div>
     </div>
   </a>
 

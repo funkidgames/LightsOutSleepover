@@ -9,6 +9,7 @@ A small multi-game website. The landing page (`index.html`) lets players pick a 
 | 🌰 Oakville Quest | `games/oakville-quest/` | A side-scrolling platformer about the history of Oakville, Ontario. Walk the town map, clear 7 history worlds, find the History Scrolls and defeat the Fog of Forgetting. Progress is saved in the browser. |
 | 🏀 Rise to the Rim | `games/rise-to-the-rim/` | A basketball career game. Create a player, play 3-on-3 games with your team, train in drills, spend skill points and climb from Rookie to the max ranking, Legend. Then keep playing seasons and win championships. Progress is saved in the browser. |
 | 🧇 Upside Down Merge | `games/upside-down-merge/` | A drop-and-merge puzzle with a Stranger Things character ladder (Will up to Eleven), drawn as original neon circles with emoji icons. Making Eleven shows a thank-you to Alessandro and Chiara. Best score is saved in the browser (localStorage key `upsideDownMergeBest`). |
+| 🐍 Gobble King | `games/gobble-king/` | An arena snake game against computer snakes. Gobble food, trap snakes (a snake pops when its head hits another snake's body) and stay King (the biggest snake) as long as you can. Gobbling a snake gives a 20-second power-up: Turbo, Shield, Magnet or Double Food. Easy, Normal and Hard. Best reign is saved in the browser (localStorage key `gobbleKing`). |
 
 Every game is a single self-contained `index.html`. Graphics, music and sound are drawn and synthesized in code.
 There is no build step and there are no dependencies.

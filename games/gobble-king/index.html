@@ -1,0 +1,806 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<title>Gobble King</title>
+<style>
+  html,body{margin:0;height:100%;overflow:hidden;background:#0b1626;font-family:"Trebuchet MS",Verdana,system-ui,sans-serif;color:#fff;
+    -webkit-user-select:none;user-select:none;touch-action:none;-webkit-tap-highlight-color:transparent}
+  canvas#c{position:fixed;inset:0;width:100%;height:100%;display:block;touch-action:none}
+  .ov{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;background:rgba(6,10,22,.62);z-index:5;padding:58px 12px 12px;box-sizing:border-box}
+  .ov.hidden{display:none}
+  .card{background:#14213d;border:3px solid #ffd23f;box-shadow:0 0 0 6px #0006,0 20px 50px #000a;border-radius:22px;max-width:430px;width:100%;
+    padding:18px 20px 20px;text-align:center;max-height:100%;overflow:auto;box-sizing:border-box}
+  .logo{margin:0;font-size:clamp(38px,11vw,56px);font-weight:900;line-height:1;letter-spacing:1px;
+    background:linear-gradient(90deg,#ffd23f,#ff8a3d,#7be36b);-webkit-background-clip:text;background-clip:text;color:transparent;filter:drop-shadow(0 4px 0 #0008)}
+  .sub{color:#b9c6ff;margin:8px 0 12px;line-height:1.4;font-size:15px}
+  h2{margin:4px 0 8px;font-size:30px;color:#ffd23f;text-shadow:0 3px 0 #0008}
+  label.lb{display:block;font-weight:bold;color:#cfe0ff;font-size:13px;margin:10px 0 5px;text-transform:uppercase;letter-spacing:1px}
+  input#name{font:inherit;font-size:18px;padding:8px 12px;border-radius:12px;border:2px solid #3b4f86;background:#0d172d;color:#fff;width:70%;text-align:center;outline:none}
+  input#name:focus{border-color:#ffd23f}
+  .row{display:flex;gap:8px;justify-content:center;flex-wrap:wrap}
+  .sw{width:36px;height:36px;border-radius:50%;border:3px solid transparent;cursor:pointer;box-shadow:0 3px 0 #0007}
+  .sw.on{border-color:#fff;transform:scale(1.12)}
+  .seg{font:inherit;font-weight:bold;font-size:15px;border:0;border-radius:12px;padding:8px 14px;background:#24345c;color:#cfe0ff;cursor:pointer;box-shadow:0 3px 0 #0007}
+  .seg.on{background:#ffd23f;color:#2a1a00}
+  .big{font:inherit;font-size:24px;font-weight:900;border:0;border-radius:16px;padding:12px 34px;background:#7be36b;color:#0d2a08;cursor:pointer;box-shadow:0 5px 0 #3c8a2e;margin-top:16px}
+  .big:active{transform:translateY(3px);box-shadow:0 2px 0 #3c8a2e}
+  .btn2{font:inherit;font-size:16px;font-weight:bold;border:0;border-radius:12px;padding:10px 18px;background:#24345c;color:#fff;cursor:pointer;box-shadow:0 3px 0 #0007;margin-top:12px}
+  .how{text-align:left;font-size:14px;line-height:1.45;color:#d6defc;background:#0d172d;border-radius:14px;padding:10px 14px;margin-top:14px}
+  .how b{color:#ffd23f}
+  .stats{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:10px 0}
+  .st{background:#0d172d;border-radius:12px;padding:8px}
+  .st b{display:block;font-size:24px;color:#ffd23f}
+  .st span{font-size:12px;color:#b9c6ff;text-transform:uppercase;letter-spacing:1px}
+  .rec{color:#7be36b;font-weight:900;font-size:18px;margin:6px 0;animation:pulse .8s ease-in-out infinite alternate}
+  @keyframes pulse{to{transform:scale(1.08)}}
+  #back{position:fixed;left:10px;top:10px;z-index:6;color:#9fe8ff;text-decoration:none;font-weight:bold;font-size:14px;padding:7px 11px;border-radius:10px;background:rgba(0,0,0,.4)}
+  #mute{position:fixed;right:10px;top:10px;z-index:6}
+  .ib{font:inherit;font-size:18px;border:0;border-radius:10px;padding:6px 10px;background:rgba(0,0,0,.4);color:#fff;cursor:pointer}
+  #pause{position:fixed;left:10px;top:10px;z-index:4;width:44px;height:44px;padding:0;font-size:22px}
+  #boost{position:fixed;right:max(18px,env(safe-area-inset-right));bottom:max(22px,env(safe-area-inset-bottom));z-index:4;width:92px;height:92px;border-radius:50%;
+    border:4px solid #fff8;background:radial-gradient(circle at 40% 35%,#ffb347,#ff6a1a);color:#fff;font:inherit;font-weight:900;font-size:16px;
+    box-shadow:0 6px 0 #0007;display:none;touch-action:none}
+  #boost.on{transform:scale(.93);background:radial-gradient(circle at 40% 35%,#fff27a,#ffb000)}
+  .hidden{display:none!important}
+</style>
+</head>
+<body>
+<canvas id="c"></canvas>
+<a id="back" href="/">⬅ All games</a>
+<button class="ib" id="mute" title="Sound on/off">🔊</button>
+<button class="ib hidden" id="pause" title="Pause">⏸</button>
+<button id="boost">🔥<br>BOOST</button>
+
+<div class="ov" id="menu">
+  <div class="card">
+    <h1 class="logo">GOBBLE KING</h1>
+    <p class="sub">Gobble food, trap the other snakes and become the biggest snake in the arena. How long can you stay <b>King</b>? 👑</p>
+    <label class="lb" for="name">Your snake's name</label>
+    <input id="name" maxlength="12" autocomplete="off" value="You">
+    <label class="lb">Your colors</label>
+    <div class="row" id="colors"></div>
+    <label class="lb">Difficulty</label>
+    <div class="row" id="diffs">
+      <button class="seg" data-d="easy">😊 Easy</button>
+      <button class="seg" data-d="normal">😎 Normal</button>
+      <button class="seg" data-d="hard">😈 Hard</button>
+    </div>
+    <button class="big" id="play">PLAY ▶</button>
+    <div class="how">
+      <b>Steer:</b> move your mouse, or drag your finger where you want to go.<br>
+      <b>Boost:</b> hold the mouse button or Space, or hold 🔥 on a phone. Boosting makes you a little shorter.<br>
+      <b>Gobble:</b> if a snake's head bumps into your body, it pops into yummy food!<br>
+      <b>Power-up:</b> every time you gobble a snake you get a power for <b>20 seconds</b>: ⚡ Turbo, 🛡️ Shield, 🧲 Magnet or 🌟 Double Food.<br>
+      <b>King:</b> the biggest snake wears the 👑. Stay King as long as you can!
+    </div>
+    <p class="sub" id="bestTxt" style="margin-bottom:0"></p>
+  </div>
+</div>
+
+<div class="ov hidden" id="over">
+  <div class="card">
+    <h2 id="overTitle">Gobbled!</h2>
+    <p class="sub" id="overWhy"></p>
+    <div id="recTxt" class="rec hidden">🏆 NEW RECORD REIGN!</div>
+    <div class="stats">
+      <div class="st"><b id="sLen">0</b><span>Length</span></div>
+      <div class="st"><b id="sKills">0</b><span>Snakes gobbled</span></div>
+      <div class="st"><b id="sReign">0:00</b><span>Longest reign</span></div>
+      <div class="st"><b id="sBest">0:00</b><span>Best reign ever</span></div>
+    </div>
+    <button class="big" id="again">PLAY AGAIN ▶</button><br>
+    <button class="btn2" id="toMenu">Menu</button>
+  </div>
+</div>
+
+<div class="ov hidden" id="paused">
+  <div class="card">
+    <h2>Paused</h2>
+    <button class="big" id="resume">KEEP PLAYING ▶</button><br>
+    <button class="btn2" id="quit">Quit to menu</button>
+  </div>
+</div>
+
+<script>
+"use strict";
+const cv = document.getElementById('c'), ctx = cv.getContext('2d');
+let W = 0, H = 0, DPR = 1;
+function resize() { DPR = Math.min(2, window.devicePixelRatio || 1); W = innerWidth; H = innerHeight; cv.width = Math.round(W * DPR); cv.height = Math.round(H * DPR); }
+addEventListener('resize', resize); resize();
+
+const TAU = Math.PI * 2;
+const rand = (a, b) => a + Math.random() * (b - a);
+const clamp = (v, a, b) => v < a ? a : v > b ? b : v;
+const angDiff = (a, b) => { let d = (a - b) % TAU; if (d > Math.PI) d -= TAU; if (d < -Math.PI) d += TAU; return d; };
+const fmt = s => { s = Math.floor(s); return Math.floor(s / 60) + ':' + String(s % 60).padStart(2, '0'); };
+
+const ARENA = 2000, FOOD_N = 1000, CELL = 64, BASE_SPEED = 165, POWER_TIME = 20;
+const POWERS = {
+  turbo:  { icon: '⚡', name: 'TURBO',        color: '#ffe14a', tip: 'Super fast, free boost!' },
+  shield: { icon: '🛡️', name: 'SHIELD',       color: '#6fd3ff', tip: 'Nothing can gobble you!' },
+  magnet: { icon: '🧲', name: 'MAGNET',       color: '#ff6fb0', tip: 'Food flies to you!' },
+  double: { icon: '🌟', name: 'DOUBLE FOOD',  color: '#b98cff', tip: 'Food counts double!' },
+};
+const POWER_KEYS = Object.keys(POWERS);
+const DIFF = {
+  easy:   { bots: 8,  maxStart: 60,  hunt: 0.15, look: 55,  think: 0.28, skill: 0.75 },
+  normal: { bots: 11, maxStart: 120, hunt: 0.4,  look: 95,  think: 0.17, skill: 0.9 },
+  hard:   { bots: 14, maxStart: 200, hunt: 0.75, look: 140, think: 0.1,  skill: 1 },
+};
+const COLORS = [['#7be36b', '#2f8f3a'], ['#ffd23f', '#e8590c'], ['#6fd3ff', '#2453c9'], ['#ff7ab6', '#9b2fae'], ['#ff5a4f', '#ffd9a0'], ['#b98cff', '#3fe0c5'],
+  ['#f4f0ff', '#ff4fa3'], ['#3fe0c5', '#0e6e74'], ['#ffa94d', '#5c3317'], ['#9be15d', '#ffe14a']];
+const PLAYER_COLORS = COLORS.slice(0, 6);
+const NAMES = ['Zippy', 'Noodle', 'Sir Wiggles', 'Mango', 'Biscuit', 'Slinky', 'Pickle', 'Rocket', 'Bubbles', 'Taco', 'Sprinkles', 'Dash',
+  'Ziggy', 'Pretzel', 'Comet', 'Waffles', 'Squiggle', 'Jelly', 'Nacho', 'Captain Coil', 'Spaghetti', 'Doodle', 'Gizmo', 'Peanut'];
+const FOOD_COLORS = ['#ff5a4f', '#ffd23f', '#7be36b', '#6fd3ff', '#ff7ab6', '#b98cff', '#ffa94d', '#3fe0c5'];
+
+// ---------- save ----------
+const SAVE_KEY = 'gobbleKing';
+let save = { best: 0, name: 'You', color: 0, diff: 'normal' };
+try { Object.assign(save, JSON.parse(localStorage.getItem(SAVE_KEY) || '{}')); } catch (e) {}
+const store = () => { try { localStorage.setItem(SAVE_KEY, JSON.stringify(save)); } catch (e) {} };
+
+// ---------- sound ----------
+let AC = null, muted = !!save.muted;
+function audio() { if (!AC) { try { AC = new (window.AudioContext || window.webkitAudioContext)(); } catch (e) {} } if (AC && AC.state === 'suspended') AC.resume(); }
+function tone(f, d, type = 'sine', vol = 0.12, slide = 0, delay = 0) {
+  if (muted || !AC) return;
+  const t = AC.currentTime + delay, o = AC.createOscillator(), g = AC.createGain();
+  o.type = type; o.frequency.setValueAtTime(f, t); if (slide) o.frequency.exponentialRampToValueAtTime(slide, t + d);
+  g.gain.setValueAtTime(vol, t); g.gain.exponentialRampToValueAtTime(0.0001, t + d);
+  o.connect(g); g.connect(AC.destination); o.start(t); o.stop(t + d + 0.02);
+}
+let lastEat = 0;
+const sfx = {
+  eat() { const n = performance.now(); if (n - lastEat < 70) return; lastEat = n; tone(rand(600, 900), 0.06, 'sine', 0.05, 1200); },
+  gobble() { [523, 659, 784, 1047].forEach((f, i) => tone(f, 0.14, 'square', 0.07, 0, i * 0.07)); },
+  power() { tone(300, 0.4, 'sawtooth', 0.06, 1200); tone(600, 0.4, 'triangle', 0.08, 1800, 0.05); },
+  die() { tone(400, 0.6, 'sawtooth', 0.1, 60); tone(200, 0.7, 'square', 0.06, 40, 0.1); },
+  crown() { [659, 784, 988, 1319].forEach((f, i) => tone(f, 0.22, 'triangle', 0.1, 0, i * 0.1)); },
+  lose() { tone(500, 0.35, 'triangle', 0.08, 250); tone(380, 0.4, 'triangle', 0.08, 190, 0.18); },
+  tick() { tone(1000, 0.05, 'square', 0.04); },
+  off() { tone(700, 0.3, 'sine', 0.07, 250); },
+};
+const muteBtn = document.getElementById('mute');
+function setMute(m) { muted = m; muteBtn.textContent = m ? '🔇' : '🔊'; save.muted = m; store(); }
+muteBtn.onclick = () => { audio(); setMute(!muted); };
+setMute(muted);
+
+// ---------- world ----------
+let snakes = [], food = [], particles = [], feed = [], respawns = [];
+let player = null, state = 'menu', cfg = DIFF.normal, diffName = 'normal';
+let nextId = 1, grid = new Map(), time = 0, king = null;
+let cam = { x: 0, y: 0, z: 1 };
+let reign = 0, longestReign = 0, kingTotal = 0, wasKing = false, deathWhy = '', dyingT = 0, newRecord = false;
+
+const segTarget = m => Math.min(320, Math.floor(8 + m * 0.45));
+const radiusFor = m => 7 + Math.min(17, Math.sqrt(m) * 0.75);
+
+function makeSnake(o) {
+  const s = { id: nextId++, name: o.name, c1: o.colors[0], c2: o.colors[1], isPlayer: !!o.isPlayer, mass: o.mass, ang: o.ang ?? rand(0, TAU),
+    segs: [], alive: true, power: null, powerT: 0, kills: 0, boosting: false, dropAcc: 0, think: rand(0, 0.2), targetAng: 0,
+    r: radiusFor(o.mass), ghost: 2.5, wander: null };
+  s.targetAng = s.ang;
+  const n = segTarget(s.mass), sp = s.r * 0.5;
+  for (let i = 0; i < n; i++) s.segs.push({ x: o.x - Math.cos(s.ang) * i * sp, y: o.y - Math.sin(s.ang) * i * sp });
+  return s;
+}
+
+function freeSpot(minFromPlayer) {
+  let best = null;
+  for (let t = 0; t < 30; t++) {
+    const a = rand(0, TAU), d = Math.sqrt(Math.random()) * ARENA * 0.82, x = Math.cos(a) * d, y = Math.sin(a) * d;
+    let ok = true;
+    if (player && player.alive && Math.hypot(player.segs[0].x - x, player.segs[0].y - y) < minFromPlayer) ok = false;
+    if (ok) for (const s of snakes) { if (!s.alive) continue; for (let i = 0; i < s.segs.length; i += 4) { const p = s.segs[i]; if ((p.x - x) ** 2 + (p.y - y) ** 2 < 160 * 160) { ok = false; break; } } if (!ok) break; }
+    if (ok) return { x, y };
+    best = { x, y };
+  }
+  return best;
+}
+
+function usedNames() { return new Set(snakes.filter(s => s.alive).map(s => s.name)); }
+function spawnBot(mass) {
+  const used = usedNames(), pool = NAMES.filter(n => !used.has(n));
+  const name = pool.length ? pool[Math.floor(Math.random() * pool.length)] : 'Snakey';
+  const p = freeSpot(state === 'play' ? 650 : 0);
+  const s = makeSnake({ name, colors: COLORS[Math.floor(Math.random() * COLORS.length)], mass: mass ?? rand(10, 40), x: p.x, y: p.y, ang: Math.atan2(-p.y, -p.x) + rand(-1, 1) });
+  snakes.push(s);
+  return s;
+}
+
+function spawnFood(n) {
+  for (let i = 0; i < n; i++) {
+    const a = rand(0, TAU), d = Math.sqrt(Math.random()) * (ARENA - 30), big = Math.random() < 0.08;
+    food.push({ x: Math.cos(a) * d, y: Math.sin(a) * d, v: big ? 3 : 1, r: big ? 7 : rand(3.5, 5), c: FOOD_COLORS[Math.floor(Math.random() * FOOD_COLORS.length)], life: -1, ph: rand(0, TAU) });
+  }
+}
+
+function resetWorld(withPlayer) {
+  snakes = []; food = []; particles = []; feed = []; respawns = []; player = null; king = null; time = 0;
+  reign = 0; longestReign = 0; kingTotal = 0; wasKing = false; newRecord = false;
+  spawnFood(FOOD_N);
+  if (withPlayer) {
+    const a = rand(0, TAU), d = rand(0, 300);
+    player = makeSnake({ name: (save.name || 'You').slice(0, 12), colors: PLAYER_COLORS[save.color] || PLAYER_COLORS[0], mass: 10, x: Math.cos(a) * d, y: Math.sin(a) * d, isPlayer: true });
+    snakes.push(player);
+  }
+  for (let i = 0; i < cfg.bots; i++) spawnBot(i === 0 ? cfg.maxStart : i === 1 ? cfg.maxStart * 0.7 : rand(10, cfg.maxStart * 0.5));
+  for (const s of snakes) s.ghost = s.isPlayer ? 3 : 0;
+}
+
+// ---------- spatial grid ----------
+const gkey = (cx, cy) => (cx + 200) * 1000 + (cy + 200);
+function buildGrid() {
+  grid = new Map();
+  for (let si = 0; si < snakes.length; si++) {
+    const s = snakes[si]; if (!s.alive || s.ghost > 0) continue;
+    const sg = s.segs;
+    for (let i = 0; i < sg.length; i += (i < 4 ? 1 : 2)) {
+      const k = gkey(Math.floor(sg[i].x / CELL), Math.floor(sg[i].y / CELL));
+      let a = grid.get(k); if (!a) grid.set(k, a = []);
+      a.push(s, i);
+    }
+  }
+}
+function forNear(x, y, R, fn) {
+  const x0 = Math.floor((x - R) / CELL), x1 = Math.floor((x + R) / CELL), y0 = Math.floor((y - R) / CELL), y1 = Math.floor((y + R) / CELL);
+  for (let cx = x0; cx <= x1; cx++) for (let cy = y0; cy <= y1; cy++) {
+    const a = grid.get(gkey(cx, cy)); if (!a) continue;
+    for (let j = 0; j < a.length; j += 2) if (fn(a[j], a[j + 1]) === true) return true;
+  }
+  return false;
+}
+
+// ---------- messages & particles ----------
+function say(text, color = '#fff', big = false) { feed.unshift({ text, color, t: big ? 3.5 : 2.8, big }); if (feed.length > 4) feed.length = 4; }
+function burst(x, y, color, n = 18, sp = 220) {
+  for (let i = 0; i < n; i++) { const a = rand(0, TAU), v = rand(sp * 0.3, sp); particles.push({ x, y, vx: Math.cos(a) * v, vy: Math.sin(a) * v, t: rand(0.4, 0.9), c: color, r: rand(2, 5) }); }
+}
+function floatText(x, y, text, color) { particles.push({ x, y, vx: 0, vy: -50, t: 1.4, c: color, text }); }
+
+// ---------- death & power-ups ----------
+function killSnake(s, killer, why) {
+  if (!s.alive) return;
+  s.alive = false;
+  const n = s.segs.length, total = Math.max(6, s.mass * 0.75), count = Math.max(4, Math.ceil(n / 2)), v = total / count;
+  for (let i = 0; i < n; i += 2) {
+    const p = s.segs[i];
+    food.push({ x: p.x + rand(-s.r, s.r) * 0.6, y: p.y + rand(-s.r, s.r) * 0.6, v, r: Math.min(12, 4.5 + v * 1.1), c: i % 4 ? s.c1 : s.c2, life: 40, ph: rand(0, TAU) });
+  }
+  burst(s.segs[0].x, s.segs[0].y, s.c1, 26, 260);
+  if (killer && killer.alive && killer !== s) {
+    killer.kills++;
+    const type = POWER_KEYS[Math.floor(Math.random() * POWER_KEYS.length)];
+    killer.power = type; killer.powerT = POWER_TIME; killer.warned = 0;
+    floatText(killer.segs[0].x, killer.segs[0].y - killer.r - 30, POWERS[type].icon + ' ' + POWERS[type].name, POWERS[type].color);
+    if (killer.isPlayer) {
+      sfx.gobble(); setTimeout(() => sfx.power(), 250);
+      say('You gobbled ' + s.name + '! 😋', '#7be36b', true);
+      say(POWERS[type].icon + ' ' + POWERS[type].name + ' for 20 seconds! ' + POWERS[type].tip, POWERS[type].color, true);
+    }
+  }
+  if (s.isPlayer) {
+    deathWhy = why || (killer ? 'You bumped into ' + killer.name + '.' : 'You hit the wall.');
+    sfx.die(); state = 'dying'; dyingT = 1.6; boostBtn.style.display = 'none'; pauseBtn.classList.add('hidden');
+  } else {
+    if (player && player.alive && killer && !killer.isPlayer && s.segs[0] && Math.hypot(s.segs[0].x - player.segs[0].x, s.segs[0].y - player.segs[0].y) < 900)
+      say(killer.name + ' gobbled ' + s.name + '!', '#cfe0ff');
+    respawns.push(time + rand(2, 4));
+  }
+}
+
+// ---------- AI ----------
+function dangerAt(s, x, y, extra) {
+  const hd = Math.hypot(x, y);
+  if (hd > ARENA - s.r - 25) return 3;
+  let hit = 0;
+  forNear(x, y, s.r + 30 + extra, (si, i) => {
+    const o = si; if (o === s || !o.alive) return;
+    const p = o.segs[i]; if (!p) return;
+    const rr = o.r + s.r + 6 + extra;
+    if ((p.x - x) ** 2 + (p.y - y) ** 2 < rr * rr) { hit = 1; return true; }
+  });
+  return hit;
+}
+
+function botThink(s) {
+  const h = s.segs[0];
+  let desire = s.ang, boost = false;
+  let prey = null, pd = 1e9;
+  if (Math.random() < cfg.hunt && s.mass > 15) {
+    for (const o of snakes) {
+      if (o === s || !o.alive || o.ghost > 0 || o.power === 'shield') continue;
+      if (o.isPlayer && diffName === 'easy' && Math.random() < 0.6) continue;
+      const d = Math.hypot(o.segs[0].x - h.x, o.segs[0].y - h.y);
+      if (d < 380 && d < pd && o.mass < s.mass * 1.3) { prey = o; pd = d; }
+    }
+  }
+  if (prey) {
+    const ph = prey.segs[0], lead = 50 + prey.r * 4;
+    desire = Math.atan2(ph.y + Math.sin(prey.ang) * lead - h.y, ph.x + Math.cos(prey.ang) * lead - h.x);
+    boost = s.mass > 30 && pd < 240 && Math.random() < cfg.hunt;
+  } else {
+    let best = null, bs = 1e9;
+    for (let i = 0; i < food.length; i++) {
+      const f = food[i], dx = f.x - h.x, dy = f.y - h.y;
+      if (Math.abs(dx) > 450 || Math.abs(dy) > 450) continue;
+      const d = Math.hypot(dx, dy), turn = Math.abs(angDiff(Math.atan2(dy, dx), s.ang));
+      const sc = (d + turn * 60) / Math.sqrt(f.v);
+      if (sc < bs) { bs = sc; best = f; }
+    }
+    if (best) desire = Math.atan2(best.y - h.y, best.x - h.x);
+    else {
+      if (!s.wander || Math.hypot(s.wander.x - h.x, s.wander.y - h.y) < 120) { const a = rand(0, TAU), d = rand(0, ARENA * 0.7); s.wander = { x: Math.cos(a) * d, y: Math.sin(a) * d }; }
+      desire = Math.atan2(s.wander.y - h.y, s.wander.x - h.x);
+    }
+    if (best && best.v > 2 && s.mass > 25 && Math.hypot(best.x - h.x, best.y - h.y) < 200 && Math.random() < 0.3) boost = true;
+  }
+  // avoid danger: test a fan of directions
+  const shielded = s.power === 'shield';
+  const look = cfg.look + s.r * 2.5;
+  const offs = [0, 0.35, -0.35, 0.7, -0.7, 1.1, -1.1, 1.6, -1.6, 2.2, -2.2, 3.0];
+  let bestA = desire, bestSc = -1e9, dangerAhead = 0;
+  for (let k = 0; k < offs.length; k++) {
+    const a = desire + offs[k];
+    let dg = 0;
+    for (let st = 1; st <= 3; st++) {
+      const px = h.x + Math.cos(a) * look * st / 3, py = h.y + Math.sin(a) * look * st / 3;
+      const d = shielded ? (Math.hypot(px, py) > ARENA - s.r - 25 ? 3 : 0) : dangerAt(s, px, py, 0);
+      if (d) dg += (4 - st) * d;
+    }
+    if (k === 0) dangerAhead = dg;
+    const sc = -dg * 10 - Math.abs(offs[k]) * 0.8 - Math.abs(angDiff(a, s.ang)) * 0.4;
+    if (sc > bestSc) { bestSc = sc; bestA = a; }
+    if (k === 0 && dg === 0) break;
+  }
+  // easy bots sometimes miss danger
+  if (Math.random() > cfg.skill && dangerAhead) bestA = desire;
+  s.targetAng = bestA;
+  s.boosting = boost && dangerAhead === 0;
+}
+
+// ---------- update ----------
+function updateSnake(s, dt) {
+  if (s.ghost > 0) s.ghost -= dt;
+  if (s.power) {
+    s.powerT -= dt;
+    if (s.isPlayer && s.powerT < 3.5 && s.powerT > 0 && Math.ceil(s.powerT) !== s.warned) { s.warned = Math.ceil(s.powerT); sfx.tick(); }
+    if (s.powerT <= 0) { if (s.isPlayer) { say(POWERS[s.power].icon + ' ' + POWERS[s.power].name + ' wore off', '#cfe0ff'); sfx.off(); } s.power = null; }
+  }
+  const maxTurn = (5.4 - Math.min(2.6, (s.r - 7) / 6)) * dt;
+  s.ang += clamp(angDiff(s.targetAng, s.ang), -maxTurn, maxTurn);
+  const turbo = s.power === 'turbo';
+  const boosting = s.boosting && (turbo || s.mass > 14);
+  const spd = BASE_SPEED * (turbo ? 1.4 : 1) * (boosting ? 1.75 : 1);
+  const sg = s.segs, h = sg[0];
+  if (boosting && !turbo) {
+    s.dropAcc += dt;
+    while (s.dropAcc > 0.12) {
+      s.dropAcc -= 0.12; s.mass -= 1;
+      const t = sg[sg.length - 1];
+      food.push({ x: t.x + rand(-4, 4), y: t.y + rand(-4, 4), v: 0.7, r: 4, c: s.c1, life: 25, ph: 0 });
+    }
+  }
+  if (boosting && turbo && Math.random() < 0.5) particles.push({ x: sg[sg.length - 1].x, y: sg[sg.length - 1].y, vx: rand(-40, 40), vy: rand(-40, 40), t: 0.5, c: '#ffe14a', r: 3 });
+  // slow shrink for giants so nobody stays huge forever
+  if (s.mass > 100) s.mass -= (s.mass - 100) * 0.008 * dt;
+  h.x += Math.cos(s.ang) * spd * dt; h.y += Math.sin(s.ang) * spd * dt;
+  // wall
+  const hd = Math.hypot(h.x, h.y);
+  if (hd > ARENA - s.r) {
+    if (s.power === 'shield' || s.ghost > 0) {
+      h.x *= (ARENA - s.r) / hd; h.y *= (ARENA - s.r) / hd;
+      s.ang = Math.atan2(-h.y, -h.x) + rand(-0.5, 0.5); s.targetAng = s.ang;
+    } else { killSnake(s, null, 'You crashed into the wall.'); return; }
+  }
+  s.r = radiusFor(s.mass);
+  const want = segTarget(s.mass);
+  while (sg.length < want) sg.push({ x: sg[sg.length - 1].x, y: sg[sg.length - 1].y });
+  while (sg.length > want && sg.length > 8) sg.pop();
+  const sp = s.r * 0.5;
+  for (let i = 1; i < sg.length; i++) {
+    const a = sg[i - 1], b = sg[i], dx = a.x - b.x, dy = a.y - b.y, d = Math.hypot(dx, dy);
+    if (d > sp) { const k = (d - sp) / d; b.x += dx * k; b.y += dy * k; }
+  }
+  // eat
+  const mag = s.power === 'magnet', mul = s.power === 'double' ? 2 : 1, er = s.r + 6, magR = 280;
+  let ate = false;
+  for (let i = food.length - 1; i >= 0; i--) {
+    const f = food[i], dx = h.x - f.x, dy = h.y - f.y;
+    if (Math.abs(dx) > magR || Math.abs(dy) > magR) continue;
+    const d2 = dx * dx + dy * dy;
+    if (mag && d2 < magR * magR) { const d = Math.sqrt(d2) || 1, v = Math.min(d, 520 * dt); f.x += dx / d * v; f.y += dy / d * v; }
+    const rr = er + f.r;
+    if (d2 < rr * rr) {
+      s.mass += f.v * mul; ate = true;
+      if (s.isPlayer && mul === 2 && f.v >= 1 && Math.random() < 0.3) floatText(f.x, f.y, 'x2', '#b98cff');
+      food[i] = food[food.length - 1]; food.pop();
+    }
+  }
+  if (ate && s.isPlayer) sfx.eat();
+}
+
+function checkCollisions() {
+  const dead = [];
+  for (const s of snakes) {
+    if (!s.alive || s.ghost > 0 || s.power === 'shield') continue;
+    const h = s.segs[0];
+    let killer = null;
+    forNear(h.x, h.y, s.r + 40, (si, i) => {
+      const o = si; if (o === s || !o.alive) return;
+      const p = o.segs[i]; if (!p) return;
+      const rr = s.r * 0.75 + o.r * 0.85;
+      if ((p.x - h.x) ** 2 + (p.y - h.y) ** 2 < rr * rr) {
+        if (i <= 2 && s.mass > o.mass) return; // head-on: the bigger one wins
+        killer = o; return true;
+      }
+    });
+    if (killer) dead.push([s, killer]);
+  }
+  for (const [s, k] of dead) killSnake(s, k, 'You bumped into ' + k.name + '.');
+}
+
+function update(dt) {
+  time += dt;
+  for (const s of snakes) {
+    if (!s.alive || s.isPlayer) continue;
+    s.think -= dt;
+    if (s.think <= 0) { s.think = cfg.think * rand(0.8, 1.2); botThink(s); }
+  }
+  if (player && player.alive) steerPlayer(dt);
+  for (const s of snakes) if (s.alive) updateSnake(s, dt);
+  buildGrid();
+  checkCollisions();
+  snakes = snakes.filter(s => s.alive || s === player);
+  // respawn bots
+  for (let i = respawns.length - 1; i >= 0; i--) if (time >= respawns[i]) { respawns.splice(i, 1); if (snakes.filter(s => s.alive && !s.isPlayer).length < cfg.bots) spawnBot(rand(10, 45)); }
+  // food upkeep
+  let natural = 0;
+  for (let i = food.length - 1; i >= 0; i--) {
+    const f = food[i];
+    if (f.life > 0) { f.life -= dt; if (f.life <= 0) { food[i] = food[food.length - 1]; food.pop(); } }
+    else natural++;
+  }
+  if (natural < FOOD_N) spawnFood(Math.min(8, FOOD_N - natural));
+  // king
+  let k = null;
+  for (const s of snakes) if (s.alive && (!k || s.mass > k.mass)) k = s;
+  if (k !== king && k && state !== 'menu') {
+    if (k === player) { sfx.crown(); say('👑 YOU ARE THE KING! Stay big!', '#ffd23f', true); burst(player.segs[0].x, player.segs[0].y, '#ffd23f', 30, 300); }
+    else if (king === player && player.alive) { sfx.lose(); say('💔 ' + k.name + ' took your crown! Get it back!', '#ff7ab6', true); }
+  }
+  king = k;
+  if (player && player.alive) {
+    if (king === player) { reign += dt; kingTotal += dt; if (reign > longestReign) longestReign = reign; }
+    else reign = 0;
+  }
+  // particles & feed
+  for (let i = particles.length - 1; i >= 0; i--) { const p = particles[i]; p.t -= dt; p.x += p.vx * dt; p.y += p.vy * dt; p.vx *= 0.92; if (!p.text) p.vy *= 0.92; if (p.t <= 0) particles.splice(i, 1); }
+  for (let i = feed.length - 1; i >= 0; i--) { feed[i].t -= dt; if (feed[i].t <= 0) feed.splice(i, 1); }
+  if (state === 'dying') { dyingT -= dt; if (dyingT <= 0) gameOver(); }
+}
+
+// ---------- input ----------
+const pointer = { x: 0, y: 0, active: false, mode: 'none' };
+const keys = {};
+let mouseBoost = false, keyBoost = false, btnBoost = false, isTouch = false;
+const boostBtn = document.getElementById('boost'), pauseBtn = document.getElementById('pause');
+cv.addEventListener('pointerdown', e => {
+  pointer.x = e.clientX; pointer.y = e.clientY; pointer.active = true; pointer.mode = 'pointer';
+  if (e.pointerType === 'touch' || e.pointerType === 'pen') { if (!isTouch) { isTouch = true; if (state === 'play') boostBtn.style.display = 'block'; } }
+  else if (e.button === 0) mouseBoost = true;
+  try { cv.setPointerCapture(e.pointerId); } catch (er) {}
+});
+cv.addEventListener('pointermove', e => { pointer.x = e.clientX; pointer.y = e.clientY; pointer.active = true; pointer.mode = 'pointer'; });
+const endPtr = e => { if (e.pointerType === 'mouse') mouseBoost = false; };
+cv.addEventListener('pointerup', endPtr); cv.addEventListener('pointercancel', endPtr);
+cv.addEventListener('contextmenu', e => e.preventDefault());
+boostBtn.addEventListener('pointerdown', e => { e.preventDefault(); btnBoost = true; boostBtn.classList.add('on'); try { boostBtn.setPointerCapture(e.pointerId); } catch (er) {} });
+const endBoost = () => { btnBoost = false; boostBtn.classList.remove('on'); };
+boostBtn.addEventListener('pointerup', endBoost); boostBtn.addEventListener('pointercancel', endBoost); boostBtn.addEventListener('lostpointercapture', endBoost);
+addEventListener('keydown', e => {
+  if (e.target && e.target.tagName === 'INPUT') return;
+  keys[e.code] = true;
+  if (e.code === 'Space' || e.code === 'ArrowUp' || e.code === 'KeyW') { keyBoost = true; e.preventDefault(); }
+  if (e.code === 'ArrowLeft' || e.code === 'ArrowRight' || e.code === 'KeyA' || e.code === 'KeyD') pointer.mode = 'keys';
+  if ((e.code === 'KeyP' || e.code === 'Escape') && (state === 'play' || state === 'paused')) togglePause();
+  if (e.code === 'KeyM') setMute(!muted);
+});
+addEventListener('keyup', e => { keys[e.code] = false; if (e.code === 'Space' || e.code === 'ArrowUp' || e.code === 'KeyW') keyBoost = false; });
+addEventListener('blur', () => { mouseBoost = keyBoost = btnBoost = false; for (const k in keys) keys[k] = false; });
+document.addEventListener('visibilitychange', () => { if (document.hidden && state === 'play') togglePause(); });
+
+function steerPlayer() {
+  const h = player.segs[0];
+  if (pointer.mode === 'keys') {
+    const l = keys.ArrowLeft || keys.KeyA, r = keys.ArrowRight || keys.KeyD;
+    player.targetAng = player.ang + (l ? -1 : 0) + (r ? 1 : 0);
+  } else if (pointer.active) {
+    const sx = (h.x - cam.x) * cam.z + W / 2, sy = (h.y - cam.y) * cam.z + H / 2;
+    const dx = pointer.x - sx, dy = pointer.y - sy;
+    if (dx * dx + dy * dy > 15 * 15) player.targetAng = Math.atan2(dy, dx);
+  }
+  player.boosting = mouseBoost || keyBoost || btnBoost;
+}
+
+// ---------- drawing ----------
+function view() {
+  const vw = W / cam.z / 2 + 60, vh = H / cam.z / 2 + 60;
+  return { x0: cam.x - vw, x1: cam.x + vw, y0: cam.y - vh, y1: cam.y + vh };
+}
+function drawBackground(v) {
+  ctx.fillStyle = '#0b1626'; ctx.fillRect(v.x0 - 100, v.y0 - 100, v.x1 - v.x0 + 200, v.y1 - v.y0 + 200);
+  // hex-ish dotted floor
+  const g = 56;
+  ctx.fillStyle = '#16294a';
+  for (let y = Math.floor(v.y0 / g) * g; y < v.y1; y += g) {
+    const odd = Math.round(y / g) & 1;
+    for (let x = Math.floor(v.x0 / g) * g + (odd ? g / 2 : 0); x < v.x1; x += g) { ctx.beginPath(); ctx.arc(x, y, 9, 0, TAU); ctx.fill(); }
+  }
+  // outside the arena
+  ctx.beginPath(); ctx.rect(v.x0 - 100, v.y0 - 100, v.x1 - v.x0 + 200, v.y1 - v.y0 + 200); ctx.arc(0, 0, ARENA, 0, TAU, true);
+  ctx.fillStyle = 'rgba(120,20,40,.55)'; ctx.fill();
+  ctx.beginPath(); ctx.arc(0, 0, ARENA, 0, TAU);
+  ctx.lineWidth = 10; ctx.strokeStyle = '#ff3c5a'; ctx.stroke();
+  ctx.lineWidth = 3; ctx.strokeStyle = '#ffd0d8'; ctx.stroke();
+}
+function drawFood(v) {
+  for (const f of food) {
+    if (f.x < v.x0 || f.x > v.x1 || f.y < v.y0 || f.y > v.y1) continue;
+    const pulse = 1 + Math.sin(time * 4 + f.ph) * 0.15;
+    ctx.globalAlpha = f.life > 0 && f.life < 4 ? f.life / 4 : 1;
+    ctx.fillStyle = f.c;
+    ctx.globalAlpha *= 0.25; ctx.beginPath(); ctx.arc(f.x, f.y, f.r * 2 * pulse, 0, TAU); ctx.fill();
+    ctx.globalAlpha /= 0.25; ctx.beginPath(); ctx.arc(f.x, f.y, f.r, 0, TAU); ctx.fill();
+  }
+  ctx.globalAlpha = 1;
+}
+function tracePath(s, v) {
+  ctx.beginPath();
+  const sg = s.segs; let started = false;
+  for (let i = 0; i < sg.length; i++) { const p = sg[i]; if (!started) { ctx.moveTo(p.x, p.y); started = true; } else ctx.lineTo(p.x, p.y); }
+}
+function drawSnake(s, v) {
+  const sg = s.segs, h = sg[0], r = s.r;
+  // quick cull
+  let vis = false;
+  for (let i = 0; i < sg.length; i += 6) { const p = sg[i]; if (p.x > v.x0 - r && p.x < v.x1 + r && p.y > v.y0 - r && p.y < v.y1 + r) { vis = true; break; } }
+  if (!vis) return;
+  ctx.save();
+  if (s.ghost > 0) ctx.globalAlpha = 0.45 + 0.25 * Math.sin(time * 18);
+  ctx.lineCap = 'round'; ctx.lineJoin = 'round';
+  tracePath(s, v);
+  if (s.power) { const P = POWERS[s.power]; ctx.strokeStyle = P.color; ctx.globalAlpha *= 0.35 + 0.15 * Math.sin(time * 8); ctx.lineWidth = r * 2 + 16; ctx.stroke(); ctx.globalAlpha = s.ghost > 0 ? 0.6 : 1; }
+  ctx.strokeStyle = 'rgba(0,0,0,.55)'; ctx.lineWidth = r * 2 + 5; ctx.stroke();
+  ctx.strokeStyle = s.c1; ctx.lineWidth = r * 2; ctx.stroke();
+  // stripes
+  ctx.fillStyle = s.c2;
+  const step = Math.max(3, Math.round(6 / 1));
+  for (let i = sg.length - 1; i > 2; i--) {
+    if (Math.floor(i / step) % 2) continue;
+    const p = sg[i]; if (p.x < v.x0 - r || p.x > v.x1 + r || p.y < v.y0 - r || p.y > v.y1 + r) continue;
+    ctx.beginPath(); ctx.arc(p.x, p.y, r * 0.62, 0, TAU); ctx.fill();
+  }
+  // shine
+  ctx.strokeStyle = 'rgba(255,255,255,.18)'; ctx.lineWidth = r * 0.5;
+  ctx.save(); ctx.translate(-r * 0.25, -r * 0.3); tracePath(s, v); ctx.stroke(); ctx.restore();
+  // head
+  ctx.fillStyle = s.c1; ctx.beginPath(); ctx.arc(h.x, h.y, r * 1.12, 0, TAU); ctx.fill();
+  ctx.lineWidth = 2.5; ctx.strokeStyle = 'rgba(0,0,0,.5)'; ctx.stroke();
+  const ca = Math.cos(s.ang), sa = Math.sin(s.ang);
+  for (const side of [-1, 1]) {
+    const ex = h.x + ca * r * 0.45 - sa * r * 0.5 * side, ey = h.y + sa * r * 0.45 + ca * r * 0.5 * side;
+    ctx.fillStyle = '#fff'; ctx.beginPath(); ctx.arc(ex, ey, r * 0.38, 0, TAU); ctx.fill();
+    ctx.fillStyle = '#111'; ctx.beginPath(); ctx.arc(ex + ca * r * 0.14, ey + sa * r * 0.14, r * 0.2, 0, TAU); ctx.fill();
+  }
+  if (s.power === 'shield') { ctx.strokeStyle = '#bdf0ff'; ctx.lineWidth = 3; ctx.globalAlpha = 0.7 + 0.3 * Math.sin(time * 10); ctx.beginPath(); ctx.arc(h.x, h.y, r * 1.12 + 9, 0, TAU); ctx.stroke(); }
+  if (s.power === 'magnet' && s.isPlayer) { ctx.strokeStyle = '#ff6fb0'; ctx.globalAlpha = 0.18; ctx.lineWidth = 2; ctx.setLineDash([10, 12]); ctx.lineDashOffset = -time * 40; ctx.beginPath(); ctx.arc(h.x, h.y, 280, 0, TAU); ctx.stroke(); ctx.setLineDash([]); }
+  ctx.restore();
+}
+function label(s) {
+  const h = s.segs[0], r = s.r;
+  let y = h.y - r - 14;
+  ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+  if (s === king) { ctx.font = Math.round(18 + r * 0.6) + 'px serif'; ctx.fillText('👑', h.x, y - 6 + Math.sin(time * 4) * 3); y -= 22 + r * 0.6; }
+  ctx.font = 'bold 13px "Trebuchet MS",sans-serif';
+  let txt = s.name;
+  if (s.power) txt = POWERS[s.power].icon + ' ' + txt;
+  ctx.lineWidth = 3; ctx.strokeStyle = 'rgba(0,0,0,.7)'; ctx.strokeText(txt, h.x, y);
+  ctx.fillStyle = s.isPlayer ? '#fff' : '#e3e9ff'; ctx.fillText(txt, h.x, y);
+}
+function outlined(text, x, y, size, color, align = 'center') {
+  ctx.font = 'bold ' + size + 'px "Trebuchet MS",Verdana,sans-serif'; ctx.textAlign = align; ctx.textBaseline = 'middle';
+  ctx.lineWidth = Math.max(3, size / 5); ctx.strokeStyle = 'rgba(0,0,0,.75)'; ctx.lineJoin = 'round'; ctx.strokeText(text, x, y);
+  ctx.fillStyle = color; ctx.fillText(text, x, y);
+}
+function roundRect(x, y, w, h, r) { ctx.beginPath(); ctx.moveTo(x + r, y); ctx.arcTo(x + w, y, x + w, y + h, r); ctx.arcTo(x + w, y + h, x, y + h, r); ctx.arcTo(x, y + h, x, y, r); ctx.arcTo(x, y, x + w, y, r); ctx.closePath(); }
+
+function drawHUD() {
+  const small = W < 600;
+  const alive = snakes.filter(s => s.alive).sort((a, b) => b.mass - a.mass);
+  // leaderboard
+  const lw = small ? 150 : 200, rows = Math.min(small ? 3 : 5, alive.length), lx = W - lw - 10, ly = small ? 54 : 56;
+  const pr = player ? alive.indexOf(player) : -1;
+  const extra = pr >= rows ? 1 : 0;
+  ctx.fillStyle = 'rgba(0,0,0,.38)'; roundRect(lx, ly, lw, 28 + (rows + extra) * 20, 12); ctx.fill();
+  outlined('👑 Leaderboard', lx + lw / 2, ly + 14, 14, '#ffd23f');
+  const row = (s, i, y) => {
+    ctx.font = (s.isPlayer ? 'bold ' : '') + '13px "Trebuchet MS",sans-serif'; ctx.textBaseline = 'middle';
+    ctx.fillStyle = s.isPlayer ? '#7be36b' : i === 0 ? '#ffd23f' : '#e3e9ff';
+    ctx.textAlign = 'left'; ctx.fillText((i + 1) + '. ' + (i === 0 ? '👑' : '') + s.name.slice(0, small ? 9 : 13), lx + 10, y);
+    ctx.textAlign = 'right'; ctx.fillText(Math.floor(s.mass), lx + lw - 10, y);
+  };
+  for (let i = 0; i < rows; i++) row(alive[i], i, ly + 38 + i * 20);
+  if (extra) row(player, pr, ly + 38 + rows * 20);
+  if (!player) return;
+  // stats top-left (beside pause button)
+  outlined('🐍 ' + Math.floor(player.mass), 62, 22, 18, '#fff', 'left');
+  outlined('⚔️ ' + player.kills, 62, 44, 16, '#ffb3b3', 'left');
+  // king banner
+  const cx = W / 2; let y = small ? 104 : 26;
+  if (small) y = 26;
+  const bw = Math.min(small ? W - 130 - 0 : 360, W - 20);
+  const bx = small ? 58 + (W - 58 - lw - 10 - bw) / 2 : cx - bw / 2;
+  const bcx = bx + bw / 2;
+  if (!small) {
+    if (king === player && player.alive) {
+      ctx.fillStyle = 'rgba(80,60,0,.6)'; roundRect(bx, 8, bw, 50, 14); ctx.fill(); ctx.strokeStyle = '#ffd23f'; ctx.lineWidth = 3; ctx.stroke();
+      outlined('👑 YOU ARE KING  ' + fmt(reign), bcx, 26, 22, '#ffd23f');
+      outlined('Best this game ' + fmt(longestReign) + '   ·   Record ' + fmt(Math.max(save.best, longestReign)), bcx, 47, 12, '#ffe9a6');
+    } else if (king) {
+      ctx.fillStyle = 'rgba(0,0,0,.38)'; roundRect(bx, 8, bw, 50, 14); ctx.fill();
+      outlined('👑 King: ' + king.name + ' (' + Math.floor(king.mass) + ')', bcx, 26, 18, '#ffd23f');
+      outlined('Grow ' + Math.max(1, Math.ceil(king.mass - player.mass + 1)) + ' more to be King   ·   Record ' + fmt(Math.max(save.best, longestReign)), bcx, 47, 12, '#cfe0ff');
+    }
+  }
+  y = 70;
+  if (small) {
+    // compact banner under the stats
+    const by = 58, w2 = W - 20;
+    if (king === player && player.alive) {
+      ctx.fillStyle = 'rgba(80,60,0,.6)'; roundRect(10, by + (pr >= 0 ? 0 : 0), lx - 20, 44, 12); ctx.fill(); ctx.strokeStyle = '#ffd23f'; ctx.lineWidth = 2; ctx.stroke();
+      outlined('👑 KING ' + fmt(reign), 10 + (lx - 20) / 2, by + 16, 18, '#ffd23f');
+      outlined('Record ' + fmt(Math.max(save.best, longestReign)), 10 + (lx - 20) / 2, by + 34, 11, '#ffe9a6');
+    } else if (king) {
+      ctx.fillStyle = 'rgba(0,0,0,.38)'; roundRect(10, by, lx - 20, 44, 12); ctx.fill();
+      outlined('Grow ' + Math.max(1, Math.ceil(king.mass - player.mass + 1)) + ' to be 👑', 10 + (lx - 20) / 2, by + 16, 14, '#ffd23f');
+      outlined('Record ' + fmt(Math.max(save.best, longestReign)), 10 + (lx - 20) / 2, by + 34, 11, '#cfe0ff');
+    }
+    y = Math.max(ly + 28 + (rows + extra) * 20, by + 44) + 12;
+  }
+  // power-up countdown
+  if (player.power && player.alive) {
+    const P = POWERS[player.power], pw = Math.min(300, W - 40), px = cx - pw / 2, ph = 40;
+    const flash = player.powerT < 4 && Math.floor(time * 6) % 2;
+    ctx.fillStyle = 'rgba(0,0,0,.5)'; roundRect(px, y, pw, ph, 12); ctx.fill();
+    ctx.fillStyle = flash ? '#fff' : P.color; roundRect(px + 4, y + 4, Math.max(0, (pw - 8) * player.powerT / POWER_TIME), ph - 8, 9); ctx.fill();
+    outlined(P.icon + ' ' + P.name + '  ' + Math.ceil(player.powerT) + 's', cx, y + ph / 2, 18, '#fff');
+    y += ph + 8;
+  }
+  // feed
+  for (let i = 0; i < feed.length; i++) {
+    const f = feed[i]; if (small && i > 2) break; ctx.globalAlpha = Math.min(1, f.t * 2);
+    outlined(f.text, cx, y + 12 + i * 26, f.big ? (small ? 15 : 19) : (small ? 13 : 15), f.color);
+  }
+  ctx.globalAlpha = 1;
+  // minimap
+  const mr = small ? 46 : 60, mx = 12 + mr, my = H - 12 - mr - (small ? 0 : 0);
+  ctx.fillStyle = 'rgba(0,0,0,.45)'; ctx.beginPath(); ctx.arc(mx, my, mr, 0, TAU); ctx.fill();
+  ctx.strokeStyle = '#ff3c5a88'; ctx.lineWidth = 2; ctx.stroke();
+  for (const s of alive) {
+    const h = s.segs[0], x = mx + h.x / ARENA * mr, yy = my + h.y / ARENA * mr;
+    ctx.fillStyle = s === player ? '#fff' : s === king ? '#ffd23f' : s.c1;
+    ctx.beginPath(); ctx.arc(x, yy, s === player ? 4 : s === king ? 4 : 2.5, 0, TAU); ctx.fill();
+  }
+  if (player.alive && player.ghost > 0) outlined('Get ready! You are safe for ' + Math.ceil(player.ghost) + 's', cx, H * 0.7, small ? 16 : 20, '#bdf0ff');
+}
+
+function draw() {
+  ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
+  // camera
+  let target = player && (player.alive || state === 'dying') ? player : king;
+  if (target) {
+    const h = target.segs[0];
+    const base = clamp(Math.min(W, H) / 760, 0.62, 1.25);
+    const z = base / (1 + (target.r - 9) / 32);
+    cam.x += (h.x - cam.x) * 0.15; cam.y += (h.y - cam.y) * 0.15; cam.z += (z - cam.z) * 0.05;
+    if (state === 'menu') { cam.x += (h.x - cam.x) * 0.0; }
+  }
+  ctx.setTransform(DPR * cam.z, 0, 0, DPR * cam.z, DPR * (W / 2 - cam.x * cam.z), DPR * (H / 2 - cam.y * cam.z));
+  const v = view();
+  drawBackground(v);
+  drawFood(v);
+  const order = snakes.filter(s => s.alive).sort((a, b) => (a.isPlayer - b.isPlayer) || (a.mass - b.mass));
+  for (const s of order) drawSnake(s, v);
+  for (const s of order) label(s);
+  for (const p of particles) {
+    ctx.globalAlpha = Math.min(1, p.t * 2);
+    if (p.text) { outlined(p.text, p.x, p.y, 18, p.c); }
+    else { ctx.fillStyle = p.c; ctx.beginPath(); ctx.arc(p.x, p.y, p.r, 0, TAU); ctx.fill(); }
+  }
+  ctx.globalAlpha = 1;
+  ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
+  if (state === 'play' || state === 'dying' || state === 'paused') drawHUD();
+}
+
+// ---------- flow ----------
+let lastT = performance.now();
+function frame(t) {
+  let dt = Math.min(0.1, (t - lastT) / 1000); lastT = t;
+  if (state !== 'paused' && state !== 'over') {
+    const steps = Math.ceil(dt / (1 / 60));
+    for (let i = 0; i < steps; i++) update(dt / steps);
+  }
+  draw();
+  requestAnimationFrame(frame);
+}
+
+const $ = id => document.getElementById(id);
+function show(id) { for (const o of ['menu', 'over', 'paused']) $(o).classList.toggle('hidden', o !== id); $('back').classList.toggle('hidden', id !== 'menu' && id !== 'over'); }
+function startGame() {
+  audio();
+  save.name = ($('name').value || 'You').trim().slice(0, 12) || 'You'; store();
+  cfg = DIFF[save.diff] || DIFF.normal; diffName = save.diff;
+  resetWorld(true);
+  cam.x = player.segs[0].x; cam.y = player.segs[0].y;
+  state = 'play'; show(null);
+  pauseBtn.classList.remove('hidden');
+  boostBtn.style.display = isTouch ? 'block' : 'none';
+  mouseBoost = keyBoost = btnBoost = false;
+  say('Gobble food and grow! Trap snakes to gobble them!', '#fff', true);
+}
+function gameOver() {
+  state = 'over';
+  newRecord = longestReign > save.best + 0.01 && longestReign >= 1;
+  if (newRecord) { save.best = longestReign; store(); }
+    $('overWhy').textContent = deathWhy;
+  $('sLen').textContent = Math.floor(player.mass);
+  $('sKills').textContent = player.kills;
+  $('sReign').textContent = fmt(longestReign);
+  $('sBest').textContent = fmt(save.best);
+  $('recTxt').classList.toggle('hidden', !newRecord);
+  show('over');
+}
+function attract() {
+  cfg = DIFF.normal; diffName = 'normal'; state = 'menu';
+  resetWorld(false);
+  show('menu');
+  pauseBtn.classList.add('hidden'); boostBtn.style.display = 'none';
+  $('bestTxt').textContent = save.best > 0 ? '🏆 Your longest reign as King: ' + fmt(save.best) : '';
+}
+function togglePause() {
+  if (state === 'play') { state = 'paused'; show('paused'); mouseBoost = keyBoost = btnBoost = false; }
+  else if (state === 'paused') { state = 'play'; show(null); lastT = performance.now(); }
+}
+// menu UI
+const colWrap = $('colors');
+PLAYER_COLORS.forEach((c, i) => {
+  const b = document.createElement('button'); b.className = 'sw'; b.style.background = 'linear-gradient(135deg,' + c[0] + ' 50%,' + c[1] + ' 50%)';
+  b.title = 'Color ' + (i + 1); b.onclick = () => { save.color = i; store(); paintMenu(); }; colWrap.appendChild(b);
+});
+document.querySelectorAll('#diffs .seg').forEach(b => b.onclick = () => { save.diff = b.dataset.d; store(); paintMenu(); });
+function paintMenu() {
+  [...colWrap.children].forEach((b, i) => b.classList.toggle('on', i === (save.color || 0)));
+  document.querySelectorAll('#diffs .seg').forEach(b => b.classList.toggle('on', b.dataset.d === save.diff));
+}
+$('name').value = save.name || 'You';
+paintMenu();
+$('play').onclick = startGame;
+$('again').onclick = startGame;
+$('toMenu').onclick = attract;
+$('resume').onclick = togglePause;
+$('quit').onclick = attract;
+pauseBtn.onclick = togglePause;
+$('name').addEventListener('keydown', e => { if (e.key === 'Enter') startGame(); });
+
+window.GK = { get snakes() { return snakes; }, get player() { return player; }, get state() { return state; }, get king() { return king; }, killSnake, POWERS,
+  get reign() { return reign; }, get food() { return food; } };
+
+attract();
+requestAnimationFrame(frame);
+</script>
+</body>
+</html>
