@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>FunKid Games</title>
-<meta name="description" content="Free browser games: Lights Out Sleepover, Chess, Oakville Quest, Rise to the Rim, Upside Down Merge, Gobble King and more.">
+<meta name="description" content="Free browser games: Lights Out Sleepover, Chess, Oakville Quest, Rise to the Rim, Upside Down Merge, Gobble King, Karate Bot Clash and more.">
 <style>
   :root{ --bg:#120f26; --ink:#f4f0ff; --muted:#aaa3d8; --accent:#ffd23f; }
   *{box-sizing:border-box}
@@ -95,6 +95,15 @@
   .t-gk .bot{position:absolute;width:22px;height:22px;border-radius:50%;background:#ff7ab6;border:3px solid #0006}
   .t-gk .food{position:absolute;width:10px;height:10px;border-radius:50%;box-shadow:0 0 8px currentColor;background:currentColor}
   .t-gk .title{position:absolute;top:14px;left:16px;font-weight:900;font-size:24px;line-height:1.02;color:#ffd23f;text-shadow:0 3px 0 #000}
+  /* Karate Bot Clash thumbnail */
+  .t-kbc{background:radial-gradient(220px 140px at 50% 40%,#ff9a4a,transparent 70%),linear-gradient(#3a1a5c,#ff6a4a 70%,#7a3a1a 70%)}
+  .t-kbc .gate{position:absolute;left:24px;bottom:58px;width:90px;height:52px;border-top:10px solid #c42a2a;border-left:8px solid #c42a2a;border-right:8px solid #c42a2a}
+  .t-kbc .vs{position:absolute;left:50%;top:52px;transform:translateX(-50%);font-weight:900;font-size:40px;color:#ffe14a;text-shadow:0 3px 0 #000,0 0 14px #ff5a3d;animation:bob 1.4s ease-in-out infinite}
+  .t-kbc .kid,.t-kbc .bot{position:absolute;bottom:58px;font-size:58px}
+  .t-kbc .kid{left:80px}.t-kbc .bot{right:66px}
+  .t-kbc .bolt{position:absolute;left:118px;bottom:100px;width:30px;height:30px;border-radius:50%;background:#ffe14a;box-shadow:0 0 20px #ffe14a;animation:zap 1.4s linear infinite}
+  @keyframes zap{from{transform:translateX(0)}to{transform:translateX(120px);opacity:0}}
+  .t-kbc .title{position:absolute;top:12px;left:16px;font-weight:900;font-size:22px;line-height:1.02;color:#fff;text-shadow:0 3px 0 #9c1a05}
   .soon{border:2px dashed rgba(255,255,255,.18);background:transparent;box-shadow:none;cursor:default}
   .soon:hover{transform:none;box-shadow:none}
   .soon .thumb{font-size:64px;opacity:.6}
@@ -201,6 +210,19 @@
       <h2>Gobble King</h2>
       <p>Slither around the arena, gobble food and trap the other snakes. Gobble a snake to get a 20-second power-up. How long can you stay King?</p>
       <div class="tags"><span class="tag">🐍 Arcade</span><span class="tag">👑 Be the King</span><span class="tag">👤 1 player</span></div>
+    </div>
+  </a>
+
+  <a class="game" href="/games/karate-bot-clash/">
+    <div class="thumb t-kbc">
+      <div class="gate"></div><div class="title">KARATE<br>BOT CLASH</div>
+      <span class="kid">🥋</span><span class="bolt"></span><span class="vs">VS</span><span class="bot">🤖</span>
+    </div>
+    <div class="info">
+      <span class="play">Play ▶</span>
+      <h2>Karate Bot Clash</h2>
+      <p>Fight the karate bots! Hit them to charge your special move, win fights to earn tokens, and buy new moves, skills and skins.</p>
+      <div class="tags"><span class="tag">🥋 Fighting</span><span class="tag">🤖 vs Computer</span><span class="tag">👤 1 player</span></div>
     </div>
   </a>
 
