@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>FunKid Games</title>
-<meta name="description" content="Free browser games: Lights Out Sleepover, Chess, Oakville Quest, Rise to the Rim, Upside Down Merge, Gobble King, Karate Bot Clash, Tic-Tac-Toe Party, Goal Rush Soccer and more.">
+<meta name="description" content="Free browser games: Lights Out Sleepover, Chess, Oakville Quest, Rise to the Rim, Upside Down Merge, Gobble King, Karate Bot Clash, Tic-Tac-Toe Party, Goal Rush Soccer, Monster Board and more.">
 <style>
   :root{ --bg:#120f26; --ink:#f4f0ff; --muted:#aaa3d8; --accent:#ffd23f; }
   *{box-sizing:border-box}
@@ -113,6 +113,14 @@
   @keyframes tttw{to{background:#3b2f86}}
   .t-ttt .title{position:absolute;top:12px;left:16px;font-weight:900;font-size:22px;line-height:1.02;color:#ffd23f;text-shadow:0 3px 0 #000}
   .t-ttt .party{position:absolute;left:30px;bottom:30px;font-size:40px;animation:bob 1.6s ease-in-out infinite}
+  /* Monster Board thumbnail */
+  .t-mb{background:radial-gradient(160px 120px at 50% 60%,#6a2fd0,transparent 70%),linear-gradient(160deg,#1a0f3a,#0b0a24)}
+  .t-mb .bd{position:absolute;left:50%;top:58%;width:150px;height:110px;margin:-55px 0 0 -75px;border-radius:14px;background:#3a2668;border:3px solid #ffd23f;transform:perspective(300px) rotateX(35deg);box-shadow:0 0 30px #b44dff;animation:mbglow 1.6s ease-in-out infinite alternate;
+    background-image:repeating-linear-gradient(90deg,#e8434f 0 25px,#ffd23f 25px 50px,#3fbf5a 50px 75px,#3f8cff 75px 100px,#b44dff 100px 125px,#ff8a1f 125px 150px);background-size:100% 22px;background-repeat:no-repeat}
+  @keyframes mbglow{to{box-shadow:0 0 60px #ff5fa2}}
+  .t-mb .m{position:absolute;font-size:36px;animation:bob 1.8s ease-in-out infinite}
+  .t-mb .title{position:absolute;top:12px;left:16px;font-weight:900;font-size:24px;line-height:1.02;color:#ffd23f;text-shadow:0 3px 0 #000}
+  .t-mb .title span{color:#ff5fa2}
   /* Goal Rush thumbnail */
   .t-gr{background:repeating-linear-gradient(90deg,#3ea84e 0 36px,#37a047 36px 72px)}
   .t-gr .ln{position:absolute;left:50%;top:0;bottom:0;border-left:3px solid #ffffffcc}
@@ -281,6 +289,21 @@
     <div class="thumb">🚀</div>
     <div class="info"><h2>More games coming soon</h2><p>New games will show up here.</p></div>
   </div>
+  <a class="game" href="/games/monster-board/">
+    <div class="thumb t-mb">
+      <div class="title">MONSTER<br><span>BOARD</span></div>
+      <div class="bd"></div>
+      <span class="m" style="right:28px;top:22px">👻</span><span class="m" style="right:70px;top:24px;animation-delay:-.6s">🧟</span>
+      <span class="m" style="left:22px;bottom:16px;animation-delay:-1.1s">🐊</span><span class="m" style="right:22px;bottom:14px;animation-delay:-.3s">🦏</span>
+      <span class="m" style="left:118px;bottom:6px;font-size:30px;animation-delay:-.9s">🥤</span>
+    </div>
+    <div class="info">
+      <span class="play">Play ▶</span>
+      <h2>Monster Board</h2>
+      <p>You won the spooky board game... and FOOM, your family is inside it! Grab swords, axes, spears and bows and fight ghosts, zombies, the Crocosquid, the Rhinorilla and an evil barista. Survive until dawn to escape!</p>
+      <div class="tags"><span class="tag">👻 Spooky</span><span class="tag">⚔️ Survival</span><span class="tag">👤 1 player</span></div>
+    </div>
+  </a>
 </main>
 <footer>Made with ❤️ by FunKid Games</footer>
 </body>
