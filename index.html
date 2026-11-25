@@ -6,7 +6,7 @@
 <title>FunKid Games</title>
 <link rel="icon" href="/favicon.png" type="image/png">
 <link rel="apple-touch-icon" href="/apple-touch-icon.png">
-<meta name="description" content="Free browser games: Lights Out Sleepover, Chess, Oakville Quest, Rise to the Rim, Upside Down Merge, Gobble King, Karate Bot Clash, Tic-Tac-Toe Party, Goal Rush Soccer, Monster Board, Last Splash, Sumo Smarts, Mini Mayhem and more.">
+<meta name="description" content="Free browser games: Lights Out Sleepover, Chess, Oakville Quest, Rise to the Rim, Upside Down Merge, Gobble King, Karate Bot Clash, Tic-Tac-Toe Party, Goal Rush Soccer, Monster Board, Last Splash, Sumo Smarts, Mini Mayhem, a Make Your Own Game Center and more.">
 <!-- Vercel Web Analytics -->
 <script defer src="https://cdn.vercel-insights.com/v1/script.js"></script>
 <style>
@@ -170,6 +170,12 @@
   .t-mini .ic{position:absolute;font-size:40px;animation:bob 1.4s ease-in-out infinite}
   .t-mini .title{position:absolute;top:14px;left:16px;font-weight:900;font-size:30px;line-height:1;color:#fff;text-shadow:0 3px 0 #000}
   .t-mini .title span{color:#ffd23f}
+  /* Game Center thumbnail */
+  .t-make{background:linear-gradient(135deg,#ffd23f,#ff7ab6 45%,#7b5cff)}
+  .t-make .ic{position:absolute;font-size:42px;animation:bob 1.4s ease-in-out infinite}
+  .t-make .title{position:absolute;top:14px;left:16px;font-weight:900;font-size:26px;line-height:1.02;color:#fff;text-shadow:0 3px 0 #000}
+  .t-make .title span{color:#2c1f5a;text-shadow:0 2px 0 #fff}
+  .t-make .new{position:absolute;right:14px;bottom:14px;background:#2c1f5a;color:#ffd23f;font-weight:900;font-size:13px;padding:5px 10px;border-radius:999px;transform:rotate(4deg)}
 </style>
 </head>
 <body>
@@ -181,6 +187,22 @@
 </header>
 
 <main class="grid">
+  <a class="game" href="/games/game-center/">
+    <div class="thumb t-make">
+      <span class="new">NEW!</span>
+      <span class="ic" style="left:40px;top:110px">🛠️</span>
+      <span class="ic" style="left:105px;top:126px;animation-delay:-.3s">🦄</span>
+      <span class="ic" style="left:170px;top:104px;animation-delay:-.6s">👾</span>
+      <span class="ic" style="left:232px;top:128px;animation-delay:-.9s">🍕</span>
+      <div class="title">MAKE YOUR OWN<br><span>GAME CENTER</span></div>
+    </div>
+    <div class="info">
+      <span class="play">Make ▶</span>
+      <h2>Make Your Own Game Center</h2>
+      <p>Type the game you dream of, like "a cat in space shooting aliens and collecting pizza", and it builds your own personal game! Pick your hero, bad guys, world, weapon and power-ups, save it, and share a link with friends.</p>
+      <div class="tags"><span class="tag">🛠️ Game maker</span><span class="tag">🎮 8 kinds of games</span><span class="tag">🔗 Share with friends</span></div>
+    </div>
+  </a>
   <a class="game" href="/games/lights-out-sleepover/">
     <div class="thumb t-sleep">
       <div class="moon"></div>
