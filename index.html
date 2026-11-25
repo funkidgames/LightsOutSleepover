@@ -4,6 +4,8 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>FunKid Games</title>
+<link rel="icon" href="/favicon.png" type="image/png">
+<link rel="apple-touch-icon" href="/apple-touch-icon.png">
 <meta name="description" content="Free browser games: Lights Out Sleepover, Chess, Oakville Quest, Rise to the Rim, Upside Down Merge, Gobble King, Karate Bot Clash, Tic-Tac-Toe Party, Goal Rush Soccer, Monster Board, Last Splash, Sumo Smarts, Mini Mayhem and more.">
 <!-- Vercel Web Analytics -->
 <script defer src="https://cdn.vercel-insights.com/v1/script.js"></script>
@@ -23,6 +25,7 @@
   .logo{font-size:clamp(40px, 8vw, 76px);font-weight:900;margin:0;letter-spacing:1px;line-height:1;
     background:linear-gradient(90deg,#ffd23f,#ff7ab6,#7be3ff,#7be36b);-webkit-background-clip:text;background-clip:text;color:transparent;
     filter:drop-shadow(0 4px 0 rgba(0,0,0,.35))}
+  .site-logo{display:block;width:clamp(160px, 30vw, 240px);height:auto;margin:0 auto 14px;border-radius:28px;box-shadow:0 12px 30px rgba(0,0,0,.5)}
   header p{color:var(--muted);font-size:18px;margin:14px 0 0}
   .grid{max-width:1040px;margin:26px auto 40px;padding:0 18px;display:grid;grid-template-columns:repeat(auto-fit, minmax(290px, 1fr));gap:24px;position:relative}
   .game{display:block;text-decoration:none;color:inherit;border-radius:22px;overflow:hidden;background:#1f1a3f;
@@ -172,6 +175,7 @@
 <body>
 <div class="stars"></div>
 <header>
+  <img class="site-logo" src="/logo.png" alt="funkid.app logo">
   <h1 class="logo">FunKid Games</h1>
   <p>Pick a game and press play. No downloads, no sign-up. 🎮</p>
 </header>
