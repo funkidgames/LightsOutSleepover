@@ -19,7 +19,7 @@ A small multi-game website. The landing page (`index.html`) lets players pick a 
 | 💦 Last Splash | `games/last-splash/` | A falling-floor party game. Stacked layers of cubes over a pool: a cube drops if you stand on it too long (it comes back 10 seconds later, until Crumble Time), so keep running and jumping. Fall through to the next layer, and the last player out of the water wins. Play vs 3, 5 or 7 bots (Easy, Normal, Hard), or 2 players on one keyboard with split screen. Crumble Time after 75 seconds. Phone joystick + JUMP. Saves in localStorage key `lastSplash`. |
 | 🤼 Sumo Smarts | `games/sumo-smarts/` | A quiz sumo game. Each turn a math or trivia question pops up: a right answer pushes your opponent toward the edge of the ring (fast answers give a Lightning Push, 3 in a row a Super Shove), a wrong answer lets them push you. Push them out to win. 8 original wrestlers from Little Mochi to Grand Champ Kaboom, Mix/Math/Trivia/Logos & Famous and Easy/Normal/Hard. Stars and progress are saved in localStorage key `sumoSmarts`. |
 | 🎮 Mini Mayhem | `games/mini-mayhem/` | A collection of 5 mini games. Forest Showdown (knock out every look-alike twin wearing your outfit with a sword, spear, bow or axe, find the very rare Diamond Sword, one life only), Tug of War (1 or 2 players), Snowball Showdown (reaction duel, 1 or 2 players), Hot Potato (with Alessandro, Chiara and Chris) and Sky Hop (cloud jumper). Winning gives coins to buy 12 animal skins in the Animal Shop. Saves in localStorage key `miniMayhem`. |
-| 🛠️ Make Your Own Game Center | `games/game-center/` | A game maker. Type the game you want (for example "a ninja fighting zombies with a sword in a haunted castle") and it builds a personal game from 8 kinds (Runner, Jump Adventure, Blaster, Battle Arena, Catcher, Maze, Flyer, Racer) with your hero, bad guys, goodies, world, weapon, power-ups, difficulty and color. Games are saved in localStorage key `funkidGameCenter`, and share links (`#g=...`) let friends play them. Test hooks on `window.GC`. |
+| 🛠️ Make Your Own Game Center | `games/game-center/` | A game maker. Type the game you want (for example "a ninja fighting zombies with a sword in a haunted castle") and it builds a personal game from 8 kinds (Runner, Jump Adventure, Blaster, Battle Arena, Catcher, Maze, Flyer, Racer) with your hero, bad guys, goodies, world, weapon, power-ups, difficulty and color. When the AI Game Maker is turned on (see below), kids can type anything and an AI writes a brand-new game for them; otherwise the instant template maker is used. Games are saved in localStorage key `funkidGameCenter`, and share links (`#g=...`) let friends play them. Test hooks on `window.GC`. |
 
 Every game is a single self-contained `index.html`. Graphics, music and sound are drawn and synthesized in code.
 There is no build step and there are no dependencies.
@@ -50,3 +50,18 @@ Or from a terminal: `npx vercel --prod`.
 
 Online invite-only rooms in Lights Out Sleepover only work when the game is opened on claude.ai.
 Solo and 2-player work everywhere, including on Vercel.
+
+## AI Game Maker (optional)
+
+`api/make-game.js` is a Vercel serverless function that lets the Game Center build any game a kid types, using the Claude API.
+It stays off (the Game Center uses its free instant maker) until an API key is added.
+
+1. Create an API key at https://platform.claude.com and set a **monthly spend limit** there (this is the real cost guard).
+2. In Vercel: Project → Settings → Environment Variables, add:
+   - `ANTHROPIC_API_KEY` (required)
+   - `GAME_MAKER_CODE` (optional) a family code kids must type before the AI maker works, so strangers can't spend your money
+   - `GAME_MODEL` (optional, default `claude-opus-5-5`), `GAME_EFFORT` (optional `low`/`medium`/`high`, default `medium`), `HOURLY_LIMIT` (optional, default 6 games per visitor per hour)
+3. Redeploy.
+
+Kid safety: every idea is checked first (blocks unsafe topics, turns copyrighted characters into original ones), the game is written under strict kid-safe rules, then the finished game is checked again before it is shown. Games run in a sandboxed iframe with a Content-Security-Policy that blocks all network access.
+AI games are saved on the device (up to 12) and can be changed with "Change it". They can't be shared by link yet.

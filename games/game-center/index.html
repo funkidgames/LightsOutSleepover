@@ -88,6 +88,28 @@
   #pkGrid button small{display:block;font-size:10px;font-weight:bold;color:#5b3cc4;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
   #pkGrid button:hover{background:#e3d9ff}
   #pkMsg{font-size:14px;color:#6a5a9a;margin-top:6px}
+  /* AI maker */
+  .aiNote{display:none;background:linear-gradient(90deg,#efe6ff,#ffe6f3);border-radius:14px;padding:8px 12px;font-size:14px;font-weight:bold;color:#5b3cc4;margin-top:8px}
+  .ai-on .aiNote{display:block}
+  #codeRow{display:none;margin-top:8px;gap:8px;align-items:center;flex-wrap:wrap}
+  #codeRow.on{display:flex}
+  #codeRow input{max-width:220px}
+  #quickBtn{display:none}
+  .ai-on #quickBtn{display:inline-block}
+  #bCancel{display:none;margin-top:18px}
+  #building.ai #bCancel{display:inline-block}
+  #building .tip{max-width:420px;color:#d9d3ff;font-size:15px;margin-top:12px;padding:0 14px}
+  #aiPlay{position:fixed;inset:0;z-index:35;display:none;background:#08061a;flex-direction:column}
+  #aiPlay.on{display:flex}
+  #aiBar{display:flex;gap:6px;padding:6px;flex-wrap:wrap;align-items:center;background:#1c1640}
+  #aiBar button{border:0;border-radius:10px;background:rgba(255,255,255,.12);color:#fff;font-size:15px;font-weight:bold;padding:7px 11px}
+  #aiBar .t{color:#ffd23f;font-weight:900;font-size:16px;margin:0 6px;flex:1;min-width:120px;overflow:hidden;white-space:nowrap;text-overflow:ellipsis}
+  #aiFrame{flex:1;border:0;width:100%;background:#000}
+  #aiChange{position:fixed;inset:0;z-index:45;display:none;align-items:center;justify-content:center;padding:12px;background:rgba(10,6,30,.7)}
+  #aiChange.on{display:flex}
+  #aiChange .panel{background:#fff;border-radius:22px;padding:16px;max-width:520px;width:100%;box-shadow:0 0 0 5px #ffd23f}
+  #aiChange h3{margin:0 0 8px;color:#5b3cc4}
+  .sg .ai{position:absolute;left:8px;top:8px;background:#2c1f5a;color:#ffd23f;font-size:11px;font-weight:900;padding:3px 8px;border-radius:999px}
   /* play */
   #play{position:fixed;inset:0;z-index:30;display:none;background:#08061a;touch-action:none;-webkit-user-select:none;user-select:none}
   #play.on{display:flex;align-items:center;justify-content:center}
@@ -129,8 +151,11 @@
     <div class="chips" id="examples"></div>
     <div class="row">
       <button class="btn big p" id="makeBtn">✨ Make my game!</button>
+      <button class="btn" id="quickBtn">⚡ Quick game (instant)</button>
       <button class="btn s" id="surpriseBtn">🎲 Surprise me</button>
     </div>
+    <div class="aiNote">🤖 AI Game Maker is on! Type <u>anything</u> you can dream up and it writes a brand-new game just for you. It takes about a minute or two.</div>
+    <div id="codeRow"><b>🔑 Family code:</b><input type="text" id="codeIn" maxlength="40" placeholder="Ask a grown-up"></div>
     <div class="note">Tip: say who you are, who the bad guys are, what you collect, where it happens and what kind of game (run, jump, shoot, fight, catch, maze, fly or race).</div>
   </section>
 
@@ -164,7 +189,13 @@
   <footer>Thanks to Alessandro, Chiara and Chris for helping dream up games! 💛<br>Games you make are saved on this device. Share links let friends play them too.</footer>
 </div>
 
-<div id="building"><div class="em" id="bEm">🛠️</div><div class="st" id="bSt">Building your game...</div><div class="pb"><i id="bPb"></i></div></div>
+<div id="building"><div class="em" id="bEm">🛠️</div><div class="st" id="bSt">Building your game...</div><div class="pb"><i id="bPb"></i></div><div class="tip" id="bTip"></div><button class="btn s" id="bCancel">✖ Cancel</button></div>
+
+<div id="aiPlay"><div id="aiBar"><button id="aiBack">⬅ Game Center</button><span class="t" id="aiTitle"></span><button id="aiRestart">🔄 Restart</button><button id="aiChangeBtn">✏️ Change it</button></div>
+  <iframe id="aiFrame" sandbox="allow-scripts" title="Your AI game"></iframe></div>
+<div id="aiChange"><div class="panel"><h3>✏️ What should I change?</h3>
+  <textarea id="aiChangeTxt" maxlength="300" placeholder="Example: make the hero faster and add a boss at the end"></textarea>
+  <div class="row"><button class="btn p" id="aiChangeGo">✨ Change my game</button><button class="btn s" id="aiChangeX">Cancel</button></div></div></div>
 
 <div id="picker"><div class="panel">
   <h3 id="pkTitle">Pick one</h3>
@@ -374,7 +405,10 @@ const EXAMPLES=['a unicorn running through candy land dodging broccoli','a cat i
 $('#examples').innerHTML=EXAMPLES.map(e=>`<button class="chip">${esc(e)}</button>`).join('');
 $('#examples').onclick=e=>{const b=e.target.closest('.chip');if(b){$('#idea').value=b.textContent;$('#idea').focus()}};
 $('#makeBtn').onclick=()=>{const t=$('#idea').value.trim();if(!t){$('#idea').focus();toastMsg('✏️ Type your game idea first, or tap an example!');return}
-  const c=parseIdea(t);c.by=SAVE.by||'';buildAnim(c,()=>{setCur(c,true)})};
+  if(AI.on)return aiMake(t);quickMake(t)};
+$('#quickBtn').onclick=()=>{const t=$('#idea').value.trim();if(!t){$('#idea').focus();toastMsg('✏️ Type your game idea first, or tap an example!');return}quickMake(t)};
+function quickMake(t){
+  const c=parseIdea(t);c.by=SAVE.by||'';buildAnim(c,()=>{setCur(c,true)})}
 $('#surpriseBtn').onclick=()=>{const c=surprise();c.by=SAVE.by||'';buildAnim(c,()=>setCur(c,true))};
 function buildAnim(c,done){const b=$('#building');b.classList.add('on');$('#bEm').textContent=c.h;
   const steps=['Reading your idea...',`Drawing ${c.hn}...`,'Adding the bad guys...',`Building ${WORLDS[c.w].n}...`,'Hiding the power-ups...','Ready!'];let i=0;
@@ -435,9 +469,13 @@ $('#pkGrid').onclick=e=>{const b=e.target.closest('button');if(!b)return;const o
   if(PK.r==='h'){CUR.h=o.e;CUR.hn=o.n}else{const arr=CUR[PK.r];if(PK.i==='new')arr.push(it);else arr[+PK.i]=it}
   $('#picker').classList.remove('on');renderBuilder()};
 
-function renderShelf(){const s=$('#shelf');if(!SAVE.games.length){s.innerHTML='<div class="empty">No games yet. Make one above and it will show up here!</div>';return}
-  s.innerHTML=SAVE.games.map(g=>`<div class="sg">${coverHTML(g,1)}<div class="nm">${esc(g.n)}</div><div class="mt">${TYPES[g.t].ic} ${TYPES[g.t].n} · ${DIFFS[g.d]}${g.by?' · by '+esc(g.by):''}${g.best?' · 🏆 '+g.best:''}</div>
+function renderShelf(){const s=$('#shelf');const ai=(SAVE.ai||[]).map(g=>`<div class="sg"><div class="cv" style="background:linear-gradient(135deg,#ffd23f,#ff7ab6 50%,#7b5cff)"><span class="ai">✨ AI GAME</span>🤖🎮</div><div class="nm">${esc(g.n)}</div><div class="mt">${esc(g.idea.slice(0,70))}</div>
+  <div class="bt"><button class="pl" data-ai="play" data-id="${g.id}">▶ Play</button><button data-ai="change" data-id="${g.id}">✏️ Change</button><button data-ai="del" data-id="${g.id}">🗑️</button></div></div>`).join('');
+  if(!SAVE.games.length&&!ai){s.innerHTML='<div class="empty">No games yet. Make one above and it will show up here!</div>';return}
+  s.innerHTML=ai+SAVE.games.map(g=>`<div class="sg">${coverHTML(g,1)}<div class="nm">${esc(g.n)}</div><div class="mt">${TYPES[g.t].ic} ${TYPES[g.t].n} · ${DIFFS[g.d]}${g.by?' · by '+esc(g.by):''}${g.best?' · 🏆 '+g.best:''}</div>
   <div class="bt"><button class="pl" data-a="play" data-id="${g.id}">▶ Play</button><button data-a="edit" data-id="${g.id}">✏️ Edit</button><button data-a="share" data-id="${g.id}">🔗 Share</button><button data-a="del" data-id="${g.id}">🗑️</button></div></div>`).join('')}
+$('#shelf').addEventListener('click',e=>{const b=e.target.closest('button[data-ai]');if(!b)return;const g=(SAVE.ai||[]).find(x=>x.id===b.dataset.id);if(!g)return;
+  if(b.dataset.ai==='play')aiOpen(g);else if(b.dataset.ai==='change'){aiOpen(g);aiAskChange()}else if(b.dataset.ai==='del'&&confirm('Delete "'+g.n+'"?')){SAVE.ai=SAVE.ai.filter(x=>x.id!==g.id);persist();renderShelf()}});
 $('#shelf').onclick=e=>{const b=e.target.closest('button[data-a]');if(!b)return;const g=SAVE.games.find(x=>x.id===b.dataset.id);if(!g)return;const c=sanitize(g);
   if(b.dataset.a==='play')startGame(c);else if(b.dataset.a==='edit')setCur(c,true);else if(b.dataset.a==='share')share(c);
   else if(b.dataset.a==='del'&&confirm('Delete "'+g.n+'"?')){SAVE.games=SAVE.games.filter(x=>x.id!==g.id);persist();renderShelf()}};
@@ -844,7 +882,49 @@ requestAnimationFrame(frame);
 let SHARED_VIEW=false;
 function checkHash(){const m=location.hash.match(/#g=([A-Za-z0-9_\-]+)/);if(!m)return;const c=decodeCfg(m[1]);if(!c)return;SHARED_VIEW=true;startGame(c)}
 checkHash();
-window.GC={parse:parseIdea,start:startGame,go,get G(){return G},ENG,SAVE,encodeCfg,decodeCfg,surprise,god(){G.P.shield=999},setCur};
+/* ---------- AI game maker (uses /api/make-game when the site owner turned it on) ---------- */
+const AI={on:false,needsCode:false,ctrl:null,cur:null};
+const CSP_META=`<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; img-src data: blob:; media-src data: blob:; font-src data:; connect-src 'none'; form-action 'none'">`;
+function lockHtml(h){h=String(h).replace(/<meta[^>]+Content-Security-Policy[^>]*>/gi,'');return /<head[^>]*>/i.test(h)?h.replace(/<head[^>]*>/i,m=>m+CSP_META):CSP_META+h}
+fetch('/api/make-game',{cache:'no-store'}).then(r=>r.ok?r.json():null).then(j=>{if(!j||!j.enabled)return;AI.on=true;AI.needsCode=!!j.needsCode;document.body.classList.add('ai-on');
+  $('#codeIn').value=SAVE.code||'';if(AI.needsCode&&!SAVE.code)$('#codeRow').classList.add('on')}).catch(()=>{});
+const AI_TIPS=['Tip: you can change your game after it is made. Just press ✏️ Change it!','Your game is being written from scratch, just for you.','Fun fact: a game like this has hundreds of lines of code!','Thanks to Alessandro, Chiara and Chris for helping dream up games! 💛'];
+async function aiRequest(payload,label){
+  if(AI.needsCode){const code=$('#codeIn').value.trim()||SAVE.code||'';if(!code){$('#codeRow').classList.add('on');$('#codeIn').focus();toastMsg('🔑 Ask a grown-up for the family code first.');return null}payload.code=code}
+  const b=$('#building');b.classList.add('on','ai');$('#bEm').textContent='🤖';$('#bSt').textContent=label;$('#bPb').style.width='3%';
+  let ti=0;$('#bTip').textContent=AI_TIPS[0];const tipT=setInterval(()=>{ti=(ti+1)%AI_TIPS.length;$('#bTip').textContent=AI_TIPS[ti]},7000);
+  let fake=3;const fakeT=setInterval(()=>{fake=Math.min(fake+0.4,90);const cur=parseFloat($('#bPb').style.width)||0;if(cur<fake)$('#bPb').style.width=fake+'%'},1000);
+  AI.ctrl=new AbortController();let result=null;
+  try{const r=await fetch('/api/make-game',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload),signal:AI.ctrl.signal});
+    if(!r.ok){let j={};try{j=await r.json()}catch(e){}if(j.needCode){SAVE.code='';persist();$('#codeRow').classList.add('on')}throw new Error(j.error||'Oops, something went wrong. Please try again!')}
+    if(payload.code){SAVE.code=payload.code;persist();$('#codeRow').classList.remove('on')}
+    const rd=r.body.getReader(),dec=new TextDecoder();let buf='';
+    for(;;){const {value,done}=await rd.read();if(done)break;buf+=dec.decode(value,{stream:true});let i;
+      while((i=buf.indexOf('\n'))>=0){const line=buf.slice(0,i).trim();buf=buf.slice(i+1);if(!line)continue;let m;try{m=JSON.parse(line)}catch(e){continue}
+        if(m.type==='status')$('#bSt').textContent=m.text;
+        else if(m.type==='progress'){$('#bSt').textContent='Writing your game... ✍️';const pc=Math.min(92,10+m.chars/45000*82);if(pc>fake){fake=pc;$('#bPb').style.width=pc+'%'}}
+        else if(m.type==='done')result=m;else if(m.type==='blocked'||m.type==='error')throw new Error(m.text)}}
+    if(!result)throw new Error('The game maker stopped early. Please try again!');
+    $('#bPb').style.width='100%';sfx('win');return result;
+  }catch(e){if(e.name!=='AbortError'){toastMsg('🙈 '+e.message);sfx('lose')}return null}
+  finally{clearInterval(tipT);clearInterval(fakeT);b.classList.remove('on','ai');AI.ctrl=null}}
+$('#bCancel').onclick=()=>{if(AI.ctrl)AI.ctrl.abort()};
+function aiStore(g){SAVE.ai=SAVE.ai||[];const i=SAVE.ai.findIndex(x=>x.id===g.id);if(i>=0)SAVE.ai[i]=g;else SAVE.ai.unshift(g);SAVE.ai=SAVE.ai.slice(0,12);
+  for(;;){try{localStorage.setItem(SKEY,JSON.stringify(SAVE));break}catch(e){if(SAVE.ai.length>1)SAVE.ai.pop();else{toastMsg('Your device is out of room to save games.');break}}}renderShelf()}
+async function aiMake(idea){ac();const r=await aiRequest({idea},'Reading your idea...');if(!r)return;
+  const g={id:newId(),idea:clean(idea,300),n:clean(r.title,40)||'My AI Game',html:r.html,made:Date.now()};aiStore(g);aiOpen(g)}
+function aiOpen(g){AI.cur=g;$('#aiTitle').textContent='✨ '+g.n;$('#aiFrame').srcdoc=lockHtml(g.html);$('#aiPlay').classList.add('on');document.body.style.overflow='hidden';
+  setTimeout(()=>{try{$('#aiFrame').focus()}catch(e){}},300)}
+$('#aiFrame').addEventListener('load',()=>{try{$('#aiFrame').focus()}catch(e){}});
+function aiClose(){$('#aiPlay').classList.remove('on');$('#aiFrame').srcdoc='';document.body.style.overflow=''}
+$('#aiBack').onclick=aiClose;
+$('#aiRestart').onclick=()=>{if(AI.cur)$('#aiFrame').srcdoc=lockHtml(AI.cur.html)};
+function aiAskChange(){$('#aiChangeTxt').value='';$('#aiChange').classList.add('on');setTimeout(()=>$('#aiChangeTxt').focus(),50)}
+$('#aiChangeBtn').onclick=aiAskChange;$('#aiChangeX').onclick=()=>$('#aiChange').classList.remove('on');
+$('#aiChangeGo').onclick=async()=>{const ch=$('#aiChangeTxt').value.trim();if(!ch){$('#aiChangeTxt').focus();return}$('#aiChange').classList.remove('on');const g=AI.cur;if(!g)return;
+  const r=await aiRequest({idea:g.idea,change:ch,base:g.html},'Changing your game...');if(!r)return;
+  const ng={...g,html:r.html,n:clean(r.title,40)||g.n,idea:clean(g.idea+' + '+ch,300),made:Date.now()};aiStore(ng);aiOpen(ng)};
+window.GC={AI,aiOpen,aiMake,parse:parseIdea,start:startGame,go,get G(){return G},ENG,SAVE,encodeCfg,decodeCfg,surprise,god(){G.P.shield=999},setCur};
 </script>
 </body>
 </html>
