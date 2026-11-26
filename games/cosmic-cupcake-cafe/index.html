@@ -1,0 +1,712 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<title>Cosmic Cupcake Café - FunKid Games</title>
+<link rel="icon" href="/favicon.png" type="image/png">
+<style>
+  :root{--ink:#fff8ff;--muted:#cfc3f5;--gold:#ffd84a;--pink:#ff6fb5;--bg1:#1a0b3d;--bg2:#3b1a7a;--counter:#ff8ac4;--counterD:#c4498a;--wood:#5a2e8a}
+  body.th-mint{--bg1:#062b2b;--bg2:#0f6b5c;--counter:#7ff0c8;--counterD:#2fa883;--wood:#155e52}
+  body.th-mars{--bg1:#3a0c12;--bg2:#b4471f;--counter:#ffc06b;--counterD:#d0782a;--wood:#7a2d18}
+  body.th-sea{--bg1:#051a40;--bg2:#1a62b8;--counter:#8fe1ff;--counterD:#3a95c4;--wood:#16407a}
+  body.th-candy{--bg1:#3d0b3a;--bg2:#ff7ac0;--counter:#fff1a8;--counterD:#e2b94a;--wood:#9a2d7a}
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+  html,body{margin:0;height:100%;overflow:hidden;color:var(--ink);font-family:"Trebuchet MS",Verdana,system-ui,sans-serif;user-select:none;-webkit-user-select:none}
+  body{background:linear-gradient(var(--bg1),var(--bg2));touch-action:manipulation}
+  .stars{position:fixed;inset:0;pointer-events:none;background-image:
+    radial-gradient(2px 2px at 8% 12%,#fff 50%,transparent 51%),radial-gradient(1.5px 1.5px at 22% 30%,#fffb 50%,transparent 51%),
+    radial-gradient(2px 2px at 40% 8%,#fffc 50%,transparent 51%),radial-gradient(1.5px 1.5px at 63% 22%,#fff9 50%,transparent 51%),
+    radial-gradient(2px 2px at 80% 10%,#fff 50%,transparent 51%),radial-gradient(1.5px 1.5px at 92% 38%,#fffa 50%,transparent 51%),
+    radial-gradient(1.5px 1.5px at 12% 52%,#fff8 50%,transparent 51%),radial-gradient(2px 2px at 52% 44%,#fff9 50%,transparent 51%);animation:tw 4s ease-in-out infinite alternate}
+  @keyframes tw{to{opacity:.55}}
+  .planet{position:fixed;border-radius:50%;pointer-events:none}
+  .p1{width:120px;height:120px;right:-30px;top:60px;background:radial-gradient(circle at 35% 35%,#ffd1f0,#c264ff 70%);box-shadow:0 0 40px #c264ff66}
+  .p1:after{content:"";position:absolute;left:-30px;right:-30px;top:52px;height:16px;border-radius:50%;border:5px solid #ffe28a99;transform:rotate(-14deg)}
+  .p2{width:50px;height:50px;left:14px;top:120px;background:radial-gradient(circle at 35% 35%,#c9fff1,#36c9a0 70%)}
+  button{font-family:inherit;cursor:pointer}
+  .screen{position:fixed;inset:0;display:none;flex-direction:column;align-items:center;z-index:1}
+  .screen.show{display:flex}
+  a.back{position:absolute;left:10px;top:10px;color:#fff;text-decoration:none;font-weight:bold;font-size:13px;padding:7px 10px;border-radius:10px;background:rgba(0,0,0,.35);z-index:5}
+  .big{border:0;border-radius:18px;padding:14px 26px;font-size:22px;font-weight:900;color:#3a1440;background:var(--gold);box-shadow:0 5px 0 #b48a00;margin:6px}
+  .big:active{transform:translateY(3px);box-shadow:0 2px 0 #b48a00}
+  .big.alt{background:#8fe1ff;box-shadow:0 5px 0 #3a95c4;color:#0b2a4a}
+  .big.pink{background:var(--pink);box-shadow:0 5px 0 #b02e74;color:#fff}
+  .big.small{font-size:16px;padding:10px 16px}
+  .panel{background:rgba(20,6,50,.72);border:3px solid #ffffff33;border-radius:22px;padding:16px;max-width:560px;width:calc(100% - 24px)}
+
+  /* MENU */
+  #menu{justify-content:center;overflow:auto;padding:50px 10px 20px}
+  #menu h1{margin:0;text-align:center;font-size:clamp(34px,9vw,60px);line-height:.95;font-weight:900;letter-spacing:1px;
+    background:linear-gradient(90deg,#ffd84a,#ff6fb5 55%,#8fe1ff);-webkit-background-clip:text;background-clip:text;color:transparent;filter:drop-shadow(0 4px 0 rgba(0,0,0,.5))}
+  #menu .sub{color:var(--muted);font-weight:bold;text-align:center;margin:8px 0 4px;max-width:440px}
+  #chefBox{width:150px;height:150px;animation:float 3s ease-in-out infinite}
+  @keyframes float{50%{transform:translateY(-10px) rotate(2deg)}}
+  #daySel{display:flex;align-items:center;gap:8px;margin-top:6px}
+  #daySel button.arr{border:0;width:44px;height:44px;border-radius:12px;background:rgba(0,0,0,.35);color:#fff;font-size:20px;font-weight:900}
+  #daySel button.arr:disabled{opacity:.3}
+  .row{display:flex;flex-wrap:wrap;justify-content:center;gap:4px}
+  #menuStats{margin-top:8px;font-weight:bold;color:#fff;background:rgba(0,0,0,.3);padding:8px 14px;border-radius:14px}
+  .thanks{margin-top:14px;font-size:14px;color:var(--muted);text-align:center;max-width:420px}
+  .thanks b{color:var(--gold)}
+
+  /* GAME */
+  #game{justify-content:flex-start}
+  #wrap{width:100%;max-width:900px;height:100%;display:flex;flex-direction:column}
+  #hud{display:flex;align-items:center;gap:6px;padding:8px 8px 0;font-weight:900}
+  #hud .pill{background:rgba(0,0,0,.4);border-radius:12px;padding:7px 10px;font-size:15px;white-space:nowrap}
+  #hud .grow{flex:1}
+  #hud .ib{border:0;background:rgba(0,0,0,.4);color:#fff;width:38px;height:36px;border-radius:10px;font-size:17px}
+  #goalBar{height:10px;border-radius:6px;background:rgba(0,0,0,.4);margin:6px 8px 0;overflow:hidden;position:relative}
+  #goalFill{height:100%;width:0;background:linear-gradient(90deg,#ffd84a,#ff6fb5);transition:width .3s}
+  #seats{flex:1 1 auto;min-height:0;display:flex;align-items:flex-end;justify-content:space-around;padding:0 4px;position:relative}
+  .seat{flex:1;max-width:220px;height:100%;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;position:relative;cursor:pointer}
+  .cust{display:flex;flex-direction:column;align-items:center;transition:transform .45s cubic-bezier(.3,1.4,.6,1),opacity .45s;transform:translateY(110%);opacity:0;position:relative}
+  .cust.in{transform:translateY(0);opacity:1}
+  .cust.happy{transform:translateY(-140%) rotate(-8deg);opacity:0;transition:transform .8s ease-in,opacity .8s ease-in}
+  .cust.sad{transform:translateY(110%);opacity:0;transition:transform .6s ease-in,opacity .6s}
+  .cust.wrong .alien{animation:shake .45s}
+  @keyframes shake{20%,60%{transform:translateX(-8px)}40%,80%{transform:translateX(8px)}}
+  .bubble{background:#fff;border-radius:18px;padding:4px 6px 6px;position:relative;box-shadow:0 4px 0 #0005;margin-bottom:6px;display:flex;flex-direction:column;align-items:center}
+  .bubble:after{content:"";position:absolute;bottom:-10px;left:50%;margin-left:-8px;border:8px solid transparent;border-top:10px solid #fff;border-bottom:0}
+  .bubble svg{width:clamp(54px,13vw,84px);height:auto;display:block}
+  .pat{width:100%;height:7px;border-radius:4px;background:#ddd;overflow:hidden;margin-top:2px}
+  .pat i{display:block;height:100%;width:100%;background:#3ed67a}
+  .alien{width:clamp(86px,22vw,150px);height:auto;display:block;margin-bottom:-6px}
+  .tag{position:absolute;bottom:4px;left:50%;transform:translateX(-50%);background:var(--gold);color:#3a1440;font-weight:900;font-size:12px;padding:2px 8px;border-radius:8px;white-space:nowrap;box-shadow:0 2px 0 #0005;z-index:2}
+  .seat.target .bubble{outline:4px solid var(--gold);outline-offset:2px}
+  #counter{height:26px;background:var(--counter);border-top:6px solid #ffffffaa;box-shadow:0 6px 0 var(--counterD) inset,0 -2px 0 #0003;position:relative;z-index:2;flex:0 0 auto}
+  #station{flex:0 0 auto;display:flex;gap:8px;padding:8px;background:var(--wood);background-image:repeating-linear-gradient(90deg,#0000 0 38px,#00000018 38px 40px)}
+  #plateBox{flex:0 0 auto;display:flex;flex-direction:column;align-items:center;justify-content:center;background:rgba(0,0,0,.25);border-radius:16px;padding:6px;width:clamp(96px,26vw,170px)}
+  #plate{width:100%;height:auto;max-height:24vh}
+  #plate.pop{animation:pop .25s}
+  @keyframes pop{50%{transform:scale(1.08)}}
+  #plateBox .hintTxt{font-size:11px;color:#fff;opacity:.85;text-align:center;font-weight:bold;min-height:14px}
+  #trash{border:0;background:#ffffff22;color:#fff;font-weight:bold;border-radius:10px;padding:5px 10px;font-size:13px;margin-top:4px}
+  #bins{flex:1;display:flex;flex-direction:column;gap:6px;min-width:0}
+  .binRow{display:flex;align-items:center;gap:6px;background:rgba(0,0,0,.22);border-radius:14px;padding:4px 6px}
+  .binRow .lab{writing-mode:vertical-rl;transform:rotate(180deg);font-size:10px;font-weight:900;letter-spacing:1px;color:#fff;opacity:.75}
+  .binRow .items{display:flex;gap:6px;flex-wrap:wrap;flex:1}
+  .ing{border:0;background:#fff;border-radius:12px;width:clamp(48px,11vw,72px);height:clamp(48px,11vw,72px);padding:3px;box-shadow:0 4px 0 #0006;position:relative;display:flex;flex-direction:column;align-items:center;justify-content:center}
+  .ing svg{width:72%;height:72%}
+  .ing span{font-size:clamp(8px,1.9vw,11px);font-weight:900;color:#3a1440;line-height:1}
+  .ing:active{transform:translateY(3px);box-shadow:0 1px 0 #0006}
+  .ing.on{background:#fff2a6}
+  .ing.hint{animation:hint .8s ease-in-out infinite;outline:4px solid #3ed67a}
+  @keyframes hint{50%{transform:translateY(-4px)}}
+  .ing.nope{animation:shake .4s}
+  .float{position:absolute;font-weight:900;font-size:26px;color:var(--gold);text-shadow:0 3px 0 #000;pointer-events:none;animation:up 1.1s ease-out forwards;z-index:9;white-space:nowrap}
+  .float.bad{color:#ff9a9a;font-size:18px}
+  @keyframes up{to{transform:translateY(-70px);opacity:0}}
+  #toast{position:fixed;left:50%;top:28%;transform:translate(-50%,-50%) scale(.6);opacity:0;background:rgba(20,6,50,.88);border:3px solid var(--gold);color:#fff;font-weight:900;font-size:22px;padding:12px 20px;border-radius:18px;text-align:center;pointer-events:none;transition:.3s;z-index:20;max-width:90%}
+  #toast.show{opacity:1;transform:translate(-50%,-50%) scale(1)}
+  #combo{position:absolute;right:10px;top:6px;font-weight:900;color:var(--gold);font-size:18px;text-shadow:0 2px 0 #000;opacity:0;transition:.2s}
+
+  /* OVERLAYS */
+  .ov{position:fixed;inset:0;background:rgba(10,3,30,.75);display:none;align-items:center;justify-content:center;z-index:30;padding:12px}
+  .ov.show{display:flex}
+  .ov .panel{text-align:center;max-height:94vh;overflow:auto}
+  .ov h2{margin:0 0 8px;font-size:30px;color:var(--gold)}
+  .bigStars{font-size:46px;letter-spacing:6px;margin:4px 0}
+  .bigStars .off{filter:grayscale(1);opacity:.3}
+  .resLine{display:flex;justify-content:space-between;font-weight:bold;font-size:17px;padding:4px 6px;border-bottom:1px dashed #ffffff33}
+  .shopItem{display:flex;align-items:center;gap:10px;background:rgba(255,255,255,.08);border-radius:14px;padding:8px 10px;margin:6px 0;text-align:left}
+  .shopItem .ic{font-size:34px;width:46px;text-align:center}
+  .shopItem .tx{flex:1}
+  .shopItem .tx b{display:block;font-size:16px}
+  .shopItem .tx small{color:var(--muted)}
+  .shopItem button{border:0;border-radius:12px;padding:8px 12px;font-weight:900;background:var(--gold);color:#3a1440;min-width:84px;box-shadow:0 3px 0 #b48a00}
+  .shopItem button:disabled{background:#777;color:#ddd;box-shadow:none}
+  .lvl{display:inline-flex;gap:3px;margin-top:3px}
+  .lvl i{width:16px;height:6px;border-radius:3px;background:#ffffff33}
+  .lvl i.on{background:var(--gold)}
+  .how{text-align:left;font-size:16px;line-height:1.45}
+  .how li{margin:6px 0}
+  .newItems{display:flex;gap:10px;justify-content:center;margin:8px 0}
+  .newItems .ing{cursor:default}
+</style>
+</head>
+<body>
+<div class="stars"></div><div class="planet p1"></div><div class="planet p2"></div>
+
+<!-- MENU -->
+<div id="menu" class="screen show">
+  <a class="back" href="/">⬅ All games</a>
+  <div id="chefBox"></div>
+  <h1>COSMIC<br>CUPCAKE CAFÉ</h1>
+  <p class="sub">Chef Bloop's café is open on the Moon! Hungry aliens are flying in. Bake the exact cupcake they want before they get too hungry to wait.</p>
+  <div id="daySel"><button class="arr" id="dPrev">◀</button><button class="big" id="playBtn">▶ Play Day 1</button><button class="arr" id="dNext">▶</button></div>
+  <div class="row">
+    <button class="big alt small" id="shopBtn">🛒 Space Shop</button>
+    <button class="big alt small" id="howBtn">❓ How to play</button>
+    <button class="big alt small" id="soundBtn">🔊 Sound on</button>
+    <button class="big alt small" id="hintBtn">🔍 Hints: auto</button>
+  </div>
+  <div id="menuStats"></div>
+  <div class="thanks">Watch out for our <b>VIP taste testers</b> <b>Alessandro</b>, <b>Chiara</b> and <b>Chris</b>! They wear golden crowns and pay double. Thanks for helping make FunKid Games! 👑</div>
+</div>
+
+<!-- GAME -->
+<div id="game" class="screen">
+  <div id="wrap">
+    <div id="hud">
+      <button class="ib" id="pauseBtn" aria-label="Pause">⏸</button>
+      <span class="pill" id="hDay">Day 1</span>
+      <span class="grow"></span>
+      <span class="pill" id="hCoins">⭐ 0 / 60</span>
+      <span class="pill" id="hTime">⏱ 75</span>
+    </div>
+    <div id="goalBar"><div id="goalFill"></div></div>
+    <div id="seats"><div id="combo"></div></div>
+    <div id="counter"></div>
+    <div id="station">
+      <div id="plateBox">
+        <svg id="plate" viewBox="0 0 100 110"></svg>
+        <div class="hintTxt" id="hintTxt">Tap a cake!</div>
+        <button id="trash">🗑️ Start over</button>
+      </div>
+      <div id="bins">
+        <div class="binRow"><span class="lab">CAKE</span><div class="items" id="binCake"></div></div>
+        <div class="binRow"><span class="lab">FROSTING</span><div class="items" id="binFrost"></div></div>
+        <div class="binRow" id="topRow"><span class="lab">TOPPING</span><div class="items" id="binTop"></div></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div id="toast"></div>
+
+<div class="ov" id="ovPause"><div class="panel">
+  <h2>Paused</h2>
+  <button class="big" id="resumeBtn">▶ Keep baking</button><br>
+  <button class="big alt small" id="quitBtn">🏠 Back to menu</button>
+</div></div>
+
+<div class="ov" id="ovStart"><div class="panel">
+  <h2 id="stTitle">Day 1</h2>
+  <div id="stBody"></div>
+  <button class="big" id="goBtn">Open the café! 🚀</button>
+</div></div>
+
+<div class="ov" id="ovEnd"><div class="panel">
+  <h2 id="endTitle">Closing time!</h2>
+  <div class="bigStars" id="endStars"></div>
+  <div id="endLines"></div>
+  <div class="row" style="margin-top:10px">
+    <button class="big" id="nextBtn">Next day ▶</button>
+    <button class="big alt small" id="retryBtn">🔁 Play again</button>
+    <button class="big alt small" id="endShopBtn">🛒 Shop</button>
+    <button class="big alt small" id="endMenuBtn">🏠 Menu</button>
+  </div>
+</div></div>
+
+<div class="ov" id="ovShop"><div class="panel">
+  <h2>🛒 Space Shop</h2>
+  <div style="font-weight:900;font-size:18px">You have ⭐ <span id="shopCoins">0</span> stardust</div>
+  <div id="shopList"></div>
+  <button class="big" id="shopClose">Done</button>
+</div></div>
+
+<div class="ov" id="ovHow"><div class="panel">
+  <h2>How to play</h2>
+  <ol class="how">
+    <li>Aliens fly up to the counter. The bubble shows the cupcake they want.</li>
+    <li>Build it on your plate: tap a <b>cake</b>, then a <b>frosting</b>, then any <b>toppings</b>. Tap a topping again to take it off.</li>
+    <li>Tap the alien to serve it! Right cupcake = stardust ⭐. Faster = bigger tip.</li>
+    <li>The green bar is how long they can wait. Serve in a row for a combo!</li>
+    <li>Reach the stardust goal before closing time to unlock the next day. Spend stardust in the Space Shop.</li>
+    <li>Golden crown customers are VIPs (Alessandro, Chiara and Chris). They pay double!</li>
+  </ol>
+  <button class="big" id="howClose">Got it!</button>
+</div></div>
+
+<script>
+(() => {
+'use strict';
+const $ = s => document.querySelector(s);
+const KEY = 'cosmicCupcake';
+
+/* ---------- DATA ---------- */
+const CAKES = {
+  vanilla:{name:'Vanilla', liner:'#ffe08a', top:'#fff1c2', d:'#d6a83a'},
+  choco:{name:'Choco', liner:'#8a5232', top:'#a8693f', d:'#5a2f18'},
+  berry:{name:'Berry', liner:'#ff5a7a', top:'#ff9db0', d:'#c42a4a'},
+  galaxy:{name:'Galaxy', liner:'#4b3bc4', top:'#7a6bff', d:'#261a7a'}
+};
+const FROSTS = {
+  pink:{name:'Pink', c:'#ff9ad5', d:'#e05aa8'},
+  blue:{name:'Sky', c:'#8fd8ff', d:'#3a9ad0'},
+  mint:{name:'Mint', c:'#9ff2c4', d:'#3cbf82'},
+  grape:{name:'Grape', c:'#c49bff', d:'#8a55e0'},
+  cream:{name:'Cream', c:'#fffaf0', d:'#d9cfb8'}
+};
+const TOPS = {
+  sprinkles:{name:'Sprinkles'}, cherry:{name:'Cherry'}, star:{name:'Star'}, moon:{name:'Moon'}, comet:{name:'Gummy'}
+};
+const CAKE_ORDER = ['vanilla','choco','berry','galaxy'];
+const FROST_ORDER = ['pink','blue','mint','grape','cream'];
+const TOP_ORDER = ['sprinkles','cherry','star','moon','comet'];
+const VIPS = [
+  {name:'Alessandro', color:'#ff9f43', eyes:2, ant:1},
+  {name:'Chiara', color:'#ff7ad9', eyes:3, ant:2},
+  {name:'Chris', color:'#4fd1ff', eyes:1, ant:1}
+];
+const ALIEN_COLORS = ['#6ee07a','#57c7ff','#b98bff','#ff8a8a','#ffd15c','#5ee6c9','#ff9fd6','#9fe35a','#ffa94d'];
+
+function dayCfg(d){
+  const e = Math.min(d,10);
+  return {
+    cakes: e>=5?4: e>=2?3:2,
+    frosts: e>=7?5: e>=3?4:3,
+    tops: e>=8?5: e>=5?4: e>=3?3: e>=2?2:0,
+    maxTops: e>=4?2: e>=2?1:0,
+    gap: Math.max(2.4, 6.6 - e*0.45),
+    patience: Math.max(15, 33 - e*1.7) * (d>10?Math.max(.75,1-(d-10)*.03):1),
+    goal: 50 + d*30,
+    vip: d>=2?0.13:0
+  };
+}
+
+/* ---------- SAVE ---------- */
+let S = {best:1, sel:1, coins:0, up:{chairs:0,tips:0,clock:0,helper:0}, themes:['nebula'], theme:'nebula', stars:{}, sound:true, hints:'auto'};
+try{ const raw = JSON.parse(localStorage.getItem(KEY)||'null'); if(raw) S = Object.assign(S, raw, {up:Object.assign(S.up, raw.up||{})}); }catch(e){}
+const save = () => { try{ localStorage.setItem(KEY, JSON.stringify(S)); }catch(e){} };
+
+/* ---------- SOUND ---------- */
+let AC = null;
+function tone(f, dur=.12, type='sine', vol=.15, slide=0, delay=0){
+  if(!S.sound) return;
+  try{
+    AC = AC || new (window.AudioContext||window.webkitAudioContext)();
+    const t = AC.currentTime + delay, o = AC.createOscillator(), g = AC.createGain();
+    o.type = type; o.frequency.setValueAtTime(f,t);
+    if(slide) o.frequency.exponentialRampToValueAtTime(Math.max(40,f+slide), t+dur);
+    g.gain.setValueAtTime(vol,t); g.gain.exponentialRampToValueAtTime(.001,t+dur);
+    o.connect(g); g.connect(AC.destination); o.start(t); o.stop(t+dur+.02);
+  }catch(e){}
+}
+const sfx = {
+  tap:()=>tone(660,.07,'triangle',.12,120),
+  plop:()=>tone(300,.12,'sine',.18,-150),
+  nope:()=>{tone(220,.12,'square',.06);tone(180,.15,'square',.06,0,.1)},
+  serve:()=>{[523,659,784,1047].forEach((f,i)=>tone(f,.14,'triangle',.13,0,i*.07))},
+  vip:()=>{[784,988,1175,1568,1175,1568].forEach((f,i)=>tone(f,.12,'triangle',.12,0,i*.07))},
+  wrong:()=>{tone(330,.15,'sawtooth',.06,-120);tone(260,.2,'sawtooth',.06,-100,.13)},
+  arrive:()=>tone(500,.25,'sine',.08,500),
+  leave:()=>tone(400,.3,'sine',.07,-250),
+  bell:()=>{tone(1320,.5,'sine',.12);tone(1760,.5,'sine',.06,0,.02)},
+  buy:()=>{[600,900,1200].forEach((f,i)=>tone(f,.1,'square',.06,0,i*.06))},
+  win:()=>{[523,659,784,659,784,1047].forEach((f,i)=>tone(f,.2,'triangle',.14,0,i*.12))}
+};
+
+/* ---------- ART ---------- */
+const SPR = [[30,52,20],[42,44,-30],[58,42,40],[70,50,-10],[36,60,60],[64,58,-50],[50,52,10],[46,36,70],[56,32,-20],[26,58,-60],[74,58,30],[50,62,-40]];
+const SPRC = ['#ff4f6d','#ffd84a','#4fd1ff','#7cf07a','#b98bff','#ff9f43'];
+function topArt(t, x, y, s=1){
+  const tr = `transform="translate(${x},${y}) scale(${s})"`;
+  if(t==='cherry') return `<g ${tr}><path d="M0,-6 Q3,-15 9,-17" stroke="#3a8a2a" stroke-width="2.2" fill="none"/><circle r="7.5" fill="#e8213f"/><circle cx="-2.5" cy="-2.5" r="2.2" fill="#fff" opacity=".7"/></g>`;
+  if(t==='star') return `<g ${tr}><path d="M0,-10 L2.9,-3.6 9.5,-3.1 4.5,1.4 6,8 0,4.6 -6,8 -4.5,1.4 -9.5,-3.1 -2.9,-3.6Z" fill="#ffd84a" stroke="#d19a00" stroke-width="1.4" stroke-linejoin="round"/></g>`;
+  if(t==='moon') return `<g ${tr}><path d="M2,-9 A9,9 0 1,0 2,9 A7,7.5 0 1,1 2,-9Z" fill="#ffe9a8" stroke="#c98a00" stroke-width="1.6"/></g>`;
+  if(t==='comet') return `<g ${tr}><path d="M-8,4 Q-8,-8 0,-8 Q8,-8 8,4 Z" fill="#3ed67a" stroke="#1f8a4a" stroke-width="1.4"/><circle cx="-3" cy="-2" r="1.3" fill="#123"/><circle cx="3" cy="-2" r="1.3" fill="#123"/><path d="M-3,1.5 Q0,4 3,1.5" stroke="#123" stroke-width="1" fill="none"/><circle cx="-4" cy="-10" r="2" fill="#3ed67a"/><circle cx="4" cy="-10" r="2" fill="#3ed67a"/></g>`;
+  if(t==='sprinkles') return `<g ${tr}>${[[-6,-3,30],[4,-5,-40],[-1,4,70],[7,3,10],[-7,5,-20]].map((p,i)=>`<rect x="${p[0]-3}" y="${p[1]-1.2}" width="6" height="2.4" rx="1.2" fill="${SPRC[i]}" transform="rotate(${p[2]} ${p[0]} ${p[1]})"/>`).join('')}</g>`;
+  return '';
+}
+function cupcake(spec, ghost){
+  let s = '';
+  s += `<ellipse cx="50" cy="103" rx="40" ry="6" fill="#000" opacity=".15"/>`;
+  if(!spec.cake){
+    if(ghost) s += `<path d="M24,64 L76,64 L69,100 L31,100Z" fill="none" stroke="#fff" stroke-opacity=".5" stroke-width="2.5" stroke-dasharray="5 4"/><text x="50" y="88" text-anchor="middle" font-size="22" font-weight="900" fill="#fff" fill-opacity=".6">?</text>`;
+    return s;
+  }
+  const c = CAKES[spec.cake];
+  s += `<path d="M20,62 Q50,28 80,62 Z" fill="${c.top}" stroke="${c.d}" stroke-width="2"/>`;
+  s += `<path d="M22,62 L78,62 L70,100 L30,100Z" fill="${c.liner}" stroke="${c.d}" stroke-width="2.2" stroke-linejoin="round"/>`;
+  for(let i=0;i<5;i++){ const x=31+i*9.5; s+=`<path d="M${x},63 L${x+ (i-2)*1.6},99" stroke="${c.d}" stroke-opacity=".45" stroke-width="2"/>`; }
+  if(spec.frost){
+    const f = FROSTS[spec.frost];
+    s += `<g stroke="${f.d}" stroke-width="2" fill="${f.c}">
+      <ellipse cx="50" cy="59" rx="33" ry="11"/>
+      <ellipse cx="50" cy="47" rx="26" ry="10.5"/>
+      <ellipse cx="50" cy="36" rx="17" ry="8.5"/>
+      <path d="M40,32 Q50,12 58,30 Z"/></g>
+      <path d="M30,55 Q38,51 46,53" stroke="#fff" stroke-opacity=".7" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+      <path d="M38,44 Q44,41 50,42" stroke="#fff" stroke-opacity=".7" stroke-width="2.5" fill="none" stroke-linecap="round"/>`;
+  }
+  const tops = (spec.tops||[]).slice();
+  if(tops.includes('sprinkles')){
+    s += SPR.map((p,i)=>`<rect x="${p[0]-3}" y="${p[1]-1.3}" width="6.5" height="2.6" rx="1.3" fill="${SPRC[i%6]}" transform="rotate(${p[2]} ${p[0]} ${p[1]})"/>`).join('');
+  }
+  const big = tops.filter(t=>t!=='sprinkles');
+  if(big.length===1) s += topArt(big[0],50,22,1.15);
+  if(big.length===2){ s += topArt(big[0],37,30,1.05); s += topArt(big[1],63,30,1.05); }
+  return s;
+}
+function alienSVG(a, mood){
+  const col = a.color, ex = a.eyes===1?[60]: a.eyes===2?[46,74]:[40,60,80];
+  let s = '';
+  // antennae
+  if(a.ant===1) s += `<path d="M48,28 Q40,10 34,8" stroke="${col}" stroke-width="5" fill="none" stroke-linecap="round"/><path d="M72,28 Q80,10 86,8" stroke="${col}" stroke-width="5" fill="none" stroke-linecap="round"/><circle cx="34" cy="8" r="6" fill="#fff59a"/><circle cx="86" cy="8" r="6" fill="#fff59a"/>`;
+  else if(a.ant===2) s += `<path d="M60,24 L60,6" stroke="${col}" stroke-width="5" stroke-linecap="round"/><circle cx="60" cy="6" r="7" fill="#ff8ad8"/>`;
+  else s += `<path d="M30,36 L18,20 L40,30Z M90,36 L102,20 L80,30Z" fill="${col}"/>`;
+  // body
+  s += `<path d="M14,130 Q10,80 22,60 Q34,24 60,24 Q86,24 98,60 Q110,80 106,130Z" fill="${col}" stroke="#0003" stroke-width="3"/>`;
+  s += `<ellipse cx="42" cy="44" rx="10" ry="6" fill="#fff" opacity=".25" transform="rotate(-25 42 44)"/>`;
+  if(a.spots) s += `<circle cx="86" cy="80" r="6" fill="#0002"/><circle cx="28" cy="92" r="4" fill="#0002"/><circle cx="92" cy="100" r="3" fill="#0002"/>`;
+  // eyes
+  const er = a.eyes===1?14: a.eyes===2?11:9;
+  ex.forEach(x=>{
+    s += `<circle cx="${x}" cy="58" r="${er}" fill="#fff" stroke="#0003" stroke-width="2"/>`;
+    const py = mood==='hungry'? 62 : 59;
+    s += `<circle cx="${x+1}" cy="${py}" r="${er*.5}" fill="#1b1036"/><circle cx="${x+3}" cy="${py-3}" r="${er*.18}" fill="#fff"/>`;
+    if(mood==='hungry') s += `<path d="M${x-er},${46} L${x+er},${50}" stroke="#0006" stroke-width="3" stroke-linecap="round"/>`;
+  });
+  // cheeks + mouth
+  s += `<ellipse cx="30" cy="80" rx="7" ry="4" fill="#ff6f9a" opacity=".45"/><ellipse cx="90" cy="80" rx="7" ry="4" fill="#ff6f9a" opacity=".45"/>`;
+  if(mood==='happy' || mood==='yum') s += `<path d="M44,80 Q60,${mood==='yum'?102:96} 76,80 Q60,88 44,80Z" fill="#5a1030"/><path d="M52,90 Q60,96 68,90 Q60,88 52,90Z" fill="#ff7aa0"/>`;
+  else if(mood==='ok') s += `<path d="M48,86 Q60,90 72,86" stroke="#5a1030" stroke-width="4" fill="none" stroke-linecap="round"/>`;
+  else if(mood==='hungry') s += `<ellipse cx="60" cy="88" rx="8" ry="6" fill="#5a1030"/>`;
+  else s += `<path d="M48,90 Q60,82 72,90" stroke="#5a1030" stroke-width="4" fill="none" stroke-linecap="round"/>`;
+  if(a.vip) s += `<path d="M38,30 L42,10 L52,22 L60,4 L68,22 L78,10 L82,30Z" fill="#ffd84a" stroke="#b48a00" stroke-width="2.5" stroke-linejoin="round"/><circle cx="60" cy="18" r="3" fill="#ff4f6d"/>`;
+  return `<svg class="alien" viewBox="0 -6 120 136">${s}</svg>`;
+}
+function chefSVG(){
+  return `<svg viewBox="0 0 150 150" width="150" height="150">
+    <ellipse cx="75" cy="142" rx="44" ry="6" fill="#000" opacity=".25"/>
+    <path d="M30,140 Q24,90 40,70 Q55,50 75,50 Q95,50 110,70 Q126,90 120,140Z" fill="#7cf07a" stroke="#2f9a4a" stroke-width="3"/>
+    <path d="M44,140 L44,104 Q75,94 106,104 L106,140Z" fill="#fff" stroke="#ddd" stroke-width="2"/>
+    <circle cx="75" cy="118" r="5" fill="#ff6fb5"/>
+    <path d="M42,58 Q32,22 56,26 Q62,8 80,14 Q100,6 104,28 Q124,30 108,58Z" fill="#fff" stroke="#ccc" stroke-width="3"/>
+    <rect x="44" y="52" width="62" height="12" rx="4" fill="#fff" stroke="#ccc" stroke-width="3"/>
+    <circle cx="58" cy="80" r="10" fill="#fff"/><circle cx="92" cy="80" r="10" fill="#fff"/><circle cx="75" cy="72" r="7" fill="#fff"/>
+    <circle cx="60" cy="81" r="5" fill="#1b1036"/><circle cx="94" cy="81" r="5" fill="#1b1036"/><circle cx="76" cy="73" r="3.5" fill="#1b1036"/>
+    <path d="M60,96 Q75,110 90,96" stroke="#1b5a2a" stroke-width="4" fill="none" stroke-linecap="round"/>
+    <ellipse cx="50" cy="96" rx="6" ry="3.5" fill="#ff6f9a" opacity=".5"/><ellipse cx="100" cy="96" rx="6" ry="3.5" fill="#ff6f9a" opacity=".5"/>
+    <g transform="translate(118,96) scale(.42)">${cupcake({cake:'berry',frost:'pink',tops:['cherry','sprinkles']})}</g>
+  </svg>`;
+}
+function ingIcon(kind, id){
+  if(kind==='cake'){ const c=CAKES[id]; return `<svg viewBox="15 25 70 80"><path d="M20,62 Q50,28 80,62 Z" fill="${c.top}" stroke="${c.d}" stroke-width="2.5"/><path d="M22,62 L78,62 L70,100 L30,100Z" fill="${c.liner}" stroke="${c.d}" stroke-width="2.5"/></svg>`; }
+  if(kind==='frost'){ const f=FROSTS[id]; return `<svg viewBox="12 10 76 62"><g stroke="${f.d}" stroke-width="2.5" fill="${f.c}"><ellipse cx="50" cy="59" rx="33" ry="11"/><ellipse cx="50" cy="47" rx="26" ry="10.5"/><ellipse cx="50" cy="36" rx="17" ry="8.5"/><path d="M40,32 Q50,12 58,30 Z"/></g></svg>`; }
+  return `<svg viewBox="-13 -19 26 30">${topArt(id,0,0,1)}</svg>`;
+}
+
+/* ---------- STATE ---------- */
+let G = null, raf = 0, last = 0;
+const seatsEl = $('#seats');
+
+function show(id){ document.querySelectorAll('.screen').forEach(e=>e.classList.toggle('show', e.id===id)); }
+function ov(id, on){ $('#'+id).classList.toggle('show', on); }
+function toast(t, ms=1400){ const e=$('#toast'); e.innerHTML=t; e.classList.add('show'); clearTimeout(toast.t); toast.t=setTimeout(()=>e.classList.remove('show'),ms); }
+function applyTheme(){ document.body.className = S.theme==='nebula'?'':'th-'+S.theme; }
+const rnd = a => a[Math.floor(Math.random()*a.length)];
+const hintsOn = () => S.hints==='on' || (S.hints==='auto' && G && G.day<=2);
+const totalStars = () => Object.values(S.stars).reduce((a,b)=>a+b,0);
+
+/* ---------- MENU ---------- */
+function refreshMenu(){
+  applyTheme();
+  S.sel = Math.min(Math.max(1,S.sel), S.best);
+  $('#playBtn').textContent = '▶ Play Day ' + S.sel;
+  $('#dPrev').disabled = S.sel<=1; $('#dNext').disabled = S.sel>=S.best;
+  $('#soundBtn').textContent = S.sound?'🔊 Sound on':'🔇 Sound off';
+  $('#hintBtn').textContent = '🔍 Hints: ' + S.hints;
+  const st = S.stars[S.sel]||0;
+  $('#menuStats').innerHTML = `⭐ ${S.coins} stardust &nbsp;·&nbsp; 🌟 ${totalStars()} stars &nbsp;·&nbsp; Day ${S.sel}: ${'★'.repeat(st)}${'☆'.repeat(3-st)}`;
+}
+$('#chefBox').innerHTML = chefSVG();
+$('#dPrev').onclick = ()=>{ S.sel--; sfx.tap(); refreshMenu(); };
+$('#dNext').onclick = ()=>{ S.sel++; sfx.tap(); refreshMenu(); };
+$('#soundBtn').onclick = ()=>{ S.sound=!S.sound; save(); refreshMenu(); sfx.tap(); };
+$('#hintBtn').onclick = ()=>{ S.hints = S.hints==='auto'?'on': S.hints==='on'?'off':'auto'; save(); refreshMenu(); sfx.tap(); };
+$('#howBtn').onclick = ()=>{ sfx.tap(); ov('ovHow',true); };
+$('#howClose').onclick = ()=>ov('ovHow',false);
+$('#playBtn').onclick = ()=>{ sfx.tap(); prepDay(S.sel); };
+$('#shopBtn').onclick = ()=>openShop();
+
+/* ---------- SHOP ---------- */
+const UPS = [
+  {id:'chairs', ic:'🛋️', name:'Comfy Space Chairs', desc:'Aliens wait 15% longer per level.', cost:[60,140,260]},
+  {id:'tips', ic:'🫙', name:'Twinkle Tip Jar', desc:'Tips are 25% bigger per level.', cost:[50,120,240]},
+  {id:'clock', ic:'⏰', name:'Slow-Mo Moon Clock', desc:'+6 seconds every day per level.', cost:[80,160,300]},
+  {id:'helper', ic:'🤖', name:'Bleep the Robot', desc:'Bleep puts the right cake on your plate when an alien arrives and your plate is empty.', cost:[220]}
+];
+const THEMES = [
+  {id:'nebula', ic:'💜', name:'Nebula Purple', cost:0},
+  {id:'mint', ic:'🌙', name:'Mint Moon', cost:120},
+  {id:'mars', ic:'🔴', name:'Sunset Mars', cost:200},
+  {id:'sea', ic:'🌊', name:'Star Sea Planet', cost:300},
+  {id:'candy', ic:'🍬', name:'Candy Comet', cost:400}
+];
+function openShop(){
+  sfx.tap();
+  $('#shopCoins').textContent = S.coins;
+  let h = '<h3 style="margin:10px 0 2px">Upgrades</h3>';
+  UPS.forEach(u=>{
+    const lv = S.up[u.id]||0, max = u.cost.length, cost = u.cost[lv];
+    h += `<div class="shopItem"><div class="ic">${u.ic}</div><div class="tx"><b>${u.name}</b><small>${u.desc}</small><br><span class="lvl">${u.cost.map((_,i)=>`<i class="${i<lv?'on':''}"></i>`).join('')}</span></div>
+      ${lv>=max?'<button disabled>MAX</button>':`<button data-up="${u.id}" ${S.coins<cost?'disabled':''}>⭐ ${cost}</button>`}</div>`;
+  });
+  h += '<h3 style="margin:12px 0 2px">Café colors</h3>';
+  THEMES.forEach(t=>{
+    const own = S.themes.includes(t.id), on = S.theme===t.id;
+    h += `<div class="shopItem"><div class="ic">${t.ic}</div><div class="tx"><b>${t.name}</b><small>${on?'Using now':own?'You own this':'New café colors'}</small></div>
+      ${on?'<button disabled>✔ On</button>': own?`<button data-th="${t.id}">Use</button>`:`<button data-buyth="${t.id}" ${S.coins<t.cost?'disabled':''}>⭐ ${t.cost}</button>`}</div>`;
+  });
+  $('#shopList').innerHTML = h;
+  ov('ovShop',true);
+}
+$('#shopList').onclick = e=>{
+  const b = e.target.closest('button'); if(!b||b.disabled) return;
+  if(b.dataset.up){ const u=UPS.find(x=>x.id===b.dataset.up), lv=S.up[u.id]||0, c=u.cost[lv]; if(S.coins>=c){ S.coins-=c; S.up[u.id]=lv+1; sfx.buy(); } }
+  if(b.dataset.buyth){ const t=THEMES.find(x=>x.id===b.dataset.buyth); if(S.coins>=t.cost){ S.coins-=t.cost; S.themes.push(t.id); S.theme=t.id; sfx.buy(); } }
+  if(b.dataset.th){ S.theme=b.dataset.th; sfx.tap(); }
+  save(); applyTheme(); openShop();
+};
+$('#shopClose').onclick = ()=>{ ov('ovShop',false); refreshMenu(); if($('#ovEnd').classList.contains('show')) showEndButtons(); };
+
+/* ---------- DAY SETUP ---------- */
+function unlocked(d){
+  const c = dayCfg(d);
+  return {cakes:CAKE_ORDER.slice(0,c.cakes), frosts:FROST_ORDER.slice(0,c.frosts), tops:TOP_ORDER.slice(0,c.tops)};
+}
+function prepDay(d){
+  const u = unlocked(d), p = d>1?unlocked(d-1):{cakes:[],frosts:[],tops:[]};
+  const fresh = [...u.cakes.filter(x=>!p.cakes.includes(x)).map(x=>['cake',x,CAKES[x].name+' cake']),
+                 ...u.frosts.filter(x=>!p.frosts.includes(x)).map(x=>['frost',x,FROSTS[x].name+' frosting']),
+                 ...u.tops.filter(x=>!p.tops.includes(x)).map(x=>['top',x,TOPS[x].name])];
+  const c = dayCfg(d);
+  $('#stTitle').textContent = 'Day ' + d + (d>10?' (Endless!)':'');
+  let b = `<p style="font-size:18px;font-weight:bold">Goal: earn <span style="color:var(--gold)">⭐ ${c.goal}</span> stardust before closing time.</p>`;
+  if(d===1) b += `<p>Tap a <b>cake</b>, then a <b>frosting</b>, then tap the <b>alien</b> to serve!</p>`;
+  if(fresh.length && d>1) b += `<p style="font-weight:900;color:var(--gold)">NEW on the menu!</p><div class="newItems">${fresh.map(f=>`<div style="text-align:center"><div class="ing">${ingIcon(f[0],f[1])}</div><small>${f[2]}</small></div>`).join('')}</div>`;
+  if(d===2) b += `<p>👑 VIP aliens may visit from today. They pay double!</p>`;
+  if(d===4) b += `<p>Some aliens now want <b>two toppings</b>!</p>`;
+  if(d===11) b += `<p>You finished all 10 days! Now the café is open forever. How far can you go?</p>`;
+  $('#stBody').innerHTML = b;
+  G = {day:d, cfg:c, u, time:0, left:75+(S.up.clock||0)*6, coins:0, served:0, missed:0, wrong:0, combo:0, bestCombo:0, vipServed:0,
+       spawn:0.6, seats:[null,null,null], plate:{cake:null,frost:null,tops:[]}, paused:true, over:false, nextId:1, recentVip:-99};
+  buildSeats(); buildBins(); drawPlate(); updHud(); showCombo();
+  show('game'); ov('ovStart',true);
+}
+$('#goBtn').onclick = ()=>{ ov('ovStart',false); sfx.bell(); G.paused=false; last=performance.now(); cancelAnimationFrame(raf); raf=requestAnimationFrame(loop); };
+
+function buildSeats(){
+  seatsEl.querySelectorAll('.seat').forEach(e=>e.remove());
+  G.seats.forEach((_,i)=>{
+    const s = document.createElement('div'); s.className='seat'; s.dataset.i=i;
+    s.addEventListener('pointerdown', ()=>serve(i));
+    seatsEl.appendChild(s);
+  });
+}
+function buildBins(){
+  const mk = (kind, list, names) => list.map(id=>`<button class="ing" data-k="${kind}" data-id="${id}">${ingIcon(kind,id)}<span>${names[id].name}</span></button>`).join('');
+  $('#binCake').innerHTML = mk('cake',G.u.cakes,CAKES);
+  $('#binFrost').innerHTML = mk('frost',G.u.frosts,FROSTS);
+  $('#binTop').innerHTML = mk('top',G.u.tops,TOPS);
+  $('#topRow').style.display = G.u.tops.length?'':'none';
+}
+$('#bins').addEventListener('pointerdown', e=>{
+  const b = e.target.closest('.ing'); if(!b||!G||G.paused||G.over) return;
+  e.preventDefault();
+  const k=b.dataset.k, id=b.dataset.id, p=G.plate;
+  if(k==='cake'){ p.cake=id; sfx.plop(); }
+  else if(k==='frost'){ if(!p.cake) return nope(b,'Cake first!'); p.frost=id; sfx.plop(); }
+  else { if(!p.frost) return nope(b,'Frosting first!');
+    const i=p.tops.indexOf(id);
+    if(i>=0){ p.tops.splice(i,1); sfx.tap(); }
+    else if(p.tops.length>=2) return nope(b,'2 toppings max!');
+    else { p.tops.push(id); sfx.plop(); } }
+  drawPlate(true);
+});
+function nope(b,msg){ sfx.nope(); b.classList.remove('nope'); void b.offsetWidth; b.classList.add('nope'); $('#hintTxt').textContent=msg; }
+$('#trash').onclick = ()=>{ if(!G||G.paused) return; G.plate={cake:null,frost:null,tops:[]}; sfx.leave(); drawPlate(); };
+
+function drawPlate(pop){
+  const p = G.plate, el=$('#plate');
+  el.innerHTML = cupcake(p, true);
+  if(pop){ el.classList.remove('pop'); void el.getBoundingClientRect(); el.classList.add('pop'); }
+  document.querySelectorAll('.ing').forEach(b=>{
+    const k=b.dataset.k,id=b.dataset.id;
+    b.classList.toggle('on', (k==='cake'&&p.cake===id)||(k==='frost'&&p.frost===id)||(k==='top'&&p.tops.includes(id)));
+  });
+  $('#hintTxt').textContent = !p.cake?'Tap a cake!': !p.frost?'Now a frosting!': 'Tap an alien to serve!';
+  updHints();
+}
+
+/* ---------- CUSTOMERS ---------- */
+function makeOrder(){
+  const u=G.u, c=G.cfg;
+  let n = 0;
+  if(c.maxTops>=1) n = Math.random()<0.75?1:0;
+  if(c.maxTops>=2 && n===1 && Math.random()<0.45) n = 2;
+  const tops=[]; const pool=u.tops.slice();
+  while(tops.length<n && pool.length){ tops.push(pool.splice(Math.floor(Math.random()*pool.length),1)[0]); }
+  return {cake:rnd(u.cakes), frost:rnd(u.frosts), tops};
+}
+function spawn(){
+  const free = G.seats.map((s,i)=>s?null:i).filter(i=>i!==null);
+  if(!free.length) return;
+  const i = rnd(free);
+  let a;
+  if(Math.random()<G.cfg.vip && G.time-G.recentVip>12){
+    const v = rnd(VIPS); a = Object.assign({vip:true, spots:false}, v); G.recentVip=G.time;
+  } else a = {color:rnd(ALIEN_COLORS), eyes:1+Math.floor(Math.random()*3), ant:Math.floor(Math.random()*3), spots:Math.random()<.4};
+  const pat = G.cfg.patience*(1+0.15*(S.up.chairs||0))*(a.vip?1.15:1);
+  const cu = {id:G.nextId++, a, order:makeOrder(), pat, max:pat, el:null, mood:'happy', leaving:false};
+  G.seats[i]=cu;
+  const seat = seatsEl.querySelector(`.seat[data-i="${i}"]`);
+  const el = document.createElement('div'); el.className='cust';
+  el.innerHTML = `<div class="bubble"><svg viewBox="0 6 100 104">${cupcake(cu.order)}</svg><div class="pat"><i></i></div></div>${alienSVG(a,'happy')}${a.vip?`<div class="tag">👑 ${a.name}</div>`:''}`;
+  seat.innerHTML=''; seat.appendChild(el); cu.el=el;
+  requestAnimationFrame(()=>requestAnimationFrame(()=>el.classList.add('in')));
+  sfx.arrive();
+  if(a.vip) toast(`👑 VIP ${a.name} is here! Double stardust!`,1500);
+  if(S.up.helper && !G.plate.cake){ G.plate.cake = cu.order.cake; drawPlate(true); }
+  updHints();
+}
+function setMood(cu, m){
+  if(cu.mood===m) return; cu.mood=m;
+  const old = cu.el.querySelector('.alien'); old.outerHTML = alienSVG(cu.a, m);
+}
+function sameOrder(p,o){
+  return p.cake===o.cake && p.frost===o.frost && p.tops.slice().sort().join()===o.tops.slice().sort().join();
+}
+function floatText(i, txt, bad){
+  const seat = seatsEl.querySelector(`.seat[data-i="${i}"]`); const r = seat.getBoundingClientRect(), pr = seatsEl.getBoundingClientRect();
+  const f = document.createElement('div'); f.className='float'+(bad?' bad':''); f.textContent=txt;
+  f.style.left = (r.left-pr.left+r.width/2-30)+'px'; f.style.top = (r.height*.35)+'px';
+  seatsEl.appendChild(f); setTimeout(()=>f.remove(),1150);
+}
+function serve(i){
+  if(!G||G.paused||G.over) return;
+  const cu = G.seats[i]; if(!cu||cu.leaving) return;
+  const p = G.plate;
+  if(!p.cake){ toast('Build a cupcake first! 🧁',900); sfx.nope(); return; }
+  if(sameOrder(p,cu.order)){
+    G.combo++; G.bestCombo=Math.max(G.bestCombo,G.combo); G.served++;
+    const base = 8 + cu.order.tops.length*4 + (cu.order.frost?2:0);
+    const tip = Math.round(8*(cu.pat/cu.max)*(1+0.25*(S.up.tips||0)));
+    const mult = 1 + Math.min(G.combo-1,10)*0.1;
+    let earn = Math.round((base+tip)*mult*(cu.a.vip?2:1));
+    G.coins += earn;
+    if(cu.a.vip){ G.vipServed++; sfx.vip(); } else sfx.serve();
+    floatText(i, '+'+earn+'⭐');
+    showCombo();
+    cu.leaving=true; setMood(cu,'yum');
+    cu.el.querySelector('.bubble').innerHTML = `<div style="font-size:30px;padding:6px 8px">${cu.a.vip?'👑💖':rnd(['😋','💖','🌟','👍'])}</div>`;
+    setTimeout(()=>cu.el.classList.add('happy'),250);
+    setTimeout(()=>{ if(G.seats[i]===cu){ G.seats[i]=null; } },900);
+    G.plate={cake:null,frost:null,tops:[]}; drawPlate();
+    if(S.up.helper){ const nxt = G.seats.filter(s=>s&&!s.leaving).sort((a,b)=>a.pat-b.pat)[0]; if(nxt){ G.plate.cake=nxt.order.cake; drawPlate(); } }
+  } else {
+    G.combo=0; G.wrong++; showCombo();
+    sfx.wrong(); cu.pat = Math.max(1, cu.pat - cu.max*0.2);
+    cu.el.classList.remove('wrong'); void cu.el.offsetWidth; cu.el.classList.add('wrong');
+    floatText(i, 'Not my cupcake!', true);
+    G.plate={cake:null,frost:null,tops:[]}; drawPlate();
+  }
+  updHud();
+}
+function showCombo(){ const c=$('#combo'); if(G.combo>=2){ c.textContent=`🔥 Combo x${G.combo}`; c.style.opacity=1; } else c.style.opacity=0; }
+function updHints(){
+  document.querySelectorAll('.ing.hint').forEach(b=>b.classList.remove('hint'));
+  seatsEl.querySelectorAll('.seat.target').forEach(s=>s.classList.remove('target'));
+  if(!G||!hintsOn()) return;
+  let best=-1, bp=1e9; G.seats.forEach((s,i)=>{ if(s&&!s.leaving&&s.pat<bp){bp=s.pat;best=i;} });
+  if(best<0) return;
+  const o=G.seats[best].order, p=G.plate;
+  seatsEl.querySelector(`.seat[data-i="${best}"]`).classList.add('target');
+  const q = (k,id)=>{ const b=document.querySelector(`.ing[data-k="${k}"][data-id="${id}"]`); if(b) b.classList.add('hint'); };
+  if(p.cake!==o.cake) q('cake',o.cake);
+  else if(p.frost!==o.frost) q('frost',o.frost);
+  else { const extra=p.tops.filter(t=>!o.tops.includes(t)); const need=o.tops.filter(t=>!p.tops.includes(t));
+    if(extra.length) q('top',extra[0]); else if(need.length) q('top',need[0]); }
+}
+
+/* ---------- LOOP ---------- */
+function loop(now){
+  if(!G||G.paused||G.over) return;
+  const dt = Math.min(.1,(now-last)/1000); last=now;
+  G.time+=dt; G.left-=dt;
+  G.spawn-=dt;
+  const active = G.seats.filter(Boolean).length;
+  if(G.spawn<=0 && G.left>4){ spawn(); G.spawn = G.cfg.gap + Math.random()*1.6 + (active===0?-1.5:0); }
+  if(active===0 && G.spawn>2.2) G.spawn=2.2;
+  G.seats.forEach((cu,i)=>{
+    if(!cu||cu.leaving) return;
+    cu.pat-=dt;
+    const r = Math.max(0,cu.pat/cu.max), bar = cu.el.querySelector('.pat i');
+    bar.style.width=(r*100)+'%'; bar.style.background = r>.55?'#3ed67a': r>.28?'#ffc83d':'#ff5a6a';
+    setMood(cu, r>.55?'happy': r>.28?'ok':'hungry');
+    if(cu.pat<=0){
+      cu.leaving=true; G.missed++; G.combo=0; showCombo(); sfx.leave();
+      floatText(i,'Too hungry... bye!',true);
+      setMood(cu,'sad'); cu.el.classList.add('sad');
+      setTimeout(()=>{ if(G.seats[i]===cu) G.seats[i]=null; updHints(); },700);
+      updHints();
+    }
+  });
+  if(Math.floor(G.left)!==G._lastSec){ G._lastSec=Math.floor(G.left); updHud(); if(G.left<=10&&G.left>0) tone(880,.05,'sine',.06); }
+  if(G.left<=0){ endDay(); return; }
+  raf=requestAnimationFrame(loop);
+}
+function updHud(){
+  if(!G) return;
+  $('#hDay').textContent='Day '+G.day;
+  $('#hCoins').textContent=`⭐ ${G.coins} / ${G.cfg.goal}`;
+  $('#hTime').textContent='⏱ '+Math.max(0,Math.ceil(G.left));
+  $('#hTime').style.color = G.left<=10?'#ff8a8a':'';
+  $('#goalFill').style.width = Math.min(100,G.coins/G.cfg.goal*100)+'%';
+  if(G.coins>=G.cfg.goal && !G.goalHit){ G.goalHit=true; toast('🎯 Goal reached! Keep going for more stars!'); sfx.win(); }
+}
+
+/* ---------- END ---------- */
+function endDay(){
+  G.over=true; sfx.bell();
+  const g=G.cfg.goal, c=G.coins;
+  const stars = c>=g*2?3: c>=g*1.5?2: c>=g?1:0;
+  S.coins += c;
+  if(stars>0){ S.stars[G.day]=Math.max(S.stars[G.day]||0,stars); if(G.day>=S.best){ S.best=G.day+1; } S.sel=Math.min(G.day+1,S.best); }
+  save();
+  $('#endTitle').textContent = stars?'🎉 Closing time! Great job!':'🌙 Closing time!';
+  $('#endStars').innerHTML = [1,2,3].map(n=>`<span class="${n<=stars?'':'off'}">⭐</span>`).join('');
+  $('#endLines').innerHTML = `
+    <div class="resLine"><span>Stardust earned</span><span>⭐ ${c}</span></div>
+    <div class="resLine"><span>Goal</span><span>${g} ${c>=g?'✅':'❌'}</span></div>
+    <div class="resLine"><span>Happy aliens</span><span>😋 ${G.served}</span></div>
+    <div class="resLine"><span>Too hungry to wait</span><span>💨 ${G.missed}</span></div>
+    <div class="resLine"><span>Best combo</span><span>🔥 ${G.bestCombo}</span></div>
+    ${G.vipServed?`<div class="resLine"><span>VIPs served</span><span>👑 ${G.vipServed}</span></div>`:''}
+    <p style="font-weight:bold">${stars?`Next goal: 1.5× for ⭐⭐, 2× for ⭐⭐⭐.`:`Almost! Your stardust is saved. Try again, or buy an upgrade in the Space Shop.`}</p>
+    <p style="color:var(--muted)">You now have ⭐ ${S.coins} stardust to spend.</p>`;
+  showEndButtons(stars);
+  setTimeout(()=>ov('ovEnd',true),600);
+  if(stars) setTimeout(sfx.win,700);
+}
+function showEndButtons(stars){
+  if(stars===undefined) stars = (S.stars[G.day]||0);
+  $('#nextBtn').style.display = S.best>G.day?'':'none';
+}
+$('#nextBtn').onclick = ()=>{ ov('ovEnd',false); prepDay(G.day+1); };
+$('#retryBtn').onclick = ()=>{ ov('ovEnd',false); prepDay(G.day); };
+$('#endShopBtn').onclick = ()=>openShop();
+$('#endMenuBtn').onclick = ()=>{ ov('ovEnd',false); toMenu(); };
+function toMenu(){ cancelAnimationFrame(raf); G=null; show('menu'); refreshMenu(); }
+
+/* ---------- PAUSE ---------- */
+function pause(){ if(!G||G.over||G.paused) return; G.paused=true; ov('ovPause',true); }
+$('#pauseBtn').onclick = pause;
+$('#resumeBtn').onclick = ()=>{ ov('ovPause',false); G.paused=false; last=performance.now(); raf=requestAnimationFrame(loop); };
+$('#quitBtn').onclick = ()=>{ ov('ovPause',false); toMenu(); };
+document.addEventListener('visibilitychange', ()=>{ if(document.hidden) pause(); });
+
+refreshMenu();
+
+/* test hooks */
+window.CC = { get G(){return G;}, S, prepDay, go:()=>$('#goBtn').click(), spawn:()=>spawn(),
+  build:o=>{ G.plate={cake:o.cake,frost:o.frost,tops:o.tops.slice()}; drawPlate(); }, serve, endNow:()=>{G.left=0;},
+  give:n=>{S.coins+=n;save();} };
+})();
+</script>
+</body>
+</html>
