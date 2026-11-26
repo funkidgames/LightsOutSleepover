@@ -1,0 +1,10 @@
+{
+  "name": "funkid-games",
+  "private": true,
+  "type": "module",
+  "description": "FunKid Games static site plus the AI Game Maker serverless function (api/make-game.js).",
+  "engines": { "node": ">=20" },
+  "dependencies": {
+    "@anthropic-ai/sdk": "^1.14.0"
+  }
+}
