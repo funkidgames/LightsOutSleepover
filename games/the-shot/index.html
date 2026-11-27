@@ -112,7 +112,7 @@
       <b>Coins:</b> win a level to earn coins (Hard gives the most!). Spend them in the Shop on new snipers and skins.<br>
       Robbers you hit get knocked out and taken away by the police. 🚓 Don't want blood? Turn <b>Blood splats</b> off on this screen.
     </div>
-    <div class="thanks">⭐ Shoutout to <b>Alessandro</b>, <b>Chiara</b> and <b>Chris</b>, the best Rescue Squad helpers! ⭐</div>
+    <div class="thanks">⭐ Shoutout to <b>Alessandro</b> and <b>Chris</b>, the best Rescue Squad helpers! ⭐</div>
   </div>
 </div>
 
@@ -947,7 +947,7 @@ function showResult(){
     $('rsCoins').textContent=`🪙 +${coins} coins (${d.name}${d.coins>1?' x'+d.coins:''})  •  Total: ${save.coins}`;$('rsCoins').classList.remove('hidden');
   } else {$('rsInfo').textContent=endWhy;$('rsCoins').classList.add('hidden');}
   $('rsNext').classList.toggle('hidden',!(endWin&&lvIdx<LEVELS.length-1));
-  if(endWin&&lvIdx===LEVELS.length-1){$('rsInfo').innerHTML+='<br><br>🏆 You beat every mission on '+diff().name+'! '+(save.diff!=='hard'?'Try a harder difficulty for more coins!':'You are a LEGEND!')+'<br>⭐ Thanks Alessandro, Chiara and Chris! ⭐';}
+  if(endWin&&lvIdx===LEVELS.length-1){$('rsInfo').innerHTML+='<br><br>🏆 You beat every mission on '+diff().name+'! '+(save.diff!=='hard'?'Try a harder difficulty for more coins!':'You are a LEGEND!')+'<br>⭐ Thanks Alessandro and Chris! ⭐';}
   if(!endWin)SFX.fail();
   showOnly('result');
 }

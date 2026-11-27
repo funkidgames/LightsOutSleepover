@@ -69,7 +69,7 @@
   <div class="sub">Pick a mini game! Win matches to earn coins and unlock animal skins.</div>
   <div class="bar"><span class="coins">🪙 <b id="coinN">0</b></span><canvas id="meCv" width="70" height="80" style="width:70px;height:80px"></canvas><button class="btn p" id="shopBtn">🛍️ Animal Shop</button></div>
   <div class="cards" id="cards"></div>
-  <div class="shout">Big shoutout to Alessandro, Chiara and Chris for playing along! 🙌</div>
+  <div class="shout">Big shoutout to Alessandro and Chris for playing along! 🙌</div>
 </div></div>
 
 <div class="ov" id="pre"><div class="panel small" id="preIn"></div></div>
@@ -640,7 +640,7 @@ function Potato(){
   const DIRS=['up','right','down','left'],ARW={up:'↑',right:'→',down:'↓',left:'←'};
   const KEYD={ArrowUp:'up',KeyW:'up',ArrowRight:'right',KeyD:'right',ArrowDown:'down',KeyS:'down',ArrowLeft:'left',KeyA:'left'};
   const ppl=[{name:'You',x:480,y:470,me:1,look:look()},{name:'Alessandro',x:200,y:330,look:kidLook('#38c766',{skin:'#e0ac69',hair:'#2a1a10',hat:'#1f7a3a'})},
-    {name:'Chiara',x:480,y:240,look:kidLook('#ff5fa8',{skin:'#ffdbac',hair:'#8a4a1a',hat:null})},{name:'Chris',x:760,y:330,look:kidLook('#ff8a1f',{skin:'#c68642',hair:'#111',hat:'#2a2a38'})}];
+    {name:'Chris',x:760,y:330,look:kidLook('#ff8a1f',{skin:'#c68642',hair:'#111',hat:'#2a2a38'})}];
   ppl.forEach(p=>{p.out=false;p.soot=false;});
   const S={name:'potato',done:false,t:0,phase:'start',pt:1.6,holder:-1,fly:null,fuse:0,fuseMax:1,seq:[],idx:0,botT:0,parts:new Parts(),outs:0,tickT:0,shake:0,wrongT:0,pad:null};
   const alive=()=>ppl.filter(p=>!p.out);
@@ -666,7 +666,7 @@ function Potato(){
   function finishPotato(win){S.done=true;const place=win?1:alive().length+1;
     if(win)SAVE.best.potato=(SAVE.best.potato||0)+1;
     const coins=win?25:place===2?8:0;
-    showResult({title:win?'🏆 Last one standing!':'🥔 POP! You\'re out!',lines:[win?'The potato never got you!':'You came in place '+place+' of 4.','Players: You, Alessandro, Chiara and Chris'],coins,win,again:()=>startGame('potato',{})});}
+    showResult({title:win?'🏆 Last one standing!':'🥔 POP! You\'re out!',lines:[win?'The potato never got you!':'You came in place '+place+' of 3.','Players: You, Alessandro and Chris'],coins,win,again:()=>startGame('potato',{})});}
   function potatoAt(c,x,y){const fr=clamp(S.fuse/S.fuseMax,0,1),hot=1-fr;const j=hot>.6?rnd(-2,2)*hot:0;
     c.save();c.translate(x+j,y+j);c.fillStyle='rgba(255,'+Math.round(120-hot*100)+',0,'+(.2+hot*.4)+')';circ(c,0,0,26+Math.sin(S.t*20)*3*hot);
     const r=Math.round(200+hot*55),gg=Math.round(150-hot*110),b=Math.round(80-hot*60);c.fillStyle='rgb('+r+','+gg+','+b+')';ell(c,0,0,17,13,.3);
@@ -768,8 +768,8 @@ const GAMES=[
  {id:'snow',e:'❄️',n:'Snowball Showdown',col:'linear-gradient(#4aa8ff,#2a62c4)',d:'Wait for THROW! and be the fastest. Don\'t get tricked!',
   how:'Wait... wait... and when you see <b>THROW!</b> press as fast as you can. Press too early and you <b>slip</b>! Watch out for trick words like <b>TOAST!</b><br>First to 3 wins (20 coins).<br>2 players: P1 presses <b>A</b>, P2 presses <b>L</b>.',
   opts:[{k:'mode',label:'Players',vals:[['1 Player',1],['2 Players',2]],def:1}],rec:()=>'Wins: '+(SAVE.best.snow||0)},
- {id:'potato',e:'🥔',n:'Hot Potato',col:'linear-gradient(#c58a3a,#8a5a1a)',d:'Press the arrows to pass the potato before it POPS! With Alessandro, Chiara and Chris.',
-  how:'When you catch the potato, press the <b>arrows shown</b> in order to throw it away. Wrong arrow? Start again! Whoever holds it when it <b>POPS</b> is out. Last one standing wins (25 coins).<br>You play with <b>Alessandro, Chiara and Chris</b>.',opts:[],rec:()=>'Wins: '+(SAVE.best.potato||0)},
+ {id:'potato',e:'🥔',n:'Hot Potato',col:'linear-gradient(#c58a3a,#8a5a1a)',d:'Press the arrows to pass the potato before it POPS! With Alessandro and Chris.',
+  how:'When you catch the potato, press the <b>arrows shown</b> in order to throw it away. Wrong arrow? Start again! Whoever holds it when it <b>POPS</b> is out. Last one standing wins (25 coins).<br>You play with <b>Alessandro and Chris</b>.',opts:[],rec:()=>'Wins: '+(SAVE.best.potato||0)},
  {id:'sky',e:'☁️',n:'Sky Hop',col:'linear-gradient(#9a7bff,#5b3cc4)',d:'Bounce up the clouds as high as you can and grab coins!',
   how:'Bounce from cloud to cloud. <b>Gray clouds</b> crumble, <b>blue clouds</b> move, <b>springs</b> launch you super high. Grab 🪙 coins on the way, plus 1 bonus coin every 100 m.<br><b>Keys:</b> left/right arrows. <b>Phone:</b> hold the left or right side.',opts:[],rec:()=>'Best: '+(SAVE.best.sky||0)+' m'}
 ];
