@@ -86,6 +86,7 @@
   <a class="back" href="/">← All games</a>
   <h2 style="margin:36px 0 0;font-size:30px">Pick your job</h2>
   <p class="sub" style="margin:6px 0">Every job helps the camp. You can switch jobs any time.</p>
+  <button class="big" id="bCamp" style="font-size:18px;padding:10px 20px">⛺ Back to the forest camp</button>
   <div class="jobs" id="jobs"></div>
 </div>
 
@@ -190,7 +191,7 @@ const isModal=()=>$('modal').classList.contains('show');
 $('modal').addEventListener('click',e=>{if(e.target.id==='modal'&&!$('modal').dataset.lock)closeModal()});
 let actList=[];
 function setActs(list){const A=$('acts');A.innerHTML='';
-  const common=[{label:'🍖 Eat',cls:'s',fn:eat,dis:()=>S.food<1},{label:'💧 Drink',cls:'s',fn:drink,dis:()=>S.water<1},{label:'🎒',cls:'s',fn:bag},{label:'⬆️ Upgrades',cls:'s',fn:upgrades},{label:'🔁 Jobs',cls:'s',fn:board}];
+  const common=[{label:'🍖 Eat',cls:'s',fn:eat,dis:()=>S.food<1},{label:'💧 Drink',cls:'s',fn:drink,dis:()=>S.water<1},{label:'🎒',cls:'s',fn:bag},{label:'⬆️ Upgrades',cls:'s',fn:upgrades},{label:'⛺ Camp',cls:'s',fn:()=>startJob('camp'),show:()=>cur&&cur.id!=='camp'}];
   actList=list.concat(common).map(a=>{const b=document.createElement('button');b.className='ab '+(a.cls||'');
     if(a.hold){b.addEventListener('pointerdown',e=>{e.preventDefault();a.down()});['pointerup','pointerleave','pointercancel'].forEach(ev=>b.addEventListener(ev,()=>a.up()))}
     else b.addEventListener('click',()=>{a.fn();updActs()});
@@ -215,7 +216,7 @@ function bag(){let h='<h2>🎒 Your Bag</h2>';
   h+='<button class="big" id="mClose">Close</button>';modal(h);
   $('mp').querySelectorAll('[data-sell]').forEach(b=>b.onclick=()=>{const k=b.dataset.sell;if(S.inv[k]>0){S.inv[k]--;S.coins+=ITEMS[k].v;sfx.coin();hudUp();save();bag()}});
   $('mClose').onclick=closeModal}
-function upgrades(){if(!cur)return;const list=UPS[cur.id];let h=`<h2>⬆️ ${cur.n} Upgrades</h2><p>You have 🪙 ${S.coins}</p>`;
+function upgrades(){if(!cur)return;const list=UPS[cur.id];if(!list)return toast('Walk to a job place first, then open its upgrades!');let h=`<h2>⬆️ ${cur.n} Upgrades</h2><p>You have 🪙 ${S.coins}</p>`;
   for(const u of list){const l=up(u.id),mx=u.names.length-1;
     h+=`<div class="row"><span class="ic">${u.ic}</span><div><b>${u.names[l]}</b><br><small>${u.desc(l)}</small>${l<mx?`<br><small>Next: <b>${u.names[l+1]}</b>: ${u.desc(l+1)}</small>`:''}</div>${l<mx?`<button class="ab" data-up="${u.id}" ${S.coins<u.cost[l+1]?'disabled':''}>${u.cost[l+1]} 🪙</button>`:'<b>MAX</b>'}</div>`}
   h+='<button class="big" id="mClose">Close</button>';modal(h);
@@ -235,6 +236,8 @@ function circ(x,y,r,c){g.beginPath();g.arc(x,y,r,0,6.283);g.fillStyle=c;g.fill()
 function ell(x,y,rx,ry,c){g.beginPath();g.ellipse(x,y,rx,ry,0,0,6.283);g.fillStyle=c;g.fill()}
 function txt(t,x,y,size=18,c='#fff',al='center',stroke=true){g.font=`900 ${size}px Trebuchet MS,Verdana,sans-serif`;g.textAlign=al;g.textBaseline='middle';if(stroke){g.lineWidth=4;g.strokeStyle='#000a';g.strokeText(t,x,y)}g.fillStyle=c;g.fillText(t,x,y);g.textBaseline='alphabetic'}
 function pine(x,y,s,c1='#1e5a2c',c2='#2c7a3c'){g.fillStyle='#5b3a1e';g.fillRect(x-4*s,y-12*s,8*s,14*s);for(let i=0;i<3;i++){g.beginPath();g.moveTo(x,y-(70-i*18)*s-20*s);g.lineTo(x-(28-i*2)*s+i*0,y-(22+i*18)*s+18*s-i*0);g.lineTo(x+(28-i*2)*s,y-(22+i*18)*s+18*s);g.closePath();g.fillStyle=i%2?c2:c1;g.fill()}}
+function tent(x,y,c){g.fillStyle=c;g.beginPath();g.moveTo(x-45,y+30);g.lineTo(x,y-40);g.lineTo(x+45,y+30);g.fill();g.fillStyle='#0004';g.beginPath();g.moveTo(x-10,y+30);g.lineTo(x,y-5);g.lineTo(x+10,y+30);g.fill()}
+function campfire(x,y,big){for(let i=0;i<6;i++)circ(x+Math.cos(i)*16,y+Math.sin(i)*6,5,'#777');g.fillStyle='#7a4a26';g.fillRect(x-14,y-4,28,6);txt('🔥',x,y-12+Math.sin(T*9)*2,big?30:22,'#fff','center',false)}
 const SKINS=['#f2c79a','#d9a066','#a86b3c','#7a4a26','#f7d7b5'];
 function person(x,y,o={}){g.save();g.translate(x,y);const s=o.s||1;g.scale(s*(o.dir<0?-1:1),s);if(o.alpha!=null)g.globalAlpha=o.alpha;
   ell(0,0,14,5,'#0004');const w=o.walk?Math.sin((o.t||0)*14)*6:0;
@@ -265,7 +268,7 @@ function person(x,y,o={}){g.save();g.translate(x,y);const s=o.s||1;g.scale(s*(o.
   if(job==='maker'){g.beginPath();g.arc(0,-54,12,Math.PI,0);g.fillStyle='#e67e22';g.fill();g.fillRect(0,-56,17,3)}
   if(job==='scout'){g.beginPath();g.moveTo(-14,-55);g.lineTo(0,-70);g.lineTo(14,-55);g.closePath();g.fillStyle='#2e7d32';g.fill()}
   if(o.carry)txt(o.carry,0,-80,14);
-  g.restore()}
+  g.restore();if(o.you)txt('YOU',x,y+16,11,'#ffd23f')}
 function drawTool(t,x,y,a){g.save();g.translate(x,y);g.rotate(-a+.6);
   if(t==='pick'){g.fillStyle='#7a4a26';g.fillRect(-2,-20,4,24);g.strokeStyle=['#a0703c','#888','#ccc','#ffd23f','#7fe9ff','#ff4fd8'][up('pick')];g.lineWidth=5;g.beginPath();g.arc(0,-14,12,Math.PI*1.15,Math.PI*1.85);g.stroke()}
   else if(t==='hammer'){g.fillStyle='#7a4a26';g.fillRect(-2,-18,4,22);g.fillStyle='#555';g.fillRect(-8,-24,16,8)}
@@ -325,7 +328,7 @@ const miner={id:'miner',n:'Miner',ic:'⛏️',desc:'Dig in the mine to find gold
       if(show){for(let i=0;i<4;i++){circ(x+18+((i*29+c*7)%46),y+18+((i*17+r*11)%34),5,T0.dot)}if(T0.rare&&L>=1&&Math.sin(T*6+c+r)>.6)txt('✨',x+60,y+16,14,'#fff','center',false)}
       if(t.hp<t.max){g.strokeStyle='#0008';g.lineWidth=2;g.beginPath();g.moveTo(x+20,y+15);g.lineTo(x+40,y+35);g.lineTo(x+30,y+52);if(t.hp<t.max/2){g.moveTo(x+40,y+35);g.lineTo(x+62,y+28)}g.stroke()}
       if(!this.canDig(r,c)){g.fillStyle='#0006';g.fillRect(x+2,y+2,MG.tw-4,MG.th-4)}}
-    person(this.mx,MG.top-8,{job:'miner',tool:'pick',swing:this.swing*2.2,t:T})},
+    person(this.mx,MG.top-8,{you:1,job:'miner',tool:'pick',swing:this.swing*2.2,t:T})},
 };
 JOBS.push(miner);
 
@@ -365,7 +368,7 @@ const smith={id:'smith',n:'Blacksmith',ic:'🔨',desc:'Turn ore into weapons and
     // scrap pile
     if(this.ph==='pick'){ell(820,450,90,30,'#6b5a4a');for(let i=0;i<8;i++)circ(770+i*14,440-(i%3)*10,8,['#888','#a0703c','#666'][i%3]);txt('Scrap pile',820,490,14)}
     const hot=this.ph==='heat'||this.ph==='hammer';if(this.ord&&this.ph!=='pick'){rr(560,326,80,14,5);g.fillStyle=hot?`rgb(255,${200-this.heat},60)`:'#ccc';g.fill()}
-    person(this.ph==='heat'?660:560,436,{job:'smith',tool:'hammer',swing:this.anim*2,t:T,dir:this.ph==='heat'?1:1});
+    person(this.ph==='heat'?660:560,436,{you:1,job:'smith',tool:'hammer',swing:this.anim*2,t:T,dir:this.ph==='heat'?1:1});
     if(this.ph==='pick'){txt('Orders',195,22,20);for(let i=0;i<3;i++){const o=this.orders[i],ox=30,oy=40+i*150,ok=has(o.r.need);rr(ox,oy,330,130,16);g.fillStyle=o.mine?'#3d5a8a':'#5a3d2a';g.fill();g.lineWidth=3;g.strokeStyle=ok?'#8bff8b':'#ffffff33';g.stroke();
         txt(o.r.ic,ox+40,oy+60,40,'#fff','center',false);txt(o.r.n,ox+80,oy+30,20,'#fff','left');txt('For: '+o.who,ox+80,oy+58,14,'#ffd23f','left');
         txt('Needs: '+needTxt(o.r.need),ox+80,oy+84,15,'#fff','left');txt(o.mine?'Upgrades your weapon!':`Pays about ${o.r.pay} 🪙`,ox+80,oy+108,13,ok?'#8bff8b':'#ccc','left')}
@@ -417,7 +420,7 @@ const collector={id:'collector',n:'Collector',ic:'🎣',desc:'Collect food and w
     txt(`🍖${S.food} 💧${S.water}`,115,400,14);
     for(let i=0;i<3;i++){const b=BUSHES[i];circ(b.x,b.y,42,'#2e7d32');circ(b.x-22,b.y+10,28,'#388e3c');circ(b.x+24,b.y+8,28,'#388e3c');for(let j=0;j<this.berries[i];j++)circ(b.x-18+j*18,b.y-8+(j%2)*14,7,'#e5395b')}
     const p=this.p;const fishing=!!this.fish;
-    person(p.x,p.y,{job:'collector',walk:p.walk,t:T,dir:p.dir,tool:fishing?'rod':(this.goal&&this.goal.t==='filling'?null:null),carry:this.carry()?`${this.food?'🍖'+this.food:''}${this.water?' 💧'+this.water:''}`:'',swing:fishing?1.2:0});
+    person(p.x,p.y,{you:1,job:'collector',walk:p.walk,t:T,dir:p.dir,tool:fishing?'rod':(this.goal&&this.goal.t==='filling'?null:null),carry:this.carry()?`${this.food?'🍖'+this.food:''}${this.water?' 💧'+this.water:''}`:'',swing:fishing?1.2:0});
     if(this.goal&&this.goal.t==='filling'){txt('🪣',p.x+22,p.y-10,26,'#fff','center',false);rr(p.x-30,p.y-100,60,10,5);g.fillStyle='#0008';g.fill();g.fillStyle='#4fc3f7';g.fillRect(p.x-30,p.y-100,60*this.fill,10)}
     if(fishing){g.strokeStyle='#fff8';g.lineWidth=1;g.beginPath();g.moveTo(p.x+14,p.y-80);g.lineTo(480,440);g.stroke();const bob=this.fish.st==='bite'?Math.sin(T*30)*4:Math.sin(T*3)*2;circ(480,440+bob,6,'#e74c3c');circ(480,436+bob,4,'#fff');if(this.fish.st==='bite')txt('❗',480,400,34,'#ff4040')}
     txt(`Bag ${this.carry()}/${this.cap()}`,880,124,14);
@@ -459,7 +462,7 @@ const scientist={id:'scientist',n:'Scientist',ic:'🔬',desc:'Look at what the m
     rr(40,40,200,150,10);g.fillStyle='#7fd0ff';g.fill();pine(90,180,.8);pine(170,185,1);g.strokeStyle='#6b4f36';g.lineWidth=8;g.strokeRect(40,40,200,150);
     // microscope
     g.fillStyle='#444';g.fillRect(270,230,60,14);g.fillRect(292,150,14,85);g.save();g.translate(300,150);g.rotate(-.4);g.fillRect(-10,-50,20,60);g.restore();
-    person(180,420,{job:'scientist',t:T,dir:1});
+    person(180,420,{you:1,job:'scientist',t:T,dir:1});
     // shelf of finds
     txt(`Mystery finds waiting: ${S.finds.length}`,140,270,16,'#333','center',false);for(let i=0;i<Math.min(8,S.finds.length);i++)txt('❓',40+i*30,295,20,'#fff','center',false);
     if(this.s){rr(380,180,260,200,20);g.fillStyle='#ffffffaa';g.fill();
@@ -479,68 +482,94 @@ JOBS.push(scientist);
 
 /* ===== WARRIOR ===== */
 const PEN={x:340,y:180,w:280,h:200};
-const warrior={id:'warrior',n:'Warrior',ic:'🛡️',desc:'Keep the rebels locked in the pen! You are faster than them, but watch out: a rebel can turn on you at any time and swipe your weapon.',raids:false,
-  on:false,p:null,rebels:[],time:0,esc:0,caught:0,calmed:0,keys:{},tgt:null,swing:0,dizzy:0,turnT:8,sneakT:3,
+const HELPER_JOBS=['collector','maker','miner','none'];
+function inPen(x,y,m=0){return x>PEN.x-m&&x<PEN.x+PEN.w+m&&y>PEN.y-m&&y<PEN.y+PEN.h+m}
+const warrior={id:'warrior',n:'Warrior',ic:'🛡️',desc:'Guard the camp! Rebels in the pen try to sneak out, and some helpers are secret rebels who will switch sides. You are faster than them, but a rebel can turn on you and swipe your weapon.',raids:false,
+  on:false,p:null,rebels:[],time:0,esc:0,caught:0,calmed:0,tgt:null,swing:0,dizzy:0,turnT:8,sneakT:3,mate:null,
   enter(){this.on=false;setActs([{label:'▶️ Start shift',cls:'g',fn:()=>this.start(),show:()=>!this.on},{label:'💥 Bonk!',cls:'r',fn:()=>this.bonk(),show:()=>this.on}]);this.p={x:480,y:470,dir:1,walk:false};this.makeRebels()},
-  makeRebels(){this.rebels=[];for(let i=0;i<6;i++)this.rebels.push({x:rnd(PEN.x+30,PEN.x+PEN.w-30),y:rnd(PEN.y+40,PEN.y+PEN.h-20),st:'pen',tx:0,ty:0,t:rnd(0,3),skin:pick(SKINS),dir:1})},
-  start(){this.on=true;this.time=90;this.esc=0;this.caught=0;this.calmed=0;this.turnT=rnd(9,13);this.sneakT=2.5;this.dizzy=0;this.makeRebels();toast('Keep them in the pen! Tap or use arrow keys to move. BONK rebels that turn on you!',3000);updActs()},
+  penR(){return{x:rnd(PEN.x+30,PEN.x+PEN.w-30),y:rnd(PEN.y+40,PEN.y+PEN.h-20),st:'pen',t:rnd(0,3),skin:pick(SKINS),dir:1}},
+  helperR(edge){const p=this.yardPt();const r={x:edge?pick([-20,980]):p.x,y:edge?rnd(200,500):p.y,st:'helper',dj:pick(HELPER_JOBS),t:rnd(0,3),skin:pick(SKINS),dir:1,carry:pick(['🪵','🍖','🪨','💧',''])};if(edge){const q=this.yardPt();r.tx=q.x;r.ty=q.y}return r},
+  yardPt(){let x,y;do{x=rnd(170,790);y=rnd(190,510)}while(inPen(x,y,40));return{x,y}},
+  makeRebels(){this.rebels=[];for(let i=0;i<3;i++)this.rebels.push(this.penR());for(let i=0;i<4;i++)this.rebels.push(this.helperR());this.mate={x:150,y:300,dir:1,tx:150,ty:300}},
+  start(){this.on=true;this.time=90;this.esc=0;this.caught=0;this.calmed=0;this.turnT=rnd(9,13);this.sneakT=3;this.dizzy=0;this.makeRebels();
+    toast('Guard the camp! Watch the helpers too: 👀 means one is about to switch sides!',3200);updActs()},
   bonk(){if(!this.on||this.dizzy>0)return;this.swing=1;sfx.bonk();const R=46+S.weapon*9;let hit=false;
     for(const r of this.rebels)if((r.st==='warn'||r.st==='charge')&&dist(r.x,r.y,this.p.x,this.p.y)<R){r.st='back';hit=true;this.calmed++;floatT(r.x,r.y-70,'Bonk! Back to the pen!','#ffd23f',18);burst(r.x,r.y-50,'#ffd23f',12)}
     if(hit)earn(4,this.p.x,this.p.y-90)},
   down(x,y){if(!this.on)return;for(const r of this.rebels)if((r.st==='warn'||r.st==='charge')&&dist(r.x,r.y-30,x,y)<45&&dist(r.x,r.y,this.p.x,this.p.y)<46+S.weapon*9+20)return this.bonk();this.tgt={x,y}},
   move(x,y){if(this.on&&ptr.down)this.tgt={x,y}},
-  update(dt){if(!this.on){for(const r of this.rebels)this.wander(r,dt);return}
-    const p=this.p;this.swing=Math.max(0,this.swing-dt*4);this.time-=dt;
+  escape(r){r.st='run';r.dj=null;r.ex=r.x<480?-30:990;r.ey=r.y},
+  update(dt){const p=this.p;
+    for(const r of this.rebels){r.t+=dt;if(r.st==='pen')this.wander(r,dt);if(r.st==='helper'&&!this.on)this.roam(r,dt)}
+    this.mateUpd(dt);if(!this.on)return;
+    this.swing=Math.max(0,this.swing-dt*4);this.time-=dt;
     let vx=0,vy=0;const K=keys;if(K.ArrowLeft||K.a)vx--;if(K.ArrowRight||K.d)vx++;if(K.ArrowUp||K.w)vy--;if(K.ArrowDown||K.s)vy++;
     if(vx||vy)this.tgt=null;else if(this.tgt){const dx=this.tgt.x-p.x,dy=this.tgt.y-p.y,d=Math.hypot(dx,dy);if(d>6){vx=dx/d;vy=dy/d}else this.tgt=null}
     const sp=this.dizzy>0?0:175+up('boots')*25;const l=Math.hypot(vx,vy)||1;p.x=clamp(p.x+vx/l*sp*dt,20,940);p.y=clamp(p.y+vy/l*sp*dt,60,530);p.walk=!!(vx||vy)&&sp>0;if(vx)p.dir=vx>0?1:-1;this.dizzy=Math.max(0,this.dizzy-dt);
-    this.sneakT-=dt;if(this.sneakT<=0){this.sneakT=rnd(2.5,4.5)*(1+up('whistle')*.4);const pen=this.rebels.filter(r=>r.st==='pen');if(pen.length){const r=pick(pen);r.st='sneak';const top=Math.random()<.5;r.gx=PEN.x+PEN.w/2;r.gy=top?PEN.y:PEN.y+PEN.h;r.ex=rnd(80,880);r.ey=top?40:560}}
-    this.turnT-=dt;if(this.turnT<=0){this.turnT=rnd(8,13);const c=this.rebels.filter(r=>r.st==='pen'||r.st==='sneak'||r.st==='run');if(c.length){const r=pick(c);r.st='warn';r.t=1.3;sfx.bad();floatT(r.x,r.y-80,'❗','#ff4040',30)}}
-    for(const r of this.rebels){r.t+=dt;
-      if(r.st==='pen')this.wander(r,dt);
+    this.sneakT-=dt;if(this.sneakT<=0){this.sneakT=rnd(4.5,6.5)*(1+up('whistle')*.4);const pen=this.rebels.filter(r=>r.st==='pen'),hel=this.rebels.filter(r=>r.st==='helper');
+      if(hel.length&&(Math.random()<.5||!pen.length)){const r=pick(hel);r.st='sus';r.t=0;r.next='run';r.sus=2.2}
+      else if(pen.length){const r=pick(pen);r.st='sneak';const top=Math.random()<.5;r.gx=PEN.x+PEN.w/2;r.gy=top?PEN.y:PEN.y+PEN.h;r.ex=rnd(80,880);r.ey=top?40:570}}
+    this.turnT-=dt;if(this.turnT<=0){this.turnT=rnd(8,13);const hel=this.rebels.filter(r=>r.st==='helper');const c=this.rebels.filter(r=>r.st==='pen'||r.st==='sneak'||r.st==='run');
+      if(hel.length&&Math.random()<.6){const r=pick(hel);r.st='sus';r.next='warn';r.sus=1.8}else if(c.length){const r=pick(c);r.st='warn';r.t=1.3;sfx.bad();floatT(r.x,r.y-80,'❗','#ff4040',30)}}
+    for(const r of this.rebels){
+      if(r.st==='helper')this.roam(r,dt);
+      else if(r.st==='sus'){r.sus-=dt;if(r.sus<=0){sfx.bad();floatT(r.x,r.y-95,'A secret rebel!','#ff8f7a',18);burst(r.x,r.y-40,'#8e44ad',14);if(r.next==='warn'){r.dj=null;r.st='warn';r.t=1.3}else this.escape(r)}}
       else if(r.st==='sneak'){if(this.go(r,r.gx,r.gy,85,dt)){r.st='run'}}
-      else if(r.st==='run'){if(this.go(r,r.ex,r.ey,110,dt)){r.st='gone';this.esc++;sfx.bad();toast(`😱 A rebel got away! (${this.esc}/3)`)}}
+      else if(r.st==='run'){if(this.go(r,r.ex,r.ey,r.ey<100||r.ey>540?110:95,dt)){r.st='gone';this.esc++;sfx.bad();toast(`😱 A rebel got away! (${this.esc}/3)`)}}
       else if(r.st==='warn'){r.t-=dt*2;if(r.t<=0){r.st='charge';r.t=5}}
-      else if(r.st==='charge'){r.t-=dt;this.go(r,p.x,p.y,135,dt);if(r.t<=0){r.st='pen';r.x=clamp(r.x,PEN.x+20,PEN.x+PEN.w-20);r.y=clamp(r.y,PEN.y+30,PEN.y+PEN.h-10)}}
-      else if(r.st==='back'){if(this.go(r,PEN.x+PEN.w/2+rnd(-60,60),PEN.y+PEN.h/2,260,dt))r.st='pen'}
+      else if(r.st==='charge'){r.t-=dt;this.go(r,p.x,p.y,135,dt);if(r.t<=0)this.escape(r)}
+      else if(r.st==='back'){r.dj=null;if(this.go(r,PEN.x+PEN.w/2+rnd(-60,60),PEN.y+PEN.h/2,260,dt))r.st=this.rebels.filter(q=>q.st==='pen').length>=6?'gone':'pen'}
       if((r.st==='sneak'||r.st==='run')&&this.dizzy<=0&&dist(r.x,r.y,p.x,p.y)<30){r.st='back';this.caught++;S.stats.caught++;earn(3,r.x,r.y-70);floatT(r.x,r.y-95,'Caught!','#8bff8b',20)}
       if(r.st==='charge'&&this.dizzy<=0&&dist(r.x,r.y,p.x,p.y)<26){this.dizzy=2;sfx.bad();
         const lost=S.weapon>0?WEAPONS[S.weapon]:null;if(lost){S.weapon--;toast(`💫 BONK! The rebel swiped your ${lost}! Now you have a ${WEAPONS[S.weapon]}.`,2800)}else toast('💫 BONK! You got bonked and the rebel is running away!',2400);
-        r.st='run';r.ex=r.x<480?-30:990;r.ey=r.y;hudUp();save()}}
-    this.rebels=this.rebels.filter(r=>r.st!=='gone');while(this.rebels.length<6)this.rebels.push({x:rnd(PEN.x+30,PEN.x+PEN.w-30),y:PEN.y+PEN.h/2,st:'pen',t:0,skin:pick(SKINS),dir:1});
+        this.escape(r);hudUp();save()}}
+    this.rebels=this.rebels.filter(r=>r.st!=='gone');
+    if(this.rebels.filter(r=>r.st==='helper'||r.st==='sus').length<3&&Math.random()<dt*.5)this.rebels.push(this.helperR(true));
     if(this.esc>=3||this.time<=0)this.end()},
+  mateUpd(dt){const m=this.mate;if(!m)return;const tg=this.on&&this.rebels.filter(r=>r.st==='run'||r.st==='sneak').sort((a,b)=>dist(a.x,a.y,m.x,m.y)-dist(b.x,b.y,m.x,m.y))[0];
+    if(tg){this.go(m,tg.x,tg.y,105,dt);if(dist(m.x,m.y,tg.x,tg.y)<26){tg.st='back';floatT(tg.x,tg.y-90,'Your partner caught one!','#8bff8b',16)}}
+    else{if(dist(m.x,m.y,m.tx,m.ty)<8){const q=this.yardPt();m.tx=q.x;m.ty=q.y}this.go(m,m.tx,m.ty,55,dt)}},
   go(r,x,y,sp,dt){const dx=x-r.x,dy=y-r.y,d=Math.hypot(dx,dy);if(d<5)return true;r.x+=dx/d*Math.min(sp*dt,d);r.y+=dy/d*Math.min(sp*dt,d);r.dir=dx>0?1:-1;r.walk=true;return false},
-  wander(r,dt){if(!r.tx||dist(r.x,r.y,r.tx,r.ty)<5){r.tx=rnd(PEN.x+25,PEN.x+PEN.w-25);r.ty=rnd(PEN.y+35,PEN.y+PEN.h-12)}this.go(r,r.tx,r.ty,30,dt)},
+  wander(r,dt){if(!r.tx||!inPen(r.tx,r.ty)||dist(r.x,r.y,r.tx,r.ty)<5){r.tx=rnd(PEN.x+25,PEN.x+PEN.w-25);r.ty=rnd(PEN.y+35,PEN.y+PEN.h-12)}this.go(r,r.tx,r.ty,30,dt)},
+  roam(r,dt){if(r.tx==null||dist(r.x,r.y,r.tx,r.ty)<6){const q=this.yardPt();r.tx=q.x;r.ty=q.y}this.go(r,r.tx,r.ty,45,dt)},
   end(){this.on=false;S.stats.shifts++;const ok=this.esc<3;let pay=ok?15:0;if(pay)earn(pay);save();updActs();
     modal(`<h2>${ok?'🛡️ Shift complete!':'😅 Too many rebels got away!'}</h2><p>Caught sneaky rebels: <b>${this.caught}</b><br>Bonked angry rebels: <b>${this.calmed}</b><br>Got away: <b>${this.esc}</b></p>${ok?'<p>Bonus: +15 🪙</p>':''}<button class="big" id="mClose">OK</button>`);$('mClose').onclick=closeModal},
-  draw(){forestBg('#5a9a48');g.fillStyle='#4c8a3c';for(let i=0;i<30;i++)ell((i*131)%W,140+(i*71)%390,14,5,'#4c8a3c');
+  draw(){forestBg('#5a9a48');for(let i=0;i<30;i++)ell((i*131)%W,140+(i*71)%390,14,5,'#4c8a3c');
     for(let i=0;i<12;i++){pine(i*90+10,60+((i*37)%30),.9);}
-    // pen
+    // camp props so it feels like the forest camp
+    tent(90,250,'#d35400');tent(870,260,'#2e86c1');tent(860,470,'#27ae60');campfire(130,470);
     g.fillStyle='#8a6a3a33';g.fillRect(PEN.x,PEN.y,PEN.w,PEN.h);g.strokeStyle='#7a4a26';g.lineWidth=8;const gx=PEN.x+PEN.w/2;
     g.beginPath();g.moveTo(gx-35,PEN.y);g.lineTo(PEN.x,PEN.y);g.lineTo(PEN.x,PEN.y+PEN.h);g.lineTo(gx-35,PEN.y+PEN.h);g.moveTo(gx+35,PEN.y+PEN.h);g.lineTo(PEN.x+PEN.w,PEN.y+PEN.h);g.lineTo(PEN.x+PEN.w,PEN.y);g.lineTo(gx+35,PEN.y);g.stroke();
     for(let x=PEN.x;x<=PEN.x+PEN.w;x+=35){if(Math.abs(x-gx)<35)continue;g.fillStyle='#5b3a1e';g.fillRect(x-4,PEN.y-12,8,16);g.fillRect(x-4,PEN.y+PEN.h-12,8,16)}
     txt('REBEL PEN',gx,PEN.y+PEN.h/2,22,'#ffffff55','center',false);
-    const ents=this.rebels.map(r=>({y:r.y,f:()=>{person(r.x,r.y,{job:'rebel',skin:r.skin,walk:r.st!=='pen'||true,t:T+r.t,dir:r.dir,angry:r.st==='warn'||r.st==='charge'});if(r.st==='warn')txt('❗',r.x,r.y-82,26,'#ff4040');if(r.st==='charge')txt('😠',r.x,r.y-82,18)}}));
-    const p=this.p;ents.push({y:p.y,f:()=>{person(p.x,p.y,{job:'warrior',tool:'sword',swing:this.swing*2.5,walk:p.walk,t:T,dir:p.dir,dizzy:this.dizzy>0});if(this.on)g.globalAlpha=.15,circ(p.x,p.y-30,46+S.weapon*9,'#fff'),g.globalAlpha=1}});
+    const ents=this.rebels.map(r=>({y:r.y,f:()=>{const dis=r.st==='helper'||r.st==='sus';person(r.x,r.y,{job:dis?r.dj:'rebel',skin:r.skin,walk:true,t:T+r.t,dir:r.dir,angry:r.st==='warn'||r.st==='charge',carry:r.st==='helper'?r.carry:''});
+      if(r.st==='sus')txt('👀',r.x+Math.sin(T*12)*3,r.y-84,22,'#fff','center',false);if(r.st==='warn')txt('❗',r.x,r.y-82,26,'#ff4040');if(r.st==='charge')txt('😠',r.x,r.y-82,18)}}));
+    const m=this.mate;ents.push({y:m.y,f:()=>person(m.x,m.y,{job:'warrior',tool:'sword',walk:true,t:T+1,dir:m.dir,skin:SKINS[2]})});
+    const p=this.p;ents.push({y:p.y,f:()=>{person(p.x,p.y,{job:'warrior',tool:'sword',swing:this.swing*2.5,walk:p.walk,t:T,dir:p.dir,dizzy:this.dizzy>0});if(this.on){g.globalAlpha=.15;circ(p.x,p.y-30,46+S.weapon*9,'#fff');g.globalAlpha=1;txt('YOU',p.x,p.y+16,11,'#ffd23f')}}});
     ents.sort((a,b)=>a.y-b.y).forEach(e=>e.f());
     if(this.on){txt(`⏱️ ${Math.ceil(this.time)}`,70,140,24);txt(`Got away: ${this.esc}/3`,880,140,18,this.esc?'#ff8f7a':'#fff')}
-    else{rr(230,420,500,90,16);g.fillStyle='#000a';g.fill();txt('Press START SHIFT. Catch rebels who sneak out,',480,450,17);txt('and BONK any rebel that turns on you!',480,480,17)}}
+    else{rr(200,420,560,100,16);g.fillStyle='#000a';g.fill();txt('Press START SHIFT. Catch rebels who sneak out of the pen.',480,446,16);txt('Some helpers are SECRET rebels: 👀 means one is about to switch sides!',480,472,15);txt('BONK any rebel that turns on you!',480,498,15)}}
 };
 JOBS.push(warrior);
 
 /* ===== REBEL ===== */
 const KM=400, GOAL_KM=18;
-const rebel={id:'rebel',n:'Rebel',ic:'🏃',desc:'Escape the camp! Get 18 km away and the rebels win. Warriors are faster than you, so hide in bushes. If you bonk a scout, the camp finds out you are the rebel!',raids:false,
+const rebel={id:'rebel',n:'Rebel',ic:'🏃',desc:'You start as a helper in camp, but you are secretly a rebel! Sneak away, switch sides, and get 18 km away to win. Warriors are faster, so hide in bushes. Bonk a scout and the camp finds out it was you!',raids:false,
   on:false,
-  enter(){this.on=false;this.setup();setActs([{label:'▶️ Escape!',cls:'g',fn:()=>this.start(),show:()=>!this.on},{label:'💨 Sprint (hold)',cls:'b',hold:true,down:()=>this.sprint=true,up:()=>this.sprint=false,show:()=>this.on},{label:'💥 Bonk scout',cls:'r',fn:()=>this.bonk(),show:()=>this.on}])},
+  enter(){this.on=false;this.setup();setActs([{label:'▶️ Escape!',cls:'g',fn:()=>this.start(),show:()=>!this.on},{label:'😈 Switch sides & RUN!',cls:'r',fn:()=>this.reveal_(),show:()=>this.on&&this.under},{label:'💨 Sprint (hold)',cls:'b',hold:true,down:()=>this.sprint=true,up:()=>this.sprint=false,show:()=>this.on},{label:'💥 Bonk scout',cls:'r',fn:()=>this.bonk(),show:()=>this.on&&!this.under}])},
   setup(){const L=GOAL_KM*KM+400;this.len=L;this.trees=[];this.bushes=[];this.streams=[];this.scouts=[];
     for(let x=500;x<L;x+=rnd(70,140)){this.trees.push({x,y:rnd(160,520),r:rnd(16,24)})}
     for(let x=350;x<L;x+=rnd(180,320)){this.bushes.push({x,y:rnd(180,500),r:38})}
     for(let x=1200;x<L;x+=rnd(1100,1800))this.streams.push({x,w:70});
     for(let x=900;x<L-300;x+=rnd(450,700))this.scouts.push({x,y:rnd(200,480),st:'watch',a:0,face:-1,t:0});
+    this.bushes=this.bushes.filter(b=>b.x>560);
+    this.helpers=[{job:'maker',x:200,y:250,tool:'hammer'},{job:'collector',x:330,y:470,tool:'rod'},{job:'miner',x:90,y:420,tool:'pick'},{job:'smith',x:420,y:230,tool:'hammer',dir:-1}];
     this.trees=this.trees.filter(t=>!this.bushes.some(b=>dist(t.x,t.y,b.x,b.y)<70)&&!this.scouts.some(s=>dist(t.x,t.y,s.x,s.y)<60));
     this.p={x:120,y:340,dir:1,walk:false,st:100,hidden:false};this.ws=[];this.cam=0;this.reveal=0;this.clue=null;this.next=2*KM;this.sprint=false;this.tgt=null},
-  start(){this.setup();this.on=true;this.ws=[{x:-140,y:300,mode:'chase',lx:0,ly:0,t:0},{x:-220,y:420,mode:'chase',lx:0,ly:0,t:0}];this.grace=2.5;toast('RUN! Warriors are faster, so hide in bushes 🌳 and sprint 💨!',2800);updActs()},
+  start(){this.setup();this.on=true;this.under=true;this.sus=0;this.p.x=260;this.ws=[{x:120,y:300,mode:'patrol',lx:120,ly:300,t:0},{x:380,y:420,mode:'patrol',lx:380,ly:420,t:0}];this.grace=0;
+    toast('🤫 Everyone thinks you are a helper. Sneak toward the forest, then SWITCH SIDES and run! Too far or too fast and the warriors get suspicious.',4200);updActs()},
+  reveal_(why){if(!this.under)return;this.under=false;this.sus=0;this.grace=1.2;sfx.bad();for(const w of this.ws)w.mode='chase';this.ws.push({x:this.p.x-480,y:this.p.y,mode:'chase',t:0});
+    toast(why||'😈 You switched sides! RUN! Warriors are faster, so hide in bushes 🌳 and sprint 💨!',3000);burst(this.p.x,this.p.y-40,'#8e44ad',20);updActs()},
   bonk(){if(!this.on)return;sfx.bonk();const p=this.p;for(const s of this.scouts)if(s.st!=='out'&&s.st!=='shout'&&dist(s.x,s.y,p.x,p.y)<60){s.st='out';this.clue={x:s.x,y:s.y,t:6};floatT(s.x,s.y-70,'Bonk! 💫','#ffd23f',22);toast('You bonked the scout. Uh oh, someone will find them...',2400);return}
     floatT(p.x,p.y-80,'Nobody close','#ddd',14)},
   down(x,y){if(this.on)this.tgt={x:x+this.cam,y}},move(x,y){if(this.on&&ptr.down)this.tgt={x:x+this.cam,y}},up(){},
@@ -552,15 +581,18 @@ const rebel={id:'rebel',n:'Rebel',ic:'🏃',desc:'Escape the camp! Get 18 km awa
     const sprinting=this.sprint&&p.st>1&&(vx||vy);let sp=(140+up('shoes')*10)*(sprinting?1.6:1)*(this.inStream(p.x)?.55:1);
     p.st=clamp(p.st+(sprinting?-34/(1+up('lungs')*.5):14)*dt,0,100);const l=Math.hypot(vx,vy)||1;p.x=clamp(p.x+vx/l*sp*dt,20,this.len);p.y=clamp(p.y+vy/l*sp*dt,150,525);this.solid(p);p.walk=!!(vx||vy);if(vx)p.dir=vx>0?1:-1;
     p.hidden=this.bushes.some(b=>dist(p.x,p.y,b.x,b.y)<b.r);
+    if(this.under){const nearW=this.ws.some(w=>dist(w.x,w.y,p.x,p.y)<220);this.sus+=dt*((p.x>520?.35+(p.x-520)/350:0)+(sprinting&&nearW?1.2:0));if(p.x<=520&&!(sprinting&&nearW))this.sus=Math.max(0,this.sus-dt*.25);
+      if(this.sus>=1)this.reveal_('🚨 The warriors got suspicious! "Hey, where is that helper going?" RUN!');}
     this.cam=clamp(p.x-320,0,this.len-W);const km=p.x/KM;this.km=km;
     if(km>=GOAL_KM)return this.end(true);
-    if(p.x>this.next&&this.ws.length<6){this.next+=2.5*KM;this.ws.push({x:this.cam-80,y:rnd(180,500),mode:'search',lx:p.x-200,ly:rnd(180,500),t:0});floatT(p.x,p.y-90,'More warriors are coming!','#ff8f7a',16)}
+    if(!this.under&&p.x>this.next&&this.ws.length<6){this.next+=2.5*KM;this.ws.push({x:this.cam-80,y:rnd(180,500),mode:'search',lx:p.x-200,ly:rnd(180,500),t:0});floatT(p.x,p.y-90,'More warriors are coming!','#ff8f7a',16)}
     if(this.clue){this.clue.t-=dt;if(this.clue.t<=0){this.reveal=12;this.clue=null;sfx.bad();toast('🚨 The camp found the bonked scout! Now everyone knows YOU are the rebel!',3200);this.ws.push({x:p.x-420,y:p.y,mode:'chase',t:0})}}
     this.reveal=Math.max(0,this.reveal-dt);this.grace=Math.max(0,this.grace-dt);
     for(const s of this.scouts){if(s.st==='out')continue;s.face=p.x>s.x?1:-1;const d=dist(s.x,s.y,p.x,p.y);
       if(s.st==='watch'){if(d<150&&!p.hidden){s.a+=dt;if(s.a>1.1){s.st='shout';s.t=2;sfx.bad();floatT(s.x,s.y-80,'REBEL HERE!','#ff4040',20);for(const w of this.ws){w.mode='chase'}}}else s.a=Math.max(0,s.a-dt)}
       else if(s.st==='shout'){s.t-=dt;if(s.t<=0)s.st='done'}}
-    for(const w of this.ws){w.t+=dt;const d=dist(w.x,w.y,p.x,p.y);const sees=this.reveal>0||d<45||(!p.hidden&&d<270);
+    for(const w of this.ws){w.t+=dt;const d=dist(w.x,w.y,p.x,p.y);
+      if(w.mode==='patrol'){if(dist(w.x,w.y,w.lx,w.ly)<10){w.lx=rnd(60,480);w.ly=rnd(180,510)}const dx=w.lx-w.x,dy=w.ly-w.y,dd=Math.hypot(dx,dy)||1;w.x+=dx/dd*55*dt;w.y+=dy/dd*55*dt;w.dir=dx>0?1:-1;continue}const sees=this.reveal>0||d<45||(!p.hidden&&d<270);
       if(w.mode==='chase'){if(!sees&&p.hidden){w.mode='search';w.st=5;w.lx=p.x+rnd(130,260);w.ly=clamp(p.y+rnd(-140,140),170,510);floatT(w.x,w.y-80,'Where did they go?','#fff',14)}else{w.lx=p.x;w.ly=p.y}}
       else if(sees){w.mode='chase';floatT(w.x,w.y-80,'❗','#ff4040',26)}
       else if(w.mode==='search'){w.st=(w.st==null?6:w.st)-dt;if(w.st<=0){w.mode='home';w.lx=-9999;w.ly=w.y}}
@@ -570,7 +602,7 @@ const rebel={id:'rebel',n:'Rebel',ic:'🏃',desc:'Escape the camp! Get 18 km awa
       let wsp=(w.mode==='chase'?178:95)*(this.inStream(w.x)?.55:1);if(dd>1){w.x+=dx/dd*wsp*dt;w.y+=dy/dd*wsp*dt;w.dir=dx>0?1:-1}this.solid(w);
       if(w.x<this.cam-600){if(w.mode==='home')w.gone=1;else w.x=this.cam-600}
       if(d<24&&this.grace<=0)return this.end(false)}
-    this.ws=this.ws.filter(w=>!w.gone);if(this.ws.length<2&&!this.ws.some(w=>w.x>this.cam-700)&&Math.random()<dt*.15)this.ws.push({x:this.cam-120,y:rnd(180,500),mode:'search',st:7,lx:p.x+rnd(0,200),ly:rnd(180,500),t:0})},
+    this.ws=this.ws.filter(w=>!w.gone);if(!this.under&&this.ws.length<2&&!this.ws.some(w=>w.x>this.cam-700)&&Math.random()<dt*.15)this.ws.push({x:this.cam-120,y:rnd(180,500),mode:'search',st:7,lx:p.x+rnd(0,200),ly:rnd(180,500),t:0})},
   end(win){this.on=false;this.sprint=false;const km=Math.min(GOAL_KM,this.km||0);let pay=Math.round(km*2);if(win){pay+=50;S.stats.rebelWins++}S.stats.bestKm=Math.max(S.stats.bestKm,+km.toFixed(1));earn(pay);save();updActs();
     modal(`<h2>${win?'🎉 REBELS WIN!':'🚨 Caught!'}</h2><p>${win?'You escaped 18 km into the forest! The warriors could not keep up.':'A warrior caught you and walked you back to the Rebel Pen.'}</p><p>You ran <b>${km.toFixed(1)} km</b>. Best: <b>${S.stats.bestKm} km</b></p><p>+${pay} 🪙</p><button class="big" id="mAgain">Run again</button><button class="ab s" id="mClose">Close</button>`);
     $('mAgain').onclick=()=>{closeModal();this.start()};$('mClose').onclick=closeModal},
@@ -578,20 +610,23 @@ const rebel={id:'rebel',n:'Rebel',ic:'🏃',desc:'Escape the camp! Get 18 km awa
     for(const s of this.streams){if(s.x+s.w<c-10||s.x>c+W+10)continue;g.fillStyle='#3d95d8';g.fillRect(s.x-c,100,s.w,H);g.fillStyle='#8fd6ff';for(let i=0;i<6;i++)g.fillRect(s.x-c+10+(i*17)%50,((i*90+T*80)%440)+100,14,3)}
     for(let k=1;k<=GOAL_KM;k++){const x=k*KM-c;if(x<-20||x>W+20)continue;g.fillStyle='#7a4a26';g.fillRect(x-3,118,6,30);rr(x-26,104,52,20,4);g.fill();txt(k+' km',x,114,12,k===GOAL_KM?'#ffd23f':'#fff')}
     if(GOAL_KM*KM-c<W+40){const x=GOAL_KM*KM-c;g.fillStyle='#ffd23f';g.fillRect(x-2,140,4,H);txt('🏁 FREEDOM!',x+60,170,20,'#ffd23f')}
+    if(c<600){tent(80-c,230,'#d35400');tent(300-c,200,'#2e86c1');tent(470-c,470,'#27ae60');campfire(250-c,360,true);txt('⛺ CAMP',250-c,150,18,'#ffffff99','center',false)}
     if(this.clue){txt('💫',this.clue.x-c,this.clue.y-40,22,'#fff','center',false)}
     const ents=[];const vis=o=>o.x>c-80&&o.x<c+W+80;
     for(const t of this.trees)if(vis(t))ents.push({y:t.y,f:()=>pine(t.x-c,t.y+6,t.r/20)});
     for(const s of this.scouts)if(vis(s))ents.push({y:s.y,f:()=>{if(s.st==='watch'){g.globalAlpha=.12+s.a*.2;circ(s.x-c,s.y-10,150,s.a>0?'#ff4040':'#fff');g.globalAlpha=1}
       person(s.x-c,s.y,{job:'scout',skin:SKINS[1],dir:s.face,sleep:s.st==='out',t:T});if(s.st==='out')txt('💤',s.x-c+16,s.y-70,16,'#fff','center',false);if(s.st==='watch'&&s.a>0)txt('👀',s.x-c,s.y-80,18,'#fff','center',false);if(s.st==='shout')txt('📣',s.x-c,s.y-80,22,'#fff','center',false)}});
-    const p=this.p;ents.push({y:p.y,f:()=>person(p.x-c,p.y,{job:'rebel',walk:p.walk,t:T,dir:p.dir,alpha:p.hidden?.45:1})});
-    for(const w of this.ws)if(vis(w))ents.push({y:w.y,f:()=>{person(w.x-c,w.y,{job:'warrior',tool:'sword',walk:true,t:T,dir:w.dir||1});if(w.mode!=='chase')txt(w.mode==='home'?'💤':'❓',w.x-c,w.y-82,18,'#fff','center',false)}});
+    for(const h of this.helpers||[])if(vis(h))ents.push({y:h.y,f:()=>person(h.x-c,h.y,{job:h.job,tool:h.tool,swing:Math.max(0,Math.sin(T*5+h.x))*2,t:T,dir:h.dir||1})});
+    const p=this.p;ents.push({y:p.y,f:()=>{person(p.x-c,p.y,{job:this.under?'collector':'rebel',walk:p.walk,t:T,dir:p.dir,alpha:p.hidden?.45:1});txt('YOU',p.x-c,p.y+16,11,'#ffd23f');if(this.under)txt('🤫',p.x-c+18,p.y-74,16,'#fff','center',false)}});
+    for(const w of this.ws)if(vis(w))ents.push({y:w.y,f:()=>{person(w.x-c,w.y,{job:'warrior',tool:'sword',walk:true,t:T,dir:w.dir||1});if(w.mode==='patrol'&&this.under&&this.sus>.5)txt('🤨',w.x-c,w.y-82,18,'#fff','center',false);else if(w.mode!=='chase'&&w.mode!=='patrol')txt(w.mode==='home'?'💤':'❓',w.x-c,w.y-82,18,'#fff','center',false)}});
     ents.sort((a,b)=>a.y-b.y).forEach(e=>e.f());
     for(const b of this.bushes)if(vis(b)){const x=b.x-c;circ(x,b.y-10,b.r,'#2e7d32');circ(x-24,b.y,24,'#388e3c');circ(x+24,b.y,24,'#388e3c');circ(x,b.y-30,20,'#43a047')}
     if(this.on||this.km){const km=(this.p.x/KM);rr(20,130,300,22,11);g.fillStyle='#0008';g.fill();g.fillStyle='#ffd23f';g.fillRect(22,132,296*Math.min(1,km/GOAL_KM),18);txt(`🏃 ${km.toFixed(1)} / ${GOAL_KM} km`,170,141,14);
       rr(20,160,140,12,6);g.fillStyle='#0008';g.fill();g.fillStyle='#8fd6ff';g.fillRect(21,161,138*p.st/100,10);txt('💨',172,166,12,'#fff','center',false);
-      if(p.hidden)txt('🌳 Hiding!',480,140,20,'#8bff8b');if(this.reveal>0)txt(`🚨 Everyone knows you are the rebel! ${Math.ceil(this.reveal)}`,620,170,16,'#ff8f7a');
+      if(p.hidden)txt('🌳 Hiding!',480,140,20,'#8bff8b');
+      if(this.on&&this.under){rr(340,180,280,18,9);g.fillStyle='#0008';g.fill();g.fillStyle=this.sus>.6?'#ff6b6b':'#ffd23f';g.fillRect(342,182,276*Math.min(1,this.sus),14);txt('🤨 Suspicion',480,170,14);txt('Undercover! Sneak right, then press SWITCH SIDES',480,214,14,'#fff')}if(this.reveal>0)txt(`🚨 Everyone knows you are the rebel! ${Math.ceil(this.reveal)}`,620,170,16,'#ff8f7a');
       const close=this.ws.reduce((m,w)=>Math.min(m,p.x-w.x),9999);if(close>0&&close<500&&close>320)txt('◀ warrior close!',60,300,14,'#ff8f7a')}
-    if(!this.on){rr(230,400,500,110,16);g.fillStyle='#000a';g.fill();txt('Press ESCAPE! Move with arrows/WASD or tap.',480,428,16);txt('Warriors are FASTER than you. Hide in bushes 🌳 to lose them.',480,456,15);txt('Bonk a scout and the camp will find out you are the rebel!',480,484,15)}}
+    if(!this.on){rr(230,400,500,110,16);g.fillStyle='#000a';g.fill();txt('You are a secret rebel dressed as a helper. Move with arrows/WASD or tap.',480,428,15);txt('Sneak away, switch sides, and hide in bushes 🌳 from the faster warriors.',480,456,15);txt('Bonk a scout and the camp will find out you are the rebel!',480,484,15)}}
 };
 JOBS.push(rebel);
 
@@ -621,7 +656,7 @@ const maker={id:'maker',n:'Maker',ic:'🪚',desc:'Build beds and everything else
     for(const id in SLOTS){const n=bl(id);SLOTS[id].forEach(([x,y],i)=>{if(i<n)this.drawBuild(id,x,y);else{g.globalAlpha=.18;this.drawBuild(id,x,y);g.globalAlpha=1}})}
     const tents=[[500,370],[680,370]];for(const [x,y] of tents){g.fillStyle='#2e86c1';g.beginPath();g.moveTo(x-45,y+30);g.lineTo(x,y-40);g.lineTo(x+45,y+30);g.fill()}
     for(const t of this.trees){const sx=t.shake?rnd(-3,3):0;if(t.re>0){g.fillStyle='#7a4a26';g.fillRect(t.x-10,t.y-10,20,14);txt('🌱',t.x,t.y-24,18,'#fff','center',false)}else pine(t.x+sx,t.y,1.5);if(!t.re&&t.hp)txt('🪓'.repeat(t.hp),t.x,t.y+24,12,'#fff','center',false)}
-    person(this.mx,this.my,{job:'maker',tool:this.job?'hammer':'axe',swing:this.swing*2.2,t:T,dir:this.mx<400?-1:1});
+    person(this.mx,this.my,{you:1,job:'maker',tool:this.job?'hammer':'axe',swing:this.swing*2.2,t:T,dir:this.mx<400?-1:1});
     txt(`🪵 ${S.inv.wood}  🪨 ${S.inv.stone}  ⚪ ${S.inv.iron}`,200,150,18);
     if(this.job){const n=this.job.nail;if(n){circ(n.x,n.y,30,'#ffd23f44');g.fillStyle='#ccc';g.fillRect(n.x-3,n.y-26,6,26);g.fillRect(n.x-10,n.y-30,20,6);g.globalAlpha=.7;g.strokeStyle='#ffd23f';g.lineWidth=4;g.beginPath();g.arc(n.x,n.y-10,34,-1.57,-1.57+6.283*(n.t/(1.5+up('toolbox')*.45)));g.stroke();g.globalAlpha=1}
       txt(`Building ${this.job.b.n}: ${6-this.job.left}/6 nails`,690,140,18,'#ffd23f')}
@@ -629,6 +664,71 @@ const maker={id:'maker',n:'Maker',ic:'🪚',desc:'Build beds and everything else
 };
 JOBS.push(maker);
 
+/* ===== FOREST CAMP (the world where you see everyone) ===== */
+const STATIONS=[{id:'miner',x:110,y:215,l:'⛏️ Mine'},{id:'scientist',x:320,y:200,l:'🔬 Lab'},{id:'smith',x:530,y:205,l:'🔨 Forge'},{id:'maker',x:740,y:215,l:'🪚 Workshop'},
+  {id:'collector',x:860,y:430,l:'🎣 River'},{id:'warrior',x:330,y:430,l:'🛡️ Rebel Pen'},{id:'rebel',x:60,y:490,l:'🏃 Forest trail'}];
+const camp={id:'camp',n:'Forest Camp',ic:'⛺',desc:'Walk around the camp and see everyone working. Tap a place to start that job!',p:null,npcs:[],evT:25,pen:3,goal:null,
+  enter(){if(!this.p)this.p={x:560,y:420,tx:560,ty:420,dir:1,walk:false};if(!this.npcs.length)this.makeNpcs();this.goal=null;this.p.tx=this.p.x;this.p.ty=this.p.y;
+    setActs([{label:'📋 Job list',cls:'b',fn:board}])},
+  makeNpcs(){this.npcs=[];const A=(job,x,y,o={})=>this.npcs.push(Object.assign({job,x,y,tx:x,ty:y,t:rnd(0,3),skin:pick(SKINS),dir:pick([-1,1]),kind:'work'},o));
+    A('miner',160,240,{tool:'pick',dir:-1});A('miner',60,245,{tool:'pick',dir:1});A('scientist',360,225,{dir:-1});A('smith',575,235,{tool:'hammer',dir:-1});
+    A('maker',700,245,{tool:'hammer'});A('maker',790,250,{tool:'axe',dir:-1});A('collector',870,340,{tool:'rod',dir:1});A('collector',880,500,{tool:'rod',dir:1});
+    A('warrior',270,470,{kind:'patrol',tool:'sword'});A('warrior',420,390,{kind:'patrol',tool:'sword'});
+    for(let i=0;i<5;i++)this.addHelper()},
+  addHelper(edge){const st=pick(STATIONS.slice(0,5));this.npcs.push({job:pick(HELPER_JOBS),x:edge?990:rnd(200,780),y:edge?rnd(300,480):rnd(300,480),tx:st.x,ty:st.y+60,t:rnd(0,3),skin:pick(SKINS),dir:-1,kind:'helper',carry:pick(['🪵','🍖','🪨','💧','🟡'])})},
+  down(x,y){for(const n of this.npcs)if(n.kind==='traitor'&&dist(x,y,n.x,n.y-30)<55){return this.catchT(n,true)}
+    const st=STATIONS.find(s=>dist(x,y,s.x,s.y)<70);const p=this.p;if(st){this.goal=st;p.tx=clamp(st.x,30,930);p.ty=clamp(st.y+(st.id==='rebel'?-10:55),160,520)}else{this.goal=null;p.tx=clamp(x,20,880);p.ty=clamp(y,170,525)}},
+  catchT(n,byYou){n.kind='jailed';n.tx=330;n.ty=440;sfx.good();burst(n.x,n.y-30,'#ffd23f',14);
+    if(byYou){S.stats.caught++;earn(6,n.x,n.y-70);toast('🛡️ You caught a secret rebel! Off to the Rebel Pen.')}else toast('🛡️ The warriors caught a secret rebel who switched sides!')},
+  arrive(){const st=this.goal;this.goal=null;if(!st)return;const J=JOBS.find(j=>j.id===st.id);
+    modal(`<h2>${J.ic} ${J.n}</h2><p>${J.desc}</p><button class="big" id="mGo">Start working ▶</button><br><button class="ab s" id="mClose">Not now</button>`);$('mGo').onclick=()=>{closeModal();startJob(J.id)};$('mClose').onclick=closeModal},
+  go(n,x,y,sp,dt){const dx=x-n.x,dy=y-n.y,d=Math.hypot(dx,dy);if(d<4)return true;n.x+=dx/d*Math.min(sp*dt,d);n.y+=dy/d*Math.min(sp*dt,d);if(Math.abs(dx)>1)n.dir=dx>0?1:-1;n.walk=true;return false},
+  update(dt){const p=this.p;p.walk=!this.go(p,p.tx,p.ty,220,dt);if(!p.walk&&this.goal)this.arrive();
+    this.evT-=dt;if(this.evT<=0){this.evT=rnd(30,50);const h=this.npcs.filter(n=>n.kind==='helper');if(h.length){const n=pick(h);n.kind='sus';n.sus=2.5}}
+    for(const n of this.npcs){n.t+=dt;n.walk=false;
+      if(n.kind==='helper'){if(this.go(n,n.tx,n.ty,50,dt)){const st=pick(STATIONS.slice(0,5));n.tx=st.x+rnd(-40,40);n.ty=st.y+rnd(50,90);n.carry=pick(['🪵','🍖','🪨','💧','🟡',''])}}
+      else if(n.kind==='patrol'){if(this.go(n,n.tx,n.ty,45,dt)){n.tx=rnd(220,460);n.ty=rnd(370,510)}}
+      else if(n.kind==='sus'){n.sus-=dt;if(n.sus<=0){n.kind='traitor';n.job='rebel';n.carry='';sfx.bad();floatT(n.x,n.y-90,'A helper switched sides!','#ff8f7a',18);toast('😱 One of the helpers was a SECRET REBEL! Tap them to catch them!',2600);
+          for(const w of this.npcs)if(w.job==='warrior'&&w.kind==='patrol')w.kind='chase'}}
+      else if(n.kind==='traitor'){if(this.go(n,20,495,80,dt)){n.kind='gone';sfx.bad();toast('A secret rebel escaped into the forest!')}}
+      else if(n.kind==='chase'){const tr=this.npcs.find(m=>m.kind==='traitor');if(!tr){n.kind='patrol';n.tx=rnd(220,460);n.ty=rnd(370,510)}else{this.go(n,tr.x,tr.y,95,dt);if(dist(n.x,n.y,tr.x,tr.y)<24)this.catchT(tr,false)}}
+      else if(n.kind==='jailed'){if(this.go(n,330,440,120,dt)){n.kind='gone';this.pen++}}}
+    const before=this.npcs.length;this.npcs=this.npcs.filter(n=>n.kind!=='gone');for(let i=this.npcs.filter(n=>n.kind==='helper'||n.kind==='sus').length;i<5;i++)if(Math.random()<dt*.3)this.addHelper(true)},
+  draw(){forestBg('#4a9a48');
+    // paths
+    g.fillStyle='#b89a66';ell(500,400,330,70,'#b89a66');g.fillRect(100,290,800,26);g.fillRect(20,470,300,24);g.fillStyle='#4a9a48';
+    for(let i=0;i<45;i++)ell((i*137)%W,160+(i*71)%370,10,4,'#438d42');
+    // river
+    g.fillStyle='#2d7fc0';g.fillRect(905,100,60,H);g.fillStyle='#5fb1f0';for(let i=0;i<6;i++)g.fillRect(912+(i*13)%40,((i*90+T*60)%440)+100,20,3);g.fillStyle='#c2a56b';g.fillRect(898,100,9,H);
+    // mine
+    ell(110,200,85,62,'#6d6d75');ell(110,170,50,30,'#7d7d86');g.fillStyle='#1b120b';g.beginPath();g.arc(110,236,28,Math.PI,0);g.fill();g.fillRect(82,236,56,10);g.fillStyle='#7a4a26';g.fillRect(78,205,8,40);g.fillRect(134,205,8,40);g.fillRect(78,203,64,8);
+    // lab
+    g.fillStyle='#f4f4f4';g.beginPath();g.moveTo(255,240);g.lineTo(320,150);g.lineTo(385,240);g.fill();g.fillStyle='#4fc3f7';g.fillRect(310,195,20,30);txt('🧪',350,232,18,'#fff','center',false);
+    // forge
+    rr(480,160,100,80,8);g.fillStyle='#7d7d86';g.fill();g.fillStyle='#5a5a62';g.fillRect(555,120,18,45);g.fillStyle=`rgba(255,${120+Math.sin(T*8)*40},40,1)`;rr(505,200,50,30,10);g.fill();
+    for(let i=0;i<3;i++){g.globalAlpha=.4;circ(564+Math.sin(T+i)*6,110-((T*20+i*20)%60),8+i*2,'#ddd');g.globalAlpha=1}
+    // workshop
+    g.fillStyle='#7a4a26';g.fillRect(690,195,110,8);g.fillRect(700,203,8,30);g.fillRect(782,203,8,30);for(let i=0;i<4;i++){g.fillStyle='#8a5a2b';g.beginPath();g.arc(810,230-i*9,6,0,6.28);g.fill();g.fillRect(760,224-i*9,50,12)}
+    // camp center: tents, fire, built stuff
+    tent(470,340,'#d35400');tent(620,330,'#2e86c1');tent(720,380,'#27ae60');campfire(560,410,bl('fire'));
+    for(let i=0;i<bl('bed');i++)txt('🛏️',640+(i%4)*36,450+Math.floor(i/4)*30,22,'#fff','center',false);
+    for(let i=0;i<bl('fence');i++)txt('🚧',150+i*30,530,18,'#fff','center',false);if(bl('tower'))txt('🗼',820,160,46,'#fff','center',false);
+    // pen
+    g.strokeStyle='#7a4a26';g.lineWidth=6;g.strokeRect(275,400,110,70);for(let i=0;i<Math.min(6,this.pen);i++)person(290+(i%3)*30,430+Math.floor(i/3)*30,{job:'rebel',s:.5,t:T+i,skin:SKINS[i%5],walk:true});
+    // trail sign
+    g.fillStyle='#7a4a26';g.fillRect(56,450,6,40);rr(30,436,70,20,4);g.fill();txt('Forest →',65,446,11,'#fff');
+    for(const s of STATIONS)txt(s.l,s.x,s.id==='rebel'?420:s.y-(s.id==='collector'?-60:80)+(s.id==='warrior'?60:0),15,'#fff');
+    const ents=this.npcs.map(n=>({y:n.y,f:()=>{person(n.x,n.y,{job:n.job,tool:n.kind==='work'?n.tool:(n.job==='warrior'?'sword':null),swing:n.kind==='work'?Math.max(0,Math.sin(T*5+n.x))*2.2:0,walk:n.walk,t:T+n.t,dir:n.dir,skin:n.skin,s:.85,carry:n.carry,angry:n.kind==='traitor'});
+      if(n.kind==='sus')txt('👀',n.x,n.y-78,20,'#fff','center',false);if(n.kind==='traitor')txt('😈',n.x,n.y-78,18,'#fff','center',false);if(n.kind==='chase')txt('❗',n.x,n.y-78,18,'#ff4040')}}));
+    const p=this.p;ents.push({y:p.y,f:()=>{person(p.x,p.y,{job:S.lastJob||'none',walk:p.walk,t:T,dir:p.dir});txt('YOU',p.x,p.y+16,11,'#ffd23f')}});
+    ents.sort((a,b)=>a.y-b.y).forEach(e=>e.f());
+    txt('Tap a place to walk there and start a job. Watch out for secret rebels 👀',480,528,15,'#fff')}
+};
+
+const CREW={miner:[{job:'miner',x:250,y:MG.top-8,tool:'pick',dir:1},{job:'miner',x:700,y:MG.top-8,tool:'pick',dir:-1}],
+  smith:[{job:'smith',x:880,y:470,tool:'hammer',dir:-1,say:'Nice work, boss!'}],collector:[{job:'collector',x:745,y:500,tool:'rod',dir:1},{job:'collector',x:640,y:150,dir:-1,carry:'💧'}],
+  scientist:[{job:'scientist',x:90,y:440,dir:1}],maker:[{job:'maker',x:560,y:350,tool:'hammer',dir:1},{job:'maker',x:900,y:330,tool:'hammer',dir:-1}]};
+function drawCrew(){const L=cur&&CREW[cur.id];if(!L)return;for(const c of L)person(c.x,c.y,{job:c.job,tool:c.tool,swing:c.tool?Math.max(0,Math.sin(T*4.5+c.x))*2.2:0,t:T,dir:c.dir,s:.85,skin:SKINS[(c.x/10|0)%5],carry:c.carry})}
 /* ---------- wolves ---------- */
 let raid=null;
 function startRaid(){const n=clamp(3+Math.floor(S.day/2)-bl('fence'),1,7);raid={warn:bl('tower')?4:2.2,wolves:[],n};sfx.howl();toast('🐺 AWOOO! Wolves are coming! Tap them to scare them off!',2600)}
@@ -663,8 +763,9 @@ function board(){scene='board';cur=null;show('sBoard');closeModal();save();
   $('jobs').innerHTML=JOBS.map(j=>`<button class="job" data-j="${j.id}"><span class="ic">${j.ic}</span><b>${j.n}</b>${j.desc}<small>${info[j.id]}</small></button>`).join('')+
     `<div class="job" style="text-align:center"><b>⛺ Camp</b>🪙 ${S.coins} coins · Day ${S.day}<br>🍖 ${S.food} food · 💧 ${S.water} water<br>🐺 Wolves scared: ${st.wolves}<br><small>Shoutout to Alessandro and Chris for helping test camp life!</small></div>`;
   $('jobs').querySelectorAll('[data-j]').forEach(b=>b.onclick=()=>startJob(b.dataset.j))}
-function startJob(id){cur=JOBS.find(j=>j.id===id);scene='job';show(null);fx=[];cur.enter();hudUp();layout();if(!S['seen_'+id]){S['seen_'+id]=1;toast(cur.ic+' '+cur.desc,3600)}}
-$('bPlay').onclick=()=>{beep(600,.05);board()};
+function startJob(id){closeModal();cur=JOBS.find(j=>j.id===id)||(id==='camp'?camp:null);if(id!=='camp')S.lastJob=id;scene='job';show(null);fx=[];cur.enter();hudUp();layout();if(!S['seen_'+id]){S['seen_'+id]=1;toast(cur.ic+' '+cur.desc,3600)}}
+$('bCamp').onclick=()=>startJob('camp');
+$('bPlay').onclick=()=>{beep(600,.05);startJob('camp')};
 const keys={};let ptr={down:false};
 addEventListener('keydown',e=>{keys[e.key.length===1?e.key.toLowerCase():e.key]=true;if(e.key===' '&&cur){e.preventDefault();if(cur.bonk)cur.bonk();else if(cur.hammer)cur.hammer()}if(e.key.startsWith('Arrow'))e.preventDefault()});
 addEventListener('keyup',e=>{keys[e.key.length===1?e.key.toLowerCase():e.key]=false;if(e.key==='Shift'&&cur===rebel)rebel.sprint=false});
@@ -678,14 +779,14 @@ function frame(now){let dt=Math.min(.05,(now-last)/1000);last=now;T+=dt;
   if(scene==='job'&&cur){const paused=isModal();if(!paused){cur.update(dt);updRaid(dt);survive(dt);updFx(dt)}
     actT+=dt;if(actT>.2){actT=0;updActs()}saveT+=dt;if(saveT>5){saveT=0;save()}
     const d=cv._dpr||1;g.setTransform(d,0,0,d,0,0);g.fillStyle='#0c2314';g.fillRect(0,0,cv.width,cv.height);g.setTransform(d*scale,0,0,d*scale,d*offX,d*offY);
-    g.save();g.beginPath();g.rect(0,0,W,H);g.clip();cur.draw();drawRaid();drawFx();g.restore()}
+    g.save();g.beginPath();g.rect(0,0,W,H);g.clip();cur.draw();drawCrew();drawRaid();drawFx();g.restore()}
   requestAnimationFrame(frame)}
 layout();hudUp();requestAnimationFrame(frame);
 addEventListener('beforeunload',save);
 document.addEventListener('visibilitychange',()=>{if(document.hidden)save()});
 
 /* test hooks */
-window.SV={S:()=>S,JOBS,startJob,board,startRaid,raid:()=>raid,give:(k,n)=>{S.inv[k]=(S.inv[k]||0)+n},coins:n=>{S.coins+=n;hudUp()},save,
+window.SV={S:()=>S,camp:()=>camp,JOBS,startJob,board,startRaid,raid:()=>raid,give:(k,n)=>{S.inv[k]=(S.inv[k]||0)+n},coins:n=>{S.coins+=n;hudUp()},save,
   rebel,warrior,miner,smith,collector,scientist,maker,raidTap,reset:()=>{localStorage.removeItem(KEY);load()}};
 })();
 </script>
