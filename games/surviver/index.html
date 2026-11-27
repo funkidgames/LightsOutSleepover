@@ -1,0 +1,693 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<title>Surviver - FunKid Games</title>
+<link rel="icon" href="/favicon.png" type="image/png">
+<style>
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+  html,body{margin:0;height:100%;overflow:hidden;background:#0c2314;color:#fff;font-family:"Trebuchet MS",Verdana,system-ui,sans-serif;user-select:none;-webkit-user-select:none}
+  body{touch-action:none}
+  button{font-family:inherit;cursor:pointer}
+  #hud{position:fixed;left:0;right:0;top:0;display:flex;align-items:center;flex-wrap:wrap;gap:6px 10px;padding:6px 8px;background:rgba(8,26,14,.94);border-bottom:2px solid #2f6b3d;z-index:3;font-weight:bold;font-size:14px}
+  #hud a{color:#fff;text-decoration:none;background:#ffffff1a;padding:5px 9px;border-radius:9px;font-size:13px}
+  .chip{background:#ffffff14;padding:4px 9px;border-radius:9px;white-space:nowrap}
+  .meter{display:inline-block;width:62px;height:11px;background:#0008;border-radius:6px;overflow:hidden;vertical-align:middle;margin-left:3px}
+  .meter i{display:block;height:100%;border-radius:6px}
+  .low{animation:fl .5s infinite alternate}
+  @keyframes fl{to{background:#c0392b}}
+  #cv{position:fixed;left:0;right:0;display:block;touch-action:none;background:#0c2314}
+  #acts{position:fixed;left:0;right:0;bottom:0;display:flex;flex-wrap:wrap;justify-content:center;gap:6px;padding:7px;background:rgba(8,26,14,.94);border-top:2px solid #2f6b3d;z-index:3}
+  .ab{border:0;border-radius:12px;padding:9px 13px;font-size:15px;font-weight:900;color:#1c2a10;background:#ffd23f;box-shadow:0 4px 0 #a07800;touch-action:none}
+  .ab:active{transform:translateY(2px);box-shadow:0 2px 0 #a07800}
+  .ab:disabled{opacity:.45}
+  .ab.g{background:#8be38b;box-shadow:0 4px 0 #3c8a3c}
+  .ab.b{background:#8fd6ff;box-shadow:0 4px 0 #3a86b8}
+  .ab.r{background:#ff8f7a;box-shadow:0 4px 0 #b84a36}
+  .ab.s{background:#e9e2ff;box-shadow:0 4px 0 #8c80c0;font-size:14px;padding:9px 10px}
+  .screen{position:fixed;inset:0;z-index:6;display:none;flex-direction:column;align-items:center;overflow-y:auto;padding:16px 12px 30px;
+    background:radial-gradient(900px 500px at 50% -10%,#3f8a4f 0%,transparent 60%),linear-gradient(#123a20,#06160c)}
+  .screen.show{display:flex}
+  .back{position:absolute;left:10px;top:10px;color:#fff;text-decoration:none;font-weight:bold;font-size:13px;padding:7px 10px;border-radius:10px;background:rgba(0,0,0,.35)}
+  h1.logo{font-size:clamp(46px,11vw,92px);margin:34px 0 0;font-weight:900;letter-spacing:2px;line-height:1;
+    background:linear-gradient(#fff3b0,#ffb13b 60%,#e2591f);-webkit-background-clip:text;background-clip:text;color:transparent;filter:drop-shadow(0 5px 0 #0009)}
+  .sub{color:#cfe8c9;max-width:560px;text-align:center;line-height:1.45;font-size:16px}
+  .trees{font-size:40px;letter-spacing:6px;margin:10px 0}
+  .big{border:0;border-radius:18px;padding:14px 30px;font-size:24px;font-weight:900;color:#2a1a00;background:#ffd23f;box-shadow:0 6px 0 #a07800;margin:8px}
+  .jobs{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px;max-width:980px;width:100%;margin-top:10px}
+  .job{border:3px solid #ffffff22;border-radius:18px;padding:12px;background:#ffffff10;color:#fff;text-align:left;font-size:14px;line-height:1.35}
+  .job:hover{border-color:#ffd23f;transform:translateY(-3px)}
+  .job b{font-size:20px;display:block;margin-bottom:3px}
+  .job .ic{font-size:36px;float:right}
+  .job small{display:block;color:#ffd23f;margin-top:6px}
+  #modal{position:fixed;inset:0;z-index:9;background:#000a;display:none;align-items:center;justify-content:center;padding:12px}
+  #modal.show{display:flex}
+  .panel{background:#17361f;border:3px solid #4f9a5c;border-radius:20px;padding:16px;max-width:520px;width:100%;max-height:90vh;overflow-y:auto;text-align:center}
+  .panel h2{margin:0 0 8px}
+  .row{display:flex;align-items:center;gap:10px;justify-content:space-between;background:#ffffff10;border-radius:12px;padding:8px 10px;margin:6px 0;text-align:left}
+  .row .ic{font-size:28px}
+  .row div{flex:1}
+  .row small{color:#bfe0b8}
+  #toast{position:fixed;left:50%;top:70px;transform:translateX(-50%);z-index:8;background:#000c;padding:9px 16px;border-radius:14px;font-weight:bold;pointer-events:none;opacity:0;transition:opacity .25s;text-align:center;max-width:90%}
+  #toast.show{opacity:1}
+  #rot{display:none;position:fixed;left:50%;transform:translateX(-50%);bottom:120px;z-index:4;background:#000b;padding:8px 14px;border-radius:12px;font-weight:bold;font-size:14px;pointer-events:none}
+  @media (orientation:portrait) and (max-width:700px){body.playing #rot{display:block}}
+  @media (max-width:640px){#hud{font-size:12px;gap:4px 6px;padding:4px 6px}.meter{width:38px}.chip{padding:3px 6px}.ab{font-size:13px;padding:8px 9px}}
+</style>
+</head>
+<body>
+<div id="hud">
+  <a href="/">← Games</a>
+  <span class="chip" id="hJob"></span>
+  <span class="chip">🪙 <span id="hCoins">0</span></span>
+  <span class="chip" id="hHun">🍖<span class="meter"><i style="background:#ff9f43"></i></span></span>
+  <span class="chip" id="hThi">💧<span class="meter"><i style="background:#4fc3f7"></i></span></span>
+  <span class="chip">☀️ Day <span id="hDay">1</span></span>
+  <span class="chip" title="Camp supplies">⛺ 🍖<span id="hFood">0</span> 💧<span id="hWater">0</span></span>
+  <span class="chip" id="hWeap"></span>
+</div>
+<canvas id="cv"></canvas>
+<div id="acts"></div>
+<div id="toast"></div>
+<div id="rot">📱 Turn your phone sideways for a bigger camp!</div>
+<div id="modal"><div class="panel" id="mp"></div></div>
+
+<div class="screen show" id="sTitle">
+  <a class="back" href="/">← All games</a>
+  <h1 class="logo">SURVIVER</h1>
+  <div class="trees">🌲🐺🌲⛺🌲</div>
+  <p class="sub">Your camp is deep in the forest, and everyone has a job. Pick yours: dig for gold, forge weapons, catch fish, study rocks, guard the rebels, run away as a rebel, or build the camp.<br><br>
+  Keep your <b>🍖 food</b> and <b>💧 water</b> up so you survive. Watch out, because <b>wolves</b> raid the camp once in a while!</p>
+  <button class="big" id="bPlay">Play ▶</button>
+</div>
+
+<div class="screen" id="sBoard">
+  <a class="back" href="/">← All games</a>
+  <h2 style="margin:36px 0 0;font-size:30px">Pick your job</h2>
+  <p class="sub" style="margin:6px 0">Every job helps the camp. You can switch jobs any time.</p>
+  <div class="jobs" id="jobs"></div>
+</div>
+
+<script>
+(()=>{
+'use strict';
+const W=960,H=540;
+const cv=document.getElementById('cv'),g=cv.getContext('2d');
+const $=id=>document.getElementById(id);
+let scale=1,offX=0,offY=0;
+const rnd=(a,b)=>a+Math.random()*(b-a), ri=(a,b)=>Math.floor(rnd(a,b+1)), pick=a=>a[Math.floor(Math.random()*a.length)];
+const clamp=(v,a,b)=>v<a?a:v>b?b:v, dist=(a,b,c,d)=>Math.hypot(a-c,b-d);
+function wpick(obj){let t=0;for(const k in obj)t+=Math.max(0,obj[k]);let r=Math.random()*t;for(const k in obj){r-=Math.max(0,obj[k]);if(r<=0)return k}return Object.keys(obj)[0]}
+
+/* ---------- sound ---------- */
+let AC=null;
+function beep(f=440,d=.08,type='square',v=.05,slide=0){try{AC=AC||new (window.AudioContext||window.webkitAudioContext)();const o=AC.createOscillator(),gg=AC.createGain();o.type=type;o.frequency.value=f;if(slide)o.frequency.linearRampToValueAtTime(f+slide,AC.currentTime+d);gg.gain.value=v;gg.gain.exponentialRampToValueAtTime(.0001,AC.currentTime+d);o.connect(gg);gg.connect(AC.destination);o.start();o.stop(AC.currentTime+d)}catch(e){}}
+const sfx={hit:()=>beep(160,.06,'square',.05,-60),coin:()=>{beep(880,.07,'square',.04);setTimeout(()=>beep(1320,.09,'square',.04),60)},
+  good:()=>{beep(523,.08,'triangle',.07);setTimeout(()=>beep(784,.12,'triangle',.07),80)},bad:()=>beep(200,.25,'sawtooth',.05,-120),
+  clang:()=>beep(1200,.12,'triangle',.06,-300),splash:()=>beep(300,.2,'sine',.08,-200),howl:()=>beep(420,.7,'sine',.07,260),bonk:()=>beep(260,.12,'square',.07,200)};
+
+/* ---------- data ---------- */
+const ITEMS={wood:{n:'Wood',i:'🪵',v:1},stone:{n:'Stone',i:'🪨',v:1},coal:{n:'Coal',i:'⚫',v:2},copper:{n:'Copper Ore',i:'🟠',v:4},iron:{n:'Iron Ore',i:'⚪',v:6},gold:{n:'Gold Nugget',i:'🟡',v:15}};
+const WEAPONS=['Stick','Wood Sword','Copper Sword','Iron Sword','Gold Sword','Crystal Sword'];
+const SAMPLES={
+  quartz:{n:'Quartz Crystal',fam:'clear',shape:'crystal',col:'#e3f3ff',look:'Clear and glassy, you can see through it',wt:'Light',hard:'Hard: it scratches glass',mag:'No pull',uv:'No glow',v:12,w:30},
+  amethyst:{n:'Amethyst',fam:'clear',shape:'crystal',col:'#a463f2',look:'Purple see-through crystals',wt:'Light',hard:'Hard: it scratches glass',mag:'No pull',uv:'No glow',v:18,w:20},
+  pyrite:{n:"Fool's Gold (Pyrite)",fam:'gold',shape:'cube',col:'#d4b44a',look:'Shiny gold color, made of little cubes',wt:'Heavy',hard:'Hard: a nail cannot scratch it',mag:'No pull',uv:'No glow',v:6,w:30},
+  realgold:{n:'Real Gold Nugget',fam:'gold',shape:'lump',col:'#ffcc33',look:'Shiny gold color, a smooth lump',wt:'Super heavy!',hard:'Soft: a nail scratches it',mag:'No pull',uv:'No glow',v:40,w:10},
+  ruby:{n:'Ruby',fam:'red',shape:'gem',col:'#e0234a',look:'Deep red shiny gem',wt:'Medium',hard:'Super hard: it scratches everything',mag:'No pull',uv:'Glows bright red!',v:35,w:10},
+  garnet:{n:'Garnet',fam:'red',shape:'gem',col:'#9e1b32',look:'Deep red shiny gem',wt:'Medium',hard:'Hard: it scratches glass',mag:'No pull',uv:'No glow',v:14,w:20},
+  emerald:{n:'Emerald',fam:'green',shape:'gem',col:'#22b866',look:'Green shiny gem',wt:'Medium',hard:'Super hard: it scratches everything',mag:'No pull',uv:'No glow',v:30,w:10},
+  fluorite:{n:'Fluorite',fam:'green',shape:'crystal',col:'#6fe3b5',look:'Green see-through crystal',wt:'Light',hard:'Soft: a nail scratches it',mag:'No pull',uv:'Glows blue!',v:15,w:20},
+  fossil:{n:'Dino Fossil',fam:'brown',shape:'fossil',col:'#a87b52',look:'Brown rock with a curly shell pattern',wt:'Medium',hard:'Soft: a nail scratches it',mag:'No pull',uv:'No glow',v:25,w:14},
+  meteorite:{n:'Space Rock (Meteorite)',fam:'dark',shape:'lump',col:'#4d4d5c',look:'Dark bumpy metal rock',wt:'Super heavy!',hard:'Hard: a nail cannot scratch it',mag:'It sticks to the magnet!',uv:'No glow',v:45,w:8},
+  magnetite:{n:'Magnetite',fam:'dark',shape:'lump',col:'#2e2e36',look:'Dark bumpy metal rock',wt:'Heavy',hard:'Hard: a nail cannot scratch it',mag:'It sticks to the magnet!',uv:'No glow',v:10,w:24},
+  basalt:{n:'Plain Basalt',fam:'dark',shape:'lump',col:'#3d3a3a',look:'Dark bumpy rock',wt:'Medium',hard:'Hard: a nail cannot scratch it',mag:'No pull',uv:'No glow',v:3,w:24}
+};
+const RECIPES=[
+  {id:'wsword',n:'Wood Sword',ic:'🗡️',need:{wood:2},tier:1,pay:8},
+  {id:'pot',n:'Copper Pot',ic:'🍲',need:{copper:1},pay:7},
+  {id:'csword',n:'Copper Sword',ic:'🗡️',need:{copper:2,coal:1},tier:2,pay:16},
+  {id:'shoe',n:'Horseshoe',ic:'🧲',need:{iron:1},pay:10},
+  {id:'axe',n:'Iron Axe',ic:'🪓',need:{iron:1,coal:1},pay:14},
+  {id:'isword',n:'Iron Sword',ic:'🗡️',need:{iron:2,coal:1},tier:3,pay:24},
+  {id:'shield',n:'Iron Shield',ic:'🛡️',need:{iron:2,wood:1},pay:22},
+  {id:'crown',n:'Gold Crown',ic:'👑',need:{gold:2},pay:40},
+  {id:'gsword',n:'Gold Sword',ic:'🗡️',need:{gold:2,coal:2},tier:4,pay:45},
+  {id:'xsword',n:'Crystal Sword',ic:'🗡️',need:{iron:3,gold:2,coal:2},tier:5,pay:70}];
+const CUSTOMERS=['Warrior Alessandro','Chris the Scout','Captain Fern','Maker Milo','Collector Juno','Granny Oak','Chief Bram','Warrior Tess'];
+const BUILDS=[
+  {id:'bed',n:'Bed',ic:'🛏️',need:{wood:3},max:8,desc:'Comfy troops! +5% coins from every job'},
+  {id:'table',n:'Table',ic:'🪑',need:{wood:2},max:4,desc:'Nice meals! +5% coins from every job'},
+  {id:'fence',n:'Fence',ic:'🚧',need:{wood:2,stone:1},max:5,desc:'One fewer wolf in every raid'},
+  {id:'fire',n:'Campfire',ic:'🔥',need:{wood:2,stone:2},max:1,desc:'You get hungry slower'},
+  {id:'barrel',n:'Water Barrel',ic:'🛢️',need:{wood:3,iron:1},max:1,desc:'You get thirsty slower'},
+  {id:'tower',n:'Watchtower',ic:'🗼',need:{wood:5,stone:2},max:1,desc:'Wolves are spotted early and run slower'},
+  {id:'chest',n:'Storage Chest',ic:'📦',need:{wood:4,iron:1},max:2,desc:'Camp can store 20 more food and water'}];
+const UPS={
+  miner:[{id:'pick',ic:'⛏️',names:['Wood Pick','Stone Pick','Iron Pick','Gold Pick','Diamond Pick','Laser Pick'],cost:[0,15,40,90,180,320],desc:l=>`Hits for ${PICK[l]} damage`},
+         {id:'lamp',ic:'🔦',names:['No Lantern','Lantern','Super Lantern'],cost:[0,25,80],desc:l=>['Ores hide in the rock','Gold and mystery finds sparkle','Every ore sparkles'][l]},
+         {id:'luck',ic:'⛑️',names:['Plain Helmet','Lucky Helmet','Super Lucky Helmet'],cost:[0,35,110],desc:l=>`${l*15}% chance of double loot`}],
+  smith:[{id:'hammer',ic:'🔨',names:['Old Hammer','Good Hammer','Master Hammer'],cost:[0,30,90],desc:l=>'Bigger perfect zone when hammering'},
+         {id:'bellows',ic:'🌬️',names:['Small Bellows','Big Bellows','Mega Bellows'],cost:[0,25,70],desc:l=>'Heats the metal faster'}],
+  collector:[{id:'bucket',ic:'🪣',names:['Wood Bucket','Big Bucket','Metal Bucket','Barrel Bucket','Super Jug'],cost:[0,15,40,90,170],desc:l=>`Carries ${BUCKET[l]} water each trip`},
+         {id:'rod',ic:'🎣',names:['Stick Rod','Bamboo Rod','Pro Rod','Golden Rod','Mega Rod'],cost:[0,20,50,110,200],desc:l=>'Faster bites, bigger fish, easier catch'},
+         {id:'bag',ic:'🎒',names:['Small Sack','Basket','Backpack','Wagon'],cost:[0,20,60,130],desc:l=>`Carry up to ${BAG[l]} things`}],
+  scientist:[{id:'coat',ic:'🥼',names:['Plain Coat','Lab Coat','Pro Lab Coat'],cost:[0,30,90],desc:l=>`+${l*25}% coins for each rock you name`},
+         {id:'uv',ic:'🔦',names:['No UV Lamp','UV Lamp'],cost:[0,35],desc:l=>l?'You can run the glow test':'Unlocks the glow test'}],
+  warrior:[{id:'boots',ic:'👢',names:['Plain Boots','Fast Boots','Rocket Boots'],cost:[0,30,90],desc:l=>'Run even faster'},
+         {id:'whistle',ic:'📯',names:['No Whistle','Whistle'],cost:[0,40],desc:l=>'Rebels sneak out less often'}],
+  rebel:[{id:'shoes',ic:'👟',names:['Old Shoes','Sneaky Shoes','Ninja Shoes'],cost:[0,30,90],desc:l=>'Run faster (warriors are still faster!)'},
+         {id:'lungs',ic:'💨',names:['Normal Sprint','Long Sprint','Super Sprint'],cost:[0,25,80],desc:l=>'Your sprint lasts longer'}],
+  maker:[{id:'saw',ic:'🪚',names:['Old Axe','Saw','Power Saw','Super Saw'],cost:[0,20,60,140],desc:l=>`Trees fall in ${4-l} chop${4-l>1?'s':''}`},
+         {id:'toolbox',ic:'🧰',names:['Small Toolbox','Big Toolbox','Pro Toolbox'],cost:[0,25,80],desc:l=>'Nails stay up longer'}]
+};
+const PICK=[1,2,3,5,8,12], BUCKET=[1,2,3,5,8], BAG=[6,10,15,25];
+
+/* ---------- save ---------- */
+const KEY='surviver';
+const DEF={coins:0,day:1,dayT:0,hun:100,thi:100,food:6,water:6,inv:{wood:0,stone:0,coal:0,copper:0,iron:0,gold:0},finds:[],weapon:0,up:{},builds:{},mineDepth:1,raidT:75,
+  stats:{gold:0,orders:0,ids:0,delivered:0,caught:0,bestKm:0,rebelWins:0,built:0,wolves:0,shifts:0}};
+let S;
+function load(){try{const d=JSON.parse(localStorage.getItem(KEY)||'null');S=Object.assign(JSON.parse(JSON.stringify(DEF)),d||{});S.inv=Object.assign({},DEF.inv,S.inv);S.stats=Object.assign({},DEF.stats,S.stats);}catch(e){S=JSON.parse(JSON.stringify(DEF))}}
+function save(){try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}}
+load();
+const up=id=>S.up[id]||0, bl=id=>S.builds[id]||0;
+const comfort=()=>bl('bed')+bl('table');
+const storeMax=()=>30+bl('chest')*20;
+function earn(n,x,y){n=Math.max(1,Math.round(n*(1+.05*comfort())));S.coins+=n;sfx.coin();if(x!=null)floatT(x,y,'+'+n+' 🪙','#ffd23f');hudUp();return n}
+function give(k,n,x,y){S.inv[k]=(S.inv[k]||0)+n;if(x!=null)floatT(x,y,'+'+n+' '+ITEMS[k].i,'#fff');}
+function has(need){for(const k in need)if((S.inv[k]||0)<need[k])return false;return true}
+function take(need){for(const k in need)S.inv[k]-=need[k]}
+const needTxt=need=>Object.keys(need).map(k=>`${need[k]}${ITEMS[k].i}`).join(' ');
+
+/* ---------- ui helpers ---------- */
+let toastT=0;
+function toast(t,ms=1800){const e=$('toast');e.innerHTML=t;e.classList.add('show');clearTimeout(toastT);toastT=setTimeout(()=>e.classList.remove('show'),ms)}
+function modal(html){$('mp').innerHTML=html;$('modal').classList.add('show')}
+function closeModal(){$('modal').classList.remove('show')}
+const isModal=()=>$('modal').classList.contains('show');
+$('modal').addEventListener('click',e=>{if(e.target.id==='modal'&&!$('modal').dataset.lock)closeModal()});
+let actList=[];
+function setActs(list){const A=$('acts');A.innerHTML='';
+  const common=[{label:'🍖 Eat',cls:'s',fn:eat,dis:()=>S.food<1},{label:'💧 Drink',cls:'s',fn:drink,dis:()=>S.water<1},{label:'🎒',cls:'s',fn:bag},{label:'⬆️ Upgrades',cls:'s',fn:upgrades},{label:'🔁 Jobs',cls:'s',fn:board}];
+  actList=list.concat(common).map(a=>{const b=document.createElement('button');b.className='ab '+(a.cls||'');
+    if(a.hold){b.addEventListener('pointerdown',e=>{e.preventDefault();a.down()});['pointerup','pointerleave','pointercancel'].forEach(ev=>b.addEventListener(ev,()=>a.up()))}
+    else b.addEventListener('click',()=>{a.fn();updActs()});
+    A.appendChild(b);return {a,b}});updActs();layout()}
+function updActs(){for(const {a,b} of actList){const t=typeof a.label=='function'?a.label():a.label;if(b._t!==t){b.innerHTML=t;b._t=t}b.disabled=a.dis?!!a.dis():false;b.style.display=a.show&&!a.show()?'none':''}}
+function layout(){const w=innerWidth,h=innerHeight,top=$('hud').offsetHeight,bot=$('acts').offsetHeight;const ch=Math.max(100,h-top-bot);
+  cv.style.top=top+'px';cv.style.height=ch+'px';cv.style.width=w+'px';const dpr=Math.min(2,devicePixelRatio||1);cv.width=w*dpr;cv.height=ch*dpr;
+  scale=Math.min(w/W,ch/H);offX=(w-W*scale)/2;offY=(ch-H*scale)/2;cv._dpr=dpr}
+addEventListener('resize',layout);
+function hudUp(){$('hCoins').textContent=S.coins;$('hDay').textContent=S.day;$('hFood').textContent=S.food;$('hWater').textContent=S.water;
+  const hm=$('hHun').querySelector('i'),tm=$('hThi').querySelector('i');hm.style.width=S.hun+'%';tm.style.width=S.thi+'%';
+  $('hHun').classList.toggle('low',S.hun<25);$('hThi').classList.toggle('low',S.thi<25);
+  $('hWeap').textContent='🗡️ '+WEAPONS[S.weapon];$('hJob').textContent=cur?cur.ic+' '+cur.n:''}
+function eat(){if(S.food<1)return toast('No food in camp! A Collector needs to catch some.');S.food--;S.hun=Math.min(100,S.hun+35);sfx.good();toast('Yum! 🍖');hudUp()}
+function drink(){if(S.water<1)return toast('No water in camp! A Collector needs to fill buckets.');S.water--;S.thi=Math.min(100,S.thi+40);sfx.good();toast('Ahh! 💧');hudUp()}
+function bag(){let h='<h2>🎒 Your Bag</h2>';
+  for(const k in ITEMS){const n=S.inv[k]||0;h+=`<div class="row"><span class="ic">${ITEMS[k].i}</span><div><b>${ITEMS[k].n}</b> × ${n}<br><small>Sells for ${ITEMS[k].v} 🪙 each</small></div>${n?`<button class="ab" data-sell="${k}">Sell 1</button>`:''}</div>`}
+  h+=`<div class="row"><span class="ic">❓</span><div><b>Mystery finds</b> × ${S.finds.length}<br><small>Take these to the Scientist to find out what they are worth</small></div></div>`;
+  h+=`<div class="row"><span class="ic">🗡️</span><div><b>${WEAPONS[S.weapon]}</b><br><small>Better weapons scare wolves faster. Blacksmiths forge new ones.</small></div></div>`;
+  const b=BUILDS.filter(x=>bl(x.id)).map(x=>x.ic+'×'+bl(x.id)).join(' ');
+  h+=`<div class="row"><span class="ic">⛺</span><div><b>Camp</b>: ${b||'nothing built yet'}<br><small>Storage: ${S.food}/${storeMax()} food, ${S.water}/${storeMax()} water. Comfort bonus +${comfort()*5}% coins</small></div></div>`;
+  h+='<button class="big" id="mClose">Close</button>';modal(h);
+  $('mp').querySelectorAll('[data-sell]').forEach(b=>b.onclick=()=>{const k=b.dataset.sell;if(S.inv[k]>0){S.inv[k]--;S.coins+=ITEMS[k].v;sfx.coin();hudUp();save();bag()}});
+  $('mClose').onclick=closeModal}
+function upgrades(){if(!cur)return;const list=UPS[cur.id];let h=`<h2>⬆️ ${cur.n} Upgrades</h2><p>You have 🪙 ${S.coins}</p>`;
+  for(const u of list){const l=up(u.id),mx=u.names.length-1;
+    h+=`<div class="row"><span class="ic">${u.ic}</span><div><b>${u.names[l]}</b><br><small>${u.desc(l)}</small>${l<mx?`<br><small>Next: <b>${u.names[l+1]}</b>: ${u.desc(l+1)}</small>`:''}</div>${l<mx?`<button class="ab" data-up="${u.id}" ${S.coins<u.cost[l+1]?'disabled':''}>${u.cost[l+1]} 🪙</button>`:'<b>MAX</b>'}</div>`}
+  h+='<button class="big" id="mClose">Close</button>';modal(h);
+  $('mp').querySelectorAll('[data-up]').forEach(b=>b.onclick=()=>{const u=list.find(x=>x.id===b.dataset.up),l=up(u.id);if(S.coins>=u.cost[l+1]){S.coins-=u.cost[l+1];S.up[u.id]=l+1;sfx.good();hudUp();save();upgrades();updActs()}});
+  $('mClose').onclick=closeModal}
+
+/* ---------- fx ---------- */
+let fx=[];
+function floatT(x,y,t,c='#fff',size=22){fx.push({x,y,t,c,size,life:1.3,vy:-40,txt:true})}
+function burst(x,y,c,n=10,sp=150){for(let i=0;i<n;i++){const a=Math.random()*6.28,s=rnd(40,sp);fx.push({x,y,vx:Math.cos(a)*s,vy:Math.sin(a)*s-60,c,life:rnd(.4,.8),r:rnd(2,5)})}}
+function updFx(dt){for(const f of fx){f.life-=dt;f.y+=f.vy*dt;if(!f.txt){f.x+=f.vx*dt;f.vy+=400*dt}}fx=fx.filter(f=>f.life>0)}
+function drawFx(ox=0){for(const f of fx){g.globalAlpha=clamp(f.life*1.5,0,1);if(f.txt){g.font=`900 ${f.size}px Trebuchet MS,Verdana,sans-serif`;g.textAlign='center';g.lineWidth=4;g.strokeStyle='#000a';g.strokeText(f.t,f.x-ox,f.y);g.fillStyle=f.c;g.fillText(f.t,f.x-ox,f.y)}else{g.fillStyle=f.c;g.fillRect(f.x-ox-f.r/2,f.y-f.r/2,f.r,f.r)}}g.globalAlpha=1}
+
+/* ---------- drawing helpers ---------- */
+function rr(x,y,w,h,r){g.beginPath();g.roundRect?g.roundRect(x,y,w,h,r):g.rect(x,y,w,h)}
+function circ(x,y,r,c){g.beginPath();g.arc(x,y,r,0,6.283);g.fillStyle=c;g.fill()}
+function ell(x,y,rx,ry,c){g.beginPath();g.ellipse(x,y,rx,ry,0,0,6.283);g.fillStyle=c;g.fill()}
+function txt(t,x,y,size=18,c='#fff',al='center',stroke=true){g.font=`900 ${size}px Trebuchet MS,Verdana,sans-serif`;g.textAlign=al;g.textBaseline='middle';if(stroke){g.lineWidth=4;g.strokeStyle='#000a';g.strokeText(t,x,y)}g.fillStyle=c;g.fillText(t,x,y);g.textBaseline='alphabetic'}
+function pine(x,y,s,c1='#1e5a2c',c2='#2c7a3c'){g.fillStyle='#5b3a1e';g.fillRect(x-4*s,y-12*s,8*s,14*s);for(let i=0;i<3;i++){g.beginPath();g.moveTo(x,y-(70-i*18)*s-20*s);g.lineTo(x-(28-i*2)*s+i*0,y-(22+i*18)*s+18*s-i*0);g.lineTo(x+(28-i*2)*s,y-(22+i*18)*s+18*s);g.closePath();g.fillStyle=i%2?c2:c1;g.fill()}}
+const SKINS=['#f2c79a','#d9a066','#a86b3c','#7a4a26','#f7d7b5'];
+function person(x,y,o={}){g.save();g.translate(x,y);const s=o.s||1;g.scale(s*(o.dir<0?-1:1),s);if(o.alpha!=null)g.globalAlpha=o.alpha;
+  ell(0,0,14,5,'#0004');const w=o.walk?Math.sin((o.t||0)*14)*6:0;
+  g.strokeStyle='#33261a';g.lineWidth=5;g.lineCap='round';g.beginPath();g.moveTo(-5,-14);g.lineTo(-5+w,-1);g.moveTo(5,-14);g.lineTo(5-w,-1);g.stroke();
+  const job=o.job||'none';let shirt=o.shirt||{miner:'#3f6fb5',smith:'#6b4a3a',collector:'#4f9a3c',scientist:'#f4f4f4',warrior:'#8a8f99',rebel:'#f0f0f0',maker:'#d9822b',scout:'#c9a227',none:'#5c7cfa'}[job];
+  rr(-11,-37,22,25,8);g.fillStyle=shirt;g.fill();
+  if(job==='rebel'){g.fillStyle='#6a3fb5';for(let i=0;i<3;i++)g.fillRect(-11,-34+i*8,22,4)}
+  if(job==='smith'){rr(-8,-33,16,22,4);g.fillStyle='#3a2a20';g.fill()}
+  if(job==='maker'){g.fillStyle='#5b3a1e';g.fillRect(-11,-18,22,5);g.fillStyle='#ccc';g.fillRect(4,-19,3,8)}
+  if(job==='warrior'){g.fillStyle='#c0392b';g.fillRect(-11,-30,22,4)}
+  // arms
+  g.strokeStyle=o.skin||SKINS[0];g.lineWidth=5;const sw=o.swing||0;g.beginPath();g.moveTo(-10,-32);g.lineTo(-15,-20);g.moveTo(10,-32);g.lineTo(16+Math.cos(sw)*4,-22-Math.sin(sw)*12);g.stroke();
+  if(o.tool)drawTool(o.tool,16+Math.cos(sw)*4,-22-Math.sin(sw)*12,sw);
+  circ(0,-48,12,o.skin||SKINS[0]);
+  // face
+  if(o.dizzy){txt('💫',0,-68,16)}
+  g.fillStyle='#1a1a1a';if(o.angry){g.beginPath();g.moveTo(-8,-55);g.lineTo(-2,-52);g.moveTo(8,-55);g.lineTo(2,-52);g.strokeStyle='#1a1a1a';g.lineWidth=2;g.stroke()}
+  if(o.sleep){g.strokeStyle='#1a1a1a';g.lineWidth=2;g.beginPath();g.moveTo(-7,-49);g.lineTo(-2,-49);g.moveTo(2,-49);g.lineTo(7,-49);g.stroke()}
+  else{circ(-4,-49,1.9,'#1a1a1a');circ(4,-49,1.9,'#1a1a1a')}
+  g.beginPath();g.arc(0,-45,4,.2,2.9);g.strokeStyle='#1a1a1a';g.lineWidth=1.6;if(!o.angry&&!o.sleep)g.stroke();
+  // hats
+  if(job==='miner'){g.beginPath();g.arc(0,-52,13,Math.PI,0);g.fillStyle='#f5c518';g.fill();g.fillRect(-15,-53,30,3);circ(0,-60,4,'#fff8b0')}
+  if(job==='smith'){g.fillStyle='#c0392b';g.fillRect(-12,-58,24,4)}
+  if(job==='collector'){ell(0,-57,19,5,'#e8c66a');g.beginPath();g.arc(0,-58,10,Math.PI,0);g.fillStyle='#e8c66a';g.fill();g.fillStyle='#c0392b';g.fillRect(-10,-60,20,3)}
+  if(job==='scientist'){circ(-5,-50,4.5,'#9be7ff');circ(5,-50,4.5,'#9be7ff');circ(-4,-49,1.6,'#1a1a1a');circ(4,-49,1.6,'#1a1a1a');g.fillStyle='#555';g.beginPath();g.arc(0,-55,12,Math.PI,0);g.fill()}
+  if(job==='warrior'){g.beginPath();g.arc(0,-52,13,Math.PI,0);g.fillStyle='#b7bcc6';g.fill();g.fillStyle='#c0392b';g.fillRect(-2,-72,4,9);ell(0,-72,7,4,'#e74c3c')}
+  if(job==='rebel'){g.fillStyle='#8e44ad';g.fillRect(-12,-58,24,5);g.beginPath();g.moveTo(10,-56);g.lineTo(18,-50);g.lineTo(12,-52);g.fill()}
+  if(job==='maker'){g.beginPath();g.arc(0,-54,12,Math.PI,0);g.fillStyle='#e67e22';g.fill();g.fillRect(0,-56,17,3)}
+  if(job==='scout'){g.beginPath();g.moveTo(-14,-55);g.lineTo(0,-70);g.lineTo(14,-55);g.closePath();g.fillStyle='#2e7d32';g.fill()}
+  if(o.carry)txt(o.carry,0,-80,14);
+  g.restore()}
+function drawTool(t,x,y,a){g.save();g.translate(x,y);g.rotate(-a+.6);
+  if(t==='pick'){g.fillStyle='#7a4a26';g.fillRect(-2,-20,4,24);g.strokeStyle=['#a0703c','#888','#ccc','#ffd23f','#7fe9ff','#ff4fd8'][up('pick')];g.lineWidth=5;g.beginPath();g.arc(0,-14,12,Math.PI*1.15,Math.PI*1.85);g.stroke()}
+  else if(t==='hammer'){g.fillStyle='#7a4a26';g.fillRect(-2,-18,4,22);g.fillStyle='#555';g.fillRect(-8,-24,16,8)}
+  else if(t==='axe'){g.fillStyle='#7a4a26';g.fillRect(-2,-20,4,24);g.fillStyle='#bbb';g.beginPath();g.moveTo(2,-20);g.lineTo(12,-24);g.lineTo(12,-10);g.lineTo(2,-13);g.fill()}
+  else if(t==='sword'){const c=['#8a5a2b','#c49a6c','#e07a32','#d9dde3','#ffd23f','#9ff3ff'][S.weapon];g.fillStyle=c;g.fillRect(-2.5,-30,5,28);g.fillStyle='#5b3a1e';g.fillRect(-7,-3,14,4)}
+  else if(t==='rod'){g.strokeStyle='#a0703c';g.lineWidth=3;g.beginPath();g.moveTo(0,4);g.lineTo(0,-36);g.stroke()}
+  g.restore()}
+function wolf(x,y,o={}){g.save();g.translate(x,y);g.scale(o.dir<0?-1:1,1);const t=o.t||0,b=Math.sin(t*16)*2;
+  ell(0,4,26,6,'#0004');g.strokeStyle='#6b6f7a';g.lineWidth=6;g.lineCap='round';g.beginPath();g.moveTo(-14,-6);g.lineTo(-16+b*2,6);g.moveTo(12,-6);g.lineTo(14-b*2,6);g.stroke();
+  g.beginPath();g.moveTo(-22,-14);g.quadraticCurveTo(-36,-26+b,-34,-34);g.lineWidth=7;g.strokeStyle='#8d929e';g.stroke();
+  ell(0,-14,24,13,'#8d929e');ell(2,-10,14,6,'#c9ccd3');
+  circ(22,-24,12,'#8d929e');g.fillStyle='#8d929e';g.beginPath();g.moveTo(14,-32);g.lineTo(17,-46);g.lineTo(23,-34);g.moveTo(24,-34);g.lineTo(30,-46);g.lineTo(31,-30);g.fill();
+  ell(32,-20,8,5,'#c9ccd3');circ(38,-21,3,'#222');circ(19,-27,4.5,'#fff');circ(27,-27,4.5,'#fff');circ(20,-27,2.3,'#222');circ(28,-27,2.3,'#222');
+  if(o.scared){txt('💦',0,-48,16)}
+  g.restore()}
+let bgTrees=null;
+function forestBg(groundC='#3d8a45',sky=['#7fd0ff','#c9f0ff'],ox=0){
+  const gr=g.createLinearGradient(0,0,0,H);gr.addColorStop(0,sky[0]);gr.addColorStop(1,sky[1]);g.fillStyle=gr;g.fillRect(0,0,W,H);
+  if(!bgTrees){bgTrees=[];for(let i=0;i<26;i++)bgTrees.push({x:i*40+rnd(-10,10),s:rnd(.8,1.3)})}
+  for(const t of bgTrees){const xx=((t.x-ox*.3)%1040+1040)%1040-40;pine(xx,110,t.s,'#2a5e3a','#336e44')}
+  g.fillStyle=groundC;g.fillRect(0,100,W,H-100)}
+
+/* ---------- jobs ---------- */
+let cur=null, T=0;
+const JOBS=[];
+
+/* ===== MINER ===== */
+const TILE={dirt:{c:'#8a5a2b',hp:2,loot:null},stone:{c:'#7d7d86',hp:4,loot:'stone'},coal:{c:'#73737c',hp:5,loot:'coal',dot:'#111'},copper:{c:'#7d7d86',hp:6,loot:'copper',dot:'#e07a32'},
+  iron:{c:'#7d7d86',hp:8,loot:'iron',dot:'#e8d6bd'},gold:{c:'#7d7d86',hp:9,loot:'gold',dot:'#ffd23f',rare:1},mystery:{c:'#706a7e',hp:8,loot:'mystery',dot:'#d38cff',rare:1},granite:{c:'#4b4452',hp:14,loot:'stone'}};
+const MG={cols:12,rows:6,tw:80,th:68,top:128};
+const miner={id:'miner',n:'Miner',ic:'⛏️',desc:'Dig in the mine to find gold! Upgrade your pickaxe for better loot and more damage.',grid:[],mx:480,swing:0,mined:0,
+  gen(){this.grid=[];this.mined=0;const D=S.mineDepth;for(let r=0;r<MG.rows;r++){const row=[];for(let c=0;c<MG.cols;c++){const d=D+r*.3;
+      const t=wpick({dirt:30-d*7,stone:30,coal:12,copper:8+d,iron:d>=1.6?5+d*1.5:0,gold:2+d*1.3,mystery:2.5+d*.9,granite:d>=3?d*3:0});
+      const hp=TILE[t].hp+Math.floor((D-1)*.8);row.push({t,hp,max:hp,open:false,hit:0})}this.grid.push(row)}},
+  enter(){if(!this.grid.length)this.gen();setActs([{label:()=>`⬇️ Go deeper (${this.mined}/8)`,cls:'g',fn:()=>this.deeper(),dis:()=>this.mined<8},{label:()=>`Depth ${S.mineDepth*10} m`,cls:'b',fn:()=>toast('Deeper = harder rock, but more gold and mystery finds!')}])},
+  deeper(){S.mineDepth++;this.gen();sfx.good();toast(`⬇️ Depth ${S.mineDepth*10} m. Harder rock, better loot!`);save()},
+  canDig(r,c){if(r===0)return true;const G=this.grid,o=(rr,cc)=>G[rr]&&G[rr][cc]&&G[rr][cc].open;return o(r-1,c)||o(r,c-1)||o(r,c+1)||o(r+1,c)},
+  down(x,y){const c=Math.floor((x-0)/MG.tw),r=Math.floor((y-MG.top)/MG.th);if(r<0||r>=MG.rows||c<0||c>=MG.cols)return;const t=this.grid[r][c];if(t.open)return;
+    if(!this.canDig(r,c)){floatT(x,y,'Dig next to a hole!','#ffd',16);return}
+    this.mx=clamp(c*MG.tw+40,30,930);this.swing=1;const dmg=PICK[up('pick')];t.hp-=dmg;t.hit=.15;sfx.hit();burst(x,y,TILE[t.t].c,6);floatT(x,y-10,'-'+dmg,'#fff',16);
+    if(t.hp<=0){t.open=true;this.mined++;const L=TILE[t.t].loot,cx=c*MG.tw+40,cy=MG.top+r*MG.th+30;burst(cx,cy,TILE[t.t].dot||TILE[t.t].c,14,220);
+      if(L){const dbl=Math.random()<up('luck')*.15?2:1;
+        if(L==='mystery'){for(let i=0;i<dbl;i++)S.finds.push(this.mysteryPick());floatT(cx,cy,'❓ Mystery find!','#e0b0ff',20);sfx.good();toast('❓ You found something strange! A Scientist can find out what it is worth.')}
+        else{give(L,dbl,cx,cy);earn(L==='gold'?5:1,cx,cy+26);if(L==='gold'){S.stats.gold+=dbl;floatT(cx,cy-30,'GOLD!','#ffd23f',30);sfx.good();burst(cx,cy,'#ffd23f',24,260)}}
+        if(dbl>1)floatT(cx,cy+24,'Lucky x2!','#8bff8b',16)}
+      save();updActs()}},
+  mysteryPick(){const w={};const D=S.mineDepth;for(const k in SAMPLES){const s=SAMPLES[k];w[k]=s.w*(s.v>25?Math.min(3,.5+D*.3):1)}return wpick(w)},
+  update(dt){this.swing=Math.max(0,this.swing-dt*4);for(const row of this.grid)for(const t of row)t.hit=Math.max(0,t.hit-dt)},
+  draw(){const gr=g.createLinearGradient(0,0,0,H);gr.addColorStop(0,'#7fd0ff');gr.addColorStop(1,'#c9f0ff');g.fillStyle=gr;g.fillRect(0,0,W,MG.top);
+    for(let i=0;i<14;i++)pine(i*75+20,MG.top-6,.75,'#1f5b30','#2a7040');g.fillStyle='#4caf50';g.fillRect(0,MG.top-8,W,8);
+    g.fillStyle='#2b1d12';g.fillRect(0,MG.top,W,H-MG.top);const L=up('lamp');
+    for(let r=0;r<MG.rows;r++)for(let c=0;c<MG.cols;c++){const t=this.grid[r][c],x=c*MG.tw,y=MG.top+r*MG.th;
+      if(t.open){g.fillStyle='#1b120b';g.fillRect(x,y,MG.tw,MG.th);continue}
+      const T0=TILE[t.t];const jig=t.hit>0?rnd(-2,2):0;rr(x+2+jig,y+2,MG.tw-4,MG.th-4,8);g.fillStyle=T0.c;g.fill();
+      g.fillStyle='#ffffff18';g.fillRect(x+6+jig,y+6,MG.tw-20,6);
+      const show=T0.dot&&(t.hp<t.max||L>=2||(L>=1&&T0.rare));
+      if(show){for(let i=0;i<4;i++){circ(x+18+((i*29+c*7)%46),y+18+((i*17+r*11)%34),5,T0.dot)}if(T0.rare&&L>=1&&Math.sin(T*6+c+r)>.6)txt('✨',x+60,y+16,14,'#fff','center',false)}
+      if(t.hp<t.max){g.strokeStyle='#0008';g.lineWidth=2;g.beginPath();g.moveTo(x+20,y+15);g.lineTo(x+40,y+35);g.lineTo(x+30,y+52);if(t.hp<t.max/2){g.moveTo(x+40,y+35);g.lineTo(x+62,y+28)}g.stroke()}
+      if(!this.canDig(r,c)){g.fillStyle='#0006';g.fillRect(x+2,y+2,MG.tw-4,MG.th-4)}}
+    person(this.mx,MG.top-8,{job:'miner',tool:'pick',swing:this.swing*2.2,t:T})},
+};
+JOBS.push(miner);
+
+/* ===== BLACKSMITH ===== */
+const smith={id:'smith',n:'Blacksmith',ic:'🔨',desc:'Turn ore into weapons and tools for the camp. Heat it, hammer it, cool it, then hand it over!',orders:[],ph:'pick',heat:0,heatOk:0,hold:false,mark:0,mdir:1,hits:[],quench:0,scrap:0,anim:0,ord:null,
+  newOrder(){const top=S.weapon+1;const avail=RECIPES.filter(r=>!r.tier||r.tier<=Math.max(2,top));let r=pick(avail);
+    if(Math.random()<.35){const nx=RECIPES.find(x=>x.tier===top);if(nx)return{r:nx,who:'You (Camp Armory)',mine:true}}return{r,who:pick(CUSTOMERS)}},
+  enter(){while(this.orders.length<3)this.orders.push(this.newOrder());if(!this.orders.some(o=>o.mine)){const nx=RECIPES.find(x=>x.tier===S.weapon+1);if(nx)this.orders[2]={r:nx,who:'You (Camp Armory)',mine:true}}this.ph='pick';
+    setActs([{label:'🔥 Hold to pump bellows',cls:'r',hold:true,down:()=>this.hold=true,up:()=>this.hold=false,show:()=>this.ph==='heat'},
+      {label:'🔨 Hammer!',cls:'g',fn:()=>this.hammer(),show:()=>this.ph==='hammer'},
+      {label:'💦 Cool it in water',cls:'b',fn:()=>this.cool(),show:()=>this.ph==='quench'},
+      {label:()=>`🗑️ Dig in scrap pile (${this.scrap}/4)`,cls:'b',fn:()=>this.dig(),show:()=>this.ph==='pick'}])},
+  dig(){this.scrap++;sfx.hit();burst(820,420,'#8a6a4a',6);if(this.scrap>=4){this.scrap=0;const k=wpick({wood:30,coal:28,copper:24,iron:14,gold:4});give(k,1,820,380);sfx.good();save()}},
+  down(x,y){if(this.ph==='pick'){for(let i=0;i<3;i++){const ox=30,oy=40+i*150;if(x>ox&&x<ox+330&&y>oy&&y<oy+130)return this.start(i)}}
+    else if(this.ph==='heat')this.hold=true;else if(this.ph==='hammer')this.hammer();else if(this.ph==='quench')this.cool()},
+  up(){this.hold=false},
+  start(i){const o=this.orders[i];if(!has(o.r.need)){toast(`You need ${needTxt(o.r.need)}. Miners dig ore, or dig in the scrap pile!`,2400);sfx.bad();return}
+    take(o.r.need);this.ord=o;this.oi=i;this.ph='heat';this.heat=0;this.heatOk=0;this.hits=[];toast('Hold to pump the bellows. Keep the heat in the orange zone!',2400);updActs()},
+  hammer(){if(this.ph!=='hammer')return;const zw=.1+up('hammer')*.04,d=Math.abs(this.mark-.5);let sc=d<zw/2?1:d<zw/2+.12?.5:0;this.hits.push(sc);this.anim=1;sfx.clang();
+    burst(600,330,'#ffb347',sc?16:5,200);floatT(600,280,sc===1?'PERFECT!':sc?'Good':'Oops','#ffd23f',22);if(this.hits.length>=3){this.ph='quench';toast('Now cool it in the water!');updActs()}},
+  cool(){if(this.ph!=='quench')return;this.quench=1;sfx.splash();this.ph='done';const o=this.ord;const sc=this.hits.reduce((a,b)=>a+b,0),stars=Math.max(1,Math.round(sc));
+    let msg;if(o.mine){if(o.r.tier>S.weapon){S.weapon=o.r.tier;msg=`You made yourself a ${o.r.n}! 🗡️`}earn(Math.round(o.r.pay*.4),600,250)}
+    else{earn(Math.round(o.r.pay*(.6+.2*stars)),600,250);msg=`${o.who} loves the ${o.r.n}!`}
+    S.stats.orders++;setTimeout(()=>{toast(`${'⭐'.repeat(stars)} ${msg}`,2400);this.orders[this.oi]=this.newOrder();this.ph='pick';hudUp();updActs();save()},700)},
+  update(dt){this.anim=Math.max(0,this.anim-dt*4);this.quench=Math.max(0,this.quench-dt);
+    if(this.ph==='heat'){const r=(30+up('bellows')*12);this.heat=clamp(this.heat+(this.hold?r*1.6:-r*.7)*dt,0,100);if(this.heat>=70&&this.heat<=90)this.heatOk+=dt;
+      if(this.heatOk>=1.6){this.ph='hammer';this.mark=0;this.hold=false;toast('Tap HAMMER when the arrow is in the green!');updActs()}}
+    if(this.ph==='hammer'){this.mark+=this.mdir*dt*(1.1+this.hits.length*.15);if(this.mark>1){this.mark=1;this.mdir=-1}if(this.mark<0){this.mark=0;this.mdir=1}}},
+  draw(){g.fillStyle='#3a2a20';g.fillRect(0,0,W,H);g.fillStyle='#4a3628';for(let i=0;i<12;i++)g.fillRect(i*80+(i%2)*20,0,4,H);g.fillStyle='#2a1d15';g.fillRect(0,440,W,100);
+    // forge
+    rr(700,180,200,200,16);g.fillStyle='#5a5a62';g.fill();rr(730,230,140,90,40);g.fillStyle=`rgb(${120+this.heat*1.3},${40+this.heat*.8},20)`;g.fill();
+    for(let i=0;i<5;i++)txt('🔥',750+i*25,300+Math.sin(T*8+i)*4,22+(this.ph==='heat'&&this.hold?8:0),'#fff','center',false);
+    // anvil
+    g.fillStyle='#3d3d45';g.beginPath();g.moveTo(520,340);g.lineTo(680,340);g.lineTo(650,370);g.lineTo(550,370);g.closePath();g.fill();g.fillRect(575,370,50,50);g.fillRect(545,420,110,16);
+    // water bucket
+    rr(440,370,60,60,8);g.fillStyle='#7a4a26';g.fill();ell(470,374,28,6,'#4fc3f7');if(this.quench>0)txt('💨💨',470,340-30*(1-this.quench),30,'#fff','center',false);
+    // scrap pile
+    if(this.ph==='pick'){ell(820,450,90,30,'#6b5a4a');for(let i=0;i<8;i++)circ(770+i*14,440-(i%3)*10,8,['#888','#a0703c','#666'][i%3]);txt('Scrap pile',820,490,14)}
+    const hot=this.ph==='heat'||this.ph==='hammer';if(this.ord&&this.ph!=='pick'){rr(560,326,80,14,5);g.fillStyle=hot?`rgb(255,${200-this.heat},60)`:'#ccc';g.fill()}
+    person(this.ph==='heat'?660:560,436,{job:'smith',tool:'hammer',swing:this.anim*2,t:T,dir:this.ph==='heat'?1:1});
+    if(this.ph==='pick'){txt('Orders',195,22,20);for(let i=0;i<3;i++){const o=this.orders[i],ox=30,oy=40+i*150,ok=has(o.r.need);rr(ox,oy,330,130,16);g.fillStyle=o.mine?'#3d5a8a':'#5a3d2a';g.fill();g.lineWidth=3;g.strokeStyle=ok?'#8bff8b':'#ffffff33';g.stroke();
+        txt(o.r.ic,ox+40,oy+60,40,'#fff','center',false);txt(o.r.n,ox+80,oy+30,20,'#fff','left');txt('For: '+o.who,ox+80,oy+58,14,'#ffd23f','left');
+        txt('Needs: '+needTxt(o.r.need),ox+80,oy+84,15,'#fff','left');txt(o.mine?'Upgrades your weapon!':`Pays about ${o.r.pay} 🪙`,ox+80,oy+108,13,ok?'#8bff8b':'#ccc','left')}
+      let inv=Object.keys(ITEMS).map(k=>ITEMS[k].i+(S.inv[k]||0)).join('  ');txt('Your ore: '+inv,640,30,16)}
+    if(this.ph==='heat'){rr(380,60,40,300,12);g.fillStyle='#0008';g.fill();g.fillStyle='#ff9f43';g.fillRect(382,60+300*(1-.9),36,300*.2);g.fillStyle=`hsl(${40-this.heat*.4},100%,55%)`;g.fillRect(386,360-this.heat*3,28,this.heat*3);
+      txt('HEAT',400,44,16);rr(150,380,200,18,9);g.fillStyle='#0008';g.fill();g.fillStyle='#8bff8b';g.fillRect(150,380,200*Math.min(1,this.heatOk/1.6),18);txt('Keep it hot!',250,370,16);txt(`Forging: ${this.ord.r.n}`,250,120,22)}
+    if(this.ph==='hammer'){const bx=180,bw=600,zw=(.1+up('hammer')*.04);rr(bx,90,bw,30,10);g.fillStyle='#0008';g.fill();g.fillStyle='#ffd23f55';g.fillRect(bx+bw*(.5-zw/2-.12),90,bw*(zw+.24),30);g.fillStyle='#3ddc84';g.fillRect(bx+bw*(.5-zw/2),90,bw*zw,30);
+      txt('▼',bx+bw*this.mark,78,26,'#fff');txt(`Hits: ${this.hits.length}/3`,480,150,20)}}
+};
+JOBS.push(smith);
+
+/* ===== COLLECTOR ===== */
+const BUSHES=[{x:330,y:200},{x:450,y:160},{x:570,y:210}];
+const collector={id:'collector',n:'Collector',ic:'🎣',desc:'Collect food and water for the troops. Catch fish, pick berries and fill buckets. Get better buckets and fishing rods!',
+  p:{x:150,y:330,tx:150,ty:330,walk:false,dir:1},goal:null,food:0,water:0,fish:null,fill:0,berries:[3,3,3],regrow:[0,0,0],
+  enter(){setActs([{label:'🎣 Reel in!',cls:'g',fn:()=>this.reel(),show:()=>this.fish&&this.fish.st!=='wait0'}])},
+  cap(){return BAG[up('bag')]},carry(){return this.food+this.water},
+  down(x,y){if(this.fish&&this.fish.st==='bite'){this.reel();return}
+    let goal=null,tx=x,ty=y;for(let i=0;i<3;i++)if(dist(x,y,BUSHES[i].x,BUSHES[i].y)<55){goal={t:'berry',i};tx=BUSHES[i].x;ty=BUSHES[i].y+50}
+    if(!goal&&x>790){goal={t:'water'};tx=770;ty=clamp(y,180,500)}
+    if(!goal&&((x-480)/150)**2+((y-430)/70)**2<1){goal={t:'fish'};tx=480;ty=350}
+    if(!goal&&x<190&&y>200&&y<380){goal={t:'tent'};tx=200;ty=350}
+    this.goal=goal;this.fish=null;this.fill=0;const p=this.p;p.tx=clamp(tx,30,780);p.ty=clamp(ty,140,515);updActs()},
+  reel(){const f=this.fish;if(!f)return;if(f.st==='bite'){const rod=up('rod');const sz=wpick({1:60-rod*10,2:30+rod*4,3:8+rod*6,5:rod*3});const n=+sz;
+      if(this.carry()+n>this.cap()){toast('Your bag is full! Take it to the supply tent ⛺');this.fish=null;return}
+      this.food+=n;sfx.splash();floatT(480,330,['','Little fish','Fish!','','','BIG FISH!'][n]||'Fish!','#8fd6ff',22);floatT(480,300,'+'+n+' 🍖','#fff');burst(480,420,'#4fc3f7',12);this.fish={st:'wait',t:this.biteT()}}
+    else{floatT(480,330,'Too early!','#ffd',18);this.fish={st:'wait',t:this.biteT()}}updActs()},
+  biteT(){return rnd(2.2,5.5)-up('rod')*.5},
+  arrive(){const gl=this.goal;if(!gl)return;const room=this.cap()-this.carry();
+    if(gl.t==='berry'){const b=this.berries[gl.i];if(b<=0){toast('No berries left here. They grow back soon!');this.goal=null;return}if(room<=0){toast('Your bag is full! Take it to the supply tent ⛺');this.goal=null;return}
+      const n=Math.min(b,room,1+Math.floor(up('bag')/2));this.berries[gl.i]-=n;this.food+=n;if(this.berries[gl.i]<=0)this.regrow[gl.i]=15;sfx.good();floatT(this.p.x,this.p.y-80,'+'+n+' 🍖 berries','#ff8fb0',18);this.goal=null}
+    else if(gl.t==='water'){if(room<=0){toast('Your bag is full! Take it to the supply tent ⛺');this.goal=null;return}gl.t='filling';this.fill=0}
+    else if(gl.t==='fish'){if(room<=0){toast('Your bag is full! Take it to the supply tent ⛺');this.goal=null;return}this.fish={st:'wait',t:this.biteT()};this.goal=null;toast('Wait for the ❗ then tap REEL!');updActs()}
+    else if(gl.t==='tent'){const mx=storeMax();if(!this.carry()){toast('Bring food 🍖 and water 💧 to the supply tent for the troops!');this.goal=null;return}
+      const f=Math.min(this.food,mx-S.food),w=Math.min(this.water,mx-S.water);S.food+=f;S.water+=w;const tot=this.food+this.water;S.stats.delivered+=tot;earn(tot*1.5,200,240);
+      if(f<this.food||w<this.water)toast('Camp storage is full! A Maker can build a Storage Chest.');else toast(`The troops say thank you! ⛺ +${f}🍖 +${w}💧`);this.food=0;this.water=0;this.goal=null;hudUp();save()}},
+  update(dt){const p=this.p,dx=p.tx-p.x,dy=p.ty-p.y,d=Math.hypot(dx,dy);if(d>4){const sp=230*dt;p.x+=dx/d*Math.min(sp,d);p.y+=dy/d*Math.min(sp,d);p.walk=true;if(Math.abs(dx)>2)p.dir=dx>0?1:-1}
+    else if(p.walk){p.walk=false;this.arrive()}
+    for(let i=0;i<3;i++)if(this.regrow[i]>0){this.regrow[i]-=dt;if(this.regrow[i]<=0)this.berries[i]=3}
+    if(this.goal&&this.goal.t==='filling'){this.fill+=dt/1.2;if(this.fill>=1){const n=Math.min(BUCKET[up('bucket')],this.cap()-this.carry());this.water+=n;sfx.splash();floatT(p.x,p.y-80,'+'+n+' 💧','#8fd6ff',18);this.goal=null;this.fill=0}}
+    const f=this.fish;if(f){f.t-=dt;if(f.st==='wait'&&f.t<=0){f.st='bite';f.t=.75+up('rod')*.18;beep(980,.08,'square',.05)}else if(f.st==='bite'&&f.t<=0){floatT(480,330,'It got away!','#ffd',18);f.st='wait';f.t=this.biteT()}updActs()}},
+  draw(){forestBg('#4a9a4a');g.fillStyle='#3e8a40';for(let i=0;i<40;i++)g.fillRect((i*97)%W,150+(i*53)%380,3,8);
+    // river
+    g.fillStyle='#2d7fc0';g.fillRect(800,100,160,H);g.fillStyle='#5fb1f0';for(let i=0;i<8;i++)g.fillRect(810+(i*37)%140,((i*80+T*60)%460)+100,30,3);g.fillStyle='#c2a56b';g.fillRect(790,100,12,H);
+    // pond
+    ell(480,430,150,70,'#2d7fc0');ell(480,430,135,58,'#3d95d8');g.fillStyle='#8a5a2b';g.fillRect(465,352,30,30);
+    // tent
+    g.fillStyle='#d35400';g.beginPath();g.moveTo(40,380);g.lineTo(115,240);g.lineTo(190,380);g.fill();g.fillStyle='#7a2e00';g.beginPath();g.moveTo(100,380);g.lineTo(115,300);g.lineTo(130,380);g.fill();txt('⛺ Supply tent',115,230,14);
+    txt(`🍖${S.food} 💧${S.water}`,115,400,14);
+    for(let i=0;i<3;i++){const b=BUSHES[i];circ(b.x,b.y,42,'#2e7d32');circ(b.x-22,b.y+10,28,'#388e3c');circ(b.x+24,b.y+8,28,'#388e3c');for(let j=0;j<this.berries[i];j++)circ(b.x-18+j*18,b.y-8+(j%2)*14,7,'#e5395b')}
+    const p=this.p;const fishing=!!this.fish;
+    person(p.x,p.y,{job:'collector',walk:p.walk,t:T,dir:p.dir,tool:fishing?'rod':(this.goal&&this.goal.t==='filling'?null:null),carry:this.carry()?`${this.food?'🍖'+this.food:''}${this.water?' 💧'+this.water:''}`:'',swing:fishing?1.2:0});
+    if(this.goal&&this.goal.t==='filling'){txt('🪣',p.x+22,p.y-10,26,'#fff','center',false);rr(p.x-30,p.y-100,60,10,5);g.fillStyle='#0008';g.fill();g.fillStyle='#4fc3f7';g.fillRect(p.x-30,p.y-100,60*this.fill,10)}
+    if(fishing){g.strokeStyle='#fff8';g.lineWidth=1;g.beginPath();g.moveTo(p.x+14,p.y-80);g.lineTo(480,440);g.stroke();const bob=this.fish.st==='bite'?Math.sin(T*30)*4:Math.sin(T*3)*2;circ(480,440+bob,6,'#e74c3c');circ(480,436+bob,4,'#fff');if(this.fish.st==='bite')txt('❗',480,400,34,'#ff4040')}
+    txt(`Bag ${this.carry()}/${this.cap()}`,880,124,14);
+    if(!this.carry()&&!this.goal&&!fishing)txt('Tap the berries, the pond 🎣 or the river 💧. Then bring it to the tent!',480,520,15,'#fff')}
+};
+JOBS.push(collector);
+
+/* ===== SCIENTIST ===== */
+const scientist={id:'scientist',n:'Scientist',ic:'🔬',desc:'Look at what the miners found and figure out what it is and what it is worth. Use tests like a real scientist!',s:null,clues:{},busy:0,busyK:'',practice:false,
+  enter(){setActs([{label:'👀 Look',cls:'b',fn:()=>this.test('look'),show:()=>!!this.s,dis:()=>this.busy>0||this.clues.look},{label:'⚖️ Weigh',cls:'b',fn:()=>this.test('wt'),show:()=>!!this.s,dis:()=>this.busy>0||this.clues.wt},
+    {label:'🪨 Scratch',cls:'b',fn:()=>this.test('hard'),show:()=>!!this.s,dis:()=>this.busy>0||this.clues.hard},{label:'🧲 Magnet',cls:'b',fn:()=>this.test('mag'),show:()=>!!this.s,dis:()=>this.busy>0||this.clues.mag},
+    {label:()=>up('uv')?'🔦 UV glow':'🔒 UV glow',cls:'b',fn:()=>up('uv')?this.test('uv'):toast('Buy the UV Lamp in Upgrades to unlock the glow test'),show:()=>!!this.s,dis:()=>this.busy>0||this.clues.uv},
+    {label:'🤔 Decide!',cls:'g',fn:()=>this.decide(),show:()=>!!this.s,dis:()=>this.busy>0||Object.keys(this.clues).length<1},
+    {label:()=>`🧪 Next find (${S.finds.length})`,cls:'g',fn:()=>this.next(),show:()=>!this.s},
+    {label:'🎁 Practice rock',cls:'b',fn:()=>this.next(true),show:()=>!this.s&&!S.finds.length}])},
+  next(pr){if(!pr&&!S.finds.length)return toast('No mystery finds yet! Miners dig them up deep in the mine.');this.practice=!!pr;
+    const id=pr?pick(Object.keys(SAMPLES)):S.finds.shift();this.s=id;this.clues={};const fam=SAMPLES[id].fam;
+    let others=Object.keys(SAMPLES).filter(k=>k!==id&&SAMPLES[k].fam===fam).sort(()=>Math.random()-.5);
+    let rest=Object.keys(SAMPLES).filter(k=>k!==id&&!others.includes(k)).sort(()=>Math.random()-.5);this.opts=[id,...others,...rest].slice(0,3).sort(()=>Math.random()-.5);save();updActs()},
+  test(k){this.busy=.8;this.busyK=k;sfx.hit();updActs()},
+  decide(){const h=`<h2>What is it? 🤔</h2><p>Look at your notes, then pick!</p>`+this.opts.map(k=>`<button class="big" style="display:block;width:100%;font-size:19px" data-o="${k}">${SAMPLES[k].n}</button>`).join('')+'<button class="ab s" id="mClose" style="margin-top:8px">Run more tests</button>';
+    modal(h);$('mClose').onclick=closeModal;$('mp').querySelectorAll('[data-o]').forEach(b=>b.onclick=()=>{closeModal();this.answer(b.dataset.o)})},
+  answer(k){const s=SAMPLES[this.s];let v=s.v*(1+up('coat')*.25)*(this.practice?.5:1);
+    if(k===this.s){earn(v,640,200);S.stats.ids++;sfx.good();toast(`Correct! It's a <b>${s.n}</b>! The miners are happy 🎉`,2600);burst(480,300,s.col,30,260)}
+    else{earn(v*.3,640,200);sfx.bad();toast(`Not quite. It was a <b>${s.n}</b>, not ${SAMPLES[k].n}. Sold for less.`,3000)}
+    this.s=null;this.clues={};save();updActs()},
+  update(dt){if(this.busy>0){this.busy-=dt;if(this.busy<=0){const k=this.busyK;this.clues[k]=SAMPLES[this.s][k];sfx.good();updActs()}}},
+  drawRock(x,y,r){const s=SAMPLES[this.s],seen=this.clues.look,c=seen?s.col:'#8a8378';g.save();g.translate(x,y);
+    if(this.busyK==='uv'&&this.busy>0||this.clues.uv){if(s.uv!=='No glow'){g.shadowColor=s.uv.includes('red')?'#ff2050':'#4080ff';g.shadowBlur=40}}
+    const sh=seen?s.shape:'lump';g.fillStyle=c;
+    if(sh==='crystal'){for(let i=-2;i<=2;i++){g.beginPath();g.moveTo(i*22-12,30);g.lineTo(i*22-10,-30+Math.abs(i)*14);g.lineTo(i*22,-50+Math.abs(i)*14);g.lineTo(i*22+10,-30+Math.abs(i)*14);g.lineTo(i*22+12,30);g.closePath();g.fill()}g.globalAlpha=.4;g.fillStyle='#fff';g.fillRect(-6,-30,4,50);g.globalAlpha=1}
+    else if(sh==='cube'){for(let i=0;i<5;i++){g.fillStyle=i%2?c:'#b8962e';g.fillRect(-60+i*22,-20-(i%3)*18,34,34)}}
+    else if(sh==='gem'){g.beginPath();g.moveTo(-45,-10);g.lineTo(-25,-40);g.lineTo(25,-40);g.lineTo(45,-10);g.lineTo(0,40);g.closePath();g.fill();g.fillStyle='#ffffff55';g.beginPath();g.moveTo(-25,-40);g.lineTo(0,-10);g.lineTo(25,-40);g.fill()}
+    else if(sh==='fossil'){g.beginPath();g.ellipse(0,0,r,r*.75,0,0,6.28);g.fill();g.strokeStyle='#5d3e22';g.lineWidth=4;g.beginPath();for(let a=0;a<12;a+=.2){const rr2=a*3.2;g.lineTo(Math.cos(a)*rr2,Math.sin(a)*rr2*.8)}g.stroke()}
+    else{g.beginPath();for(let a=0;a<6.28;a+=.5){const rr2=r*(.8+.2*Math.sin(a*3+1));g.lineTo(Math.cos(a)*rr2,Math.sin(a)*rr2*.75)}g.closePath();g.fill();if(seen&&s.fam==='gold'){g.fillStyle='#fff8';g.fillRect(-20,-18,14,6)}if(!seen){g.fillStyle='#6d665c';circ(-15,5,6,'#6d665c');circ(18,-8,8,'#6d665c')}}
+    g.restore()},
+  draw(){g.fillStyle='#dfe9f0';g.fillRect(0,0,W,H);g.fillStyle='#c6d4de';for(let i=0;i<W;i+=60)g.fillRect(i,0,2,300);g.fillStyle='#8a6a4a';g.fillRect(0,300,W,240);g.fillStyle='#6b4f36';g.fillRect(0,300,W,14);
+    // window
+    rr(40,40,200,150,10);g.fillStyle='#7fd0ff';g.fill();pine(90,180,.8);pine(170,185,1);g.strokeStyle='#6b4f36';g.lineWidth=8;g.strokeRect(40,40,200,150);
+    // microscope
+    g.fillStyle='#444';g.fillRect(270,230,60,14);g.fillRect(292,150,14,85);g.save();g.translate(300,150);g.rotate(-.4);g.fillRect(-10,-50,20,60);g.restore();
+    person(180,420,{job:'scientist',t:T,dir:1});
+    // shelf of finds
+    txt(`Mystery finds waiting: ${S.finds.length}`,140,270,16,'#333','center',false);for(let i=0;i<Math.min(8,S.finds.length);i++)txt('❓',40+i*30,295,20,'#fff','center',false);
+    if(this.s){rr(380,180,260,200,20);g.fillStyle='#ffffffaa';g.fill();
+      let jx=0,jy=0;if(this.busy>0){if(this.busyK==='wt')jy=Math.sin(T*20)*4;if(this.busyK==='hard')jx=Math.sin(T*40)*3}
+      this.drawRock(510+jx,280+jy,60);
+      if(this.busy>0){const K={look:'🔍',wt:'⚖️',hard:'📌',mag:'🧲',uv:'🔦'}[this.busyK];txt(K,600+Math.sin(T*10)*10,200,40,'#fff','center',false);txt('Testing...',510,400,20,'#333','center',false)}
+      if(this.clues.mag&&SAMPLES[this.s].mag.includes('sticks'))txt('🧲',560,240,30,'#fff','center',false);
+      // notebook
+      rr(660,40,280,340,14);g.fillStyle='#fffbe6';g.fill();g.strokeStyle='#c9b98a';g.lineWidth=2;for(let i=0;i<9;i++){g.beginPath();g.moveTo(670,100+i*32);g.lineTo(930,100+i*32);g.stroke()}
+      txt('📓 Notes',800,66,20,'#5a4020','center',false);const rows=[['look','👀 Looks'],['wt','⚖️ Weight'],['hard','🪨 Scratch'],['mag','🧲 Magnet'],['uv','🔦 UV glow']];
+      rows.forEach(([k,l],i)=>{txt(l+':',672,92+i*62,14,'#5a4020','left',false);wrap(this.clues[k]||'?',672,112+i*62,256,14,this.clues[k]?'#1a1a1a':'#aaa')});
+      if(this.practice)txt('Practice rock (half coins)',510,170,14,'#7a2e00','center',false)}
+    else{rr(380,180,520,120,20);g.fillStyle='#ffffffaa';g.fill();txt(S.finds.length?'Tap "Next find" to study a mystery rock!':'No finds yet. Miners find them deep underground.',640,225,18,'#333','center',false);txt('Or try a practice rock 🎁',640,260,16,'#555','center',false)}}
+};
+function wrap(t,x,y,w,size,c){g.font=`bold ${size}px Trebuchet MS,Verdana,sans-serif`;g.textAlign='left';g.fillStyle=c;const words=t.split(' ');let line='',yy=y;for(const wd of words){const tt=line?line+' '+wd:wd;if(g.measureText(tt).width>w&&line){g.fillText(line,x,yy);line=wd;yy+=size+3}else line=tt}g.fillText(line,x,yy)}
+JOBS.push(scientist);
+
+/* ===== WARRIOR ===== */
+const PEN={x:340,y:180,w:280,h:200};
+const warrior={id:'warrior',n:'Warrior',ic:'🛡️',desc:'Keep the rebels locked in the pen! You are faster than them, but watch out: a rebel can turn on you at any time and swipe your weapon.',raids:false,
+  on:false,p:null,rebels:[],time:0,esc:0,caught:0,calmed:0,keys:{},tgt:null,swing:0,dizzy:0,turnT:8,sneakT:3,
+  enter(){this.on=false;setActs([{label:'▶️ Start shift',cls:'g',fn:()=>this.start(),show:()=>!this.on},{label:'💥 Bonk!',cls:'r',fn:()=>this.bonk(),show:()=>this.on}]);this.p={x:480,y:470,dir:1,walk:false};this.makeRebels()},
+  makeRebels(){this.rebels=[];for(let i=0;i<6;i++)this.rebels.push({x:rnd(PEN.x+30,PEN.x+PEN.w-30),y:rnd(PEN.y+40,PEN.y+PEN.h-20),st:'pen',tx:0,ty:0,t:rnd(0,3),skin:pick(SKINS),dir:1})},
+  start(){this.on=true;this.time=90;this.esc=0;this.caught=0;this.calmed=0;this.turnT=rnd(9,13);this.sneakT=2.5;this.dizzy=0;this.makeRebels();toast('Keep them in the pen! Tap or use arrow keys to move. BONK rebels that turn on you!',3000);updActs()},
+  bonk(){if(!this.on||this.dizzy>0)return;this.swing=1;sfx.bonk();const R=46+S.weapon*9;let hit=false;
+    for(const r of this.rebels)if((r.st==='warn'||r.st==='charge')&&dist(r.x,r.y,this.p.x,this.p.y)<R){r.st='back';hit=true;this.calmed++;floatT(r.x,r.y-70,'Bonk! Back to the pen!','#ffd23f',18);burst(r.x,r.y-50,'#ffd23f',12)}
+    if(hit)earn(4,this.p.x,this.p.y-90)},
+  down(x,y){if(!this.on)return;for(const r of this.rebels)if((r.st==='warn'||r.st==='charge')&&dist(r.x,r.y-30,x,y)<45&&dist(r.x,r.y,this.p.x,this.p.y)<46+S.weapon*9+20)return this.bonk();this.tgt={x,y}},
+  move(x,y){if(this.on&&ptr.down)this.tgt={x,y}},
+  update(dt){if(!this.on){for(const r of this.rebels)this.wander(r,dt);return}
+    const p=this.p;this.swing=Math.max(0,this.swing-dt*4);this.time-=dt;
+    let vx=0,vy=0;const K=keys;if(K.ArrowLeft||K.a)vx--;if(K.ArrowRight||K.d)vx++;if(K.ArrowUp||K.w)vy--;if(K.ArrowDown||K.s)vy++;
+    if(vx||vy)this.tgt=null;else if(this.tgt){const dx=this.tgt.x-p.x,dy=this.tgt.y-p.y,d=Math.hypot(dx,dy);if(d>6){vx=dx/d;vy=dy/d}else this.tgt=null}
+    const sp=this.dizzy>0?0:175+up('boots')*25;const l=Math.hypot(vx,vy)||1;p.x=clamp(p.x+vx/l*sp*dt,20,940);p.y=clamp(p.y+vy/l*sp*dt,60,530);p.walk=!!(vx||vy)&&sp>0;if(vx)p.dir=vx>0?1:-1;this.dizzy=Math.max(0,this.dizzy-dt);
+    this.sneakT-=dt;if(this.sneakT<=0){this.sneakT=rnd(2.5,4.5)*(1+up('whistle')*.4);const pen=this.rebels.filter(r=>r.st==='pen');if(pen.length){const r=pick(pen);r.st='sneak';const top=Math.random()<.5;r.gx=PEN.x+PEN.w/2;r.gy=top?PEN.y:PEN.y+PEN.h;r.ex=rnd(80,880);r.ey=top?40:560}}
+    this.turnT-=dt;if(this.turnT<=0){this.turnT=rnd(8,13);const c=this.rebels.filter(r=>r.st==='pen'||r.st==='sneak'||r.st==='run');if(c.length){const r=pick(c);r.st='warn';r.t=1.3;sfx.bad();floatT(r.x,r.y-80,'❗','#ff4040',30)}}
+    for(const r of this.rebels){r.t+=dt;
+      if(r.st==='pen')this.wander(r,dt);
+      else if(r.st==='sneak'){if(this.go(r,r.gx,r.gy,85,dt)){r.st='run'}}
+      else if(r.st==='run'){if(this.go(r,r.ex,r.ey,110,dt)){r.st='gone';this.esc++;sfx.bad();toast(`😱 A rebel got away! (${this.esc}/3)`)}}
+      else if(r.st==='warn'){r.t-=dt*2;if(r.t<=0){r.st='charge';r.t=5}}
+      else if(r.st==='charge'){r.t-=dt;this.go(r,p.x,p.y,135,dt);if(r.t<=0){r.st='pen';r.x=clamp(r.x,PEN.x+20,PEN.x+PEN.w-20);r.y=clamp(r.y,PEN.y+30,PEN.y+PEN.h-10)}}
+      else if(r.st==='back'){if(this.go(r,PEN.x+PEN.w/2+rnd(-60,60),PEN.y+PEN.h/2,260,dt))r.st='pen'}
+      if((r.st==='sneak'||r.st==='run')&&this.dizzy<=0&&dist(r.x,r.y,p.x,p.y)<30){r.st='back';this.caught++;S.stats.caught++;earn(3,r.x,r.y-70);floatT(r.x,r.y-95,'Caught!','#8bff8b',20)}
+      if(r.st==='charge'&&this.dizzy<=0&&dist(r.x,r.y,p.x,p.y)<26){this.dizzy=2;sfx.bad();
+        const lost=S.weapon>0?WEAPONS[S.weapon]:null;if(lost){S.weapon--;toast(`💫 BONK! The rebel swiped your ${lost}! Now you have a ${WEAPONS[S.weapon]}.`,2800)}else toast('💫 BONK! You got bonked and the rebel is running away!',2400);
+        r.st='run';r.ex=r.x<480?-30:990;r.ey=r.y;hudUp();save()}}
+    this.rebels=this.rebels.filter(r=>r.st!=='gone');while(this.rebels.length<6)this.rebels.push({x:rnd(PEN.x+30,PEN.x+PEN.w-30),y:PEN.y+PEN.h/2,st:'pen',t:0,skin:pick(SKINS),dir:1});
+    if(this.esc>=3||this.time<=0)this.end()},
+  go(r,x,y,sp,dt){const dx=x-r.x,dy=y-r.y,d=Math.hypot(dx,dy);if(d<5)return true;r.x+=dx/d*Math.min(sp*dt,d);r.y+=dy/d*Math.min(sp*dt,d);r.dir=dx>0?1:-1;r.walk=true;return false},
+  wander(r,dt){if(!r.tx||dist(r.x,r.y,r.tx,r.ty)<5){r.tx=rnd(PEN.x+25,PEN.x+PEN.w-25);r.ty=rnd(PEN.y+35,PEN.y+PEN.h-12)}this.go(r,r.tx,r.ty,30,dt)},
+  end(){this.on=false;S.stats.shifts++;const ok=this.esc<3;let pay=ok?15:0;if(pay)earn(pay);save();updActs();
+    modal(`<h2>${ok?'🛡️ Shift complete!':'😅 Too many rebels got away!'}</h2><p>Caught sneaky rebels: <b>${this.caught}</b><br>Bonked angry rebels: <b>${this.calmed}</b><br>Got away: <b>${this.esc}</b></p>${ok?'<p>Bonus: +15 🪙</p>':''}<button class="big" id="mClose">OK</button>`);$('mClose').onclick=closeModal},
+  draw(){forestBg('#5a9a48');g.fillStyle='#4c8a3c';for(let i=0;i<30;i++)ell((i*131)%W,140+(i*71)%390,14,5,'#4c8a3c');
+    for(let i=0;i<12;i++){pine(i*90+10,60+((i*37)%30),.9);}
+    // pen
+    g.fillStyle='#8a6a3a33';g.fillRect(PEN.x,PEN.y,PEN.w,PEN.h);g.strokeStyle='#7a4a26';g.lineWidth=8;const gx=PEN.x+PEN.w/2;
+    g.beginPath();g.moveTo(gx-35,PEN.y);g.lineTo(PEN.x,PEN.y);g.lineTo(PEN.x,PEN.y+PEN.h);g.lineTo(gx-35,PEN.y+PEN.h);g.moveTo(gx+35,PEN.y+PEN.h);g.lineTo(PEN.x+PEN.w,PEN.y+PEN.h);g.lineTo(PEN.x+PEN.w,PEN.y);g.lineTo(gx+35,PEN.y);g.stroke();
+    for(let x=PEN.x;x<=PEN.x+PEN.w;x+=35){if(Math.abs(x-gx)<35)continue;g.fillStyle='#5b3a1e';g.fillRect(x-4,PEN.y-12,8,16);g.fillRect(x-4,PEN.y+PEN.h-12,8,16)}
+    txt('REBEL PEN',gx,PEN.y+PEN.h/2,22,'#ffffff55','center',false);
+    const ents=this.rebels.map(r=>({y:r.y,f:()=>{person(r.x,r.y,{job:'rebel',skin:r.skin,walk:r.st!=='pen'||true,t:T+r.t,dir:r.dir,angry:r.st==='warn'||r.st==='charge'});if(r.st==='warn')txt('❗',r.x,r.y-82,26,'#ff4040');if(r.st==='charge')txt('😠',r.x,r.y-82,18)}}));
+    const p=this.p;ents.push({y:p.y,f:()=>{person(p.x,p.y,{job:'warrior',tool:'sword',swing:this.swing*2.5,walk:p.walk,t:T,dir:p.dir,dizzy:this.dizzy>0});if(this.on)g.globalAlpha=.15,circ(p.x,p.y-30,46+S.weapon*9,'#fff'),g.globalAlpha=1}});
+    ents.sort((a,b)=>a.y-b.y).forEach(e=>e.f());
+    if(this.on){txt(`⏱️ ${Math.ceil(this.time)}`,70,140,24);txt(`Got away: ${this.esc}/3`,880,140,18,this.esc?'#ff8f7a':'#fff')}
+    else{rr(230,420,500,90,16);g.fillStyle='#000a';g.fill();txt('Press START SHIFT. Catch rebels who sneak out,',480,450,17);txt('and BONK any rebel that turns on you!',480,480,17)}}
+};
+JOBS.push(warrior);
+
+/* ===== REBEL ===== */
+const KM=400, GOAL_KM=18;
+const rebel={id:'rebel',n:'Rebel',ic:'🏃',desc:'Escape the camp! Get 18 km away and the rebels win. Warriors are faster than you, so hide in bushes. If you bonk a scout, the camp finds out you are the rebel!',raids:false,
+  on:false,
+  enter(){this.on=false;this.setup();setActs([{label:'▶️ Escape!',cls:'g',fn:()=>this.start(),show:()=>!this.on},{label:'💨 Sprint (hold)',cls:'b',hold:true,down:()=>this.sprint=true,up:()=>this.sprint=false,show:()=>this.on},{label:'💥 Bonk scout',cls:'r',fn:()=>this.bonk(),show:()=>this.on}])},
+  setup(){const L=GOAL_KM*KM+400;this.len=L;this.trees=[];this.bushes=[];this.streams=[];this.scouts=[];
+    for(let x=500;x<L;x+=rnd(70,140)){this.trees.push({x,y:rnd(160,520),r:rnd(16,24)})}
+    for(let x=350;x<L;x+=rnd(180,320)){this.bushes.push({x,y:rnd(180,500),r:38})}
+    for(let x=1200;x<L;x+=rnd(1100,1800))this.streams.push({x,w:70});
+    for(let x=900;x<L-300;x+=rnd(450,700))this.scouts.push({x,y:rnd(200,480),st:'watch',a:0,face:-1,t:0});
+    this.trees=this.trees.filter(t=>!this.bushes.some(b=>dist(t.x,t.y,b.x,b.y)<70)&&!this.scouts.some(s=>dist(t.x,t.y,s.x,s.y)<60));
+    this.p={x:120,y:340,dir:1,walk:false,st:100,hidden:false};this.ws=[];this.cam=0;this.reveal=0;this.clue=null;this.next=2*KM;this.sprint=false;this.tgt=null},
+  start(){this.setup();this.on=true;this.ws=[{x:-140,y:300,mode:'chase',lx:0,ly:0,t:0},{x:-220,y:420,mode:'chase',lx:0,ly:0,t:0}];this.grace=2.5;toast('RUN! Warriors are faster, so hide in bushes 🌳 and sprint 💨!',2800);updActs()},
+  bonk(){if(!this.on)return;sfx.bonk();const p=this.p;for(const s of this.scouts)if(s.st!=='out'&&s.st!=='shout'&&dist(s.x,s.y,p.x,p.y)<60){s.st='out';this.clue={x:s.x,y:s.y,t:6};floatT(s.x,s.y-70,'Bonk! 💫','#ffd23f',22);toast('You bonked the scout. Uh oh, someone will find them...',2400);return}
+    floatT(p.x,p.y-80,'Nobody close','#ddd',14)},
+  down(x,y){if(this.on)this.tgt={x:x+this.cam,y}},move(x,y){if(this.on&&ptr.down)this.tgt={x:x+this.cam,y}},up(){},
+  solid(o){for(const t of this.trees){const d=dist(o.x,o.y,t.x,t.y),m=t.r+10;if(d<m&&d>0){o.x=t.x+(o.x-t.x)/d*m;o.y=t.y+(o.y-t.y)/d*m}}},
+  inStream(x){return this.streams.some(s=>x>s.x&&x<s.x+s.w)},
+  update(dt){if(!this.on)return;const p=this.p;
+    let vx=0,vy=0;const K=keys;if(K.ArrowLeft||K.a)vx--;if(K.ArrowRight||K.d)vx++;if(K.ArrowUp||K.w)vy--;if(K.ArrowDown||K.s)vy++;if(K.Shift)this.sprint=true;
+    if(vx||vy)this.tgt=null;else if(this.tgt){const dx=this.tgt.x-p.x,dy=this.tgt.y-p.y,d=Math.hypot(dx,dy);if(d>6){vx=dx/d;vy=dy/d}else this.tgt=null}
+    const sprinting=this.sprint&&p.st>1&&(vx||vy);let sp=(140+up('shoes')*10)*(sprinting?1.6:1)*(this.inStream(p.x)?.55:1);
+    p.st=clamp(p.st+(sprinting?-34/(1+up('lungs')*.5):14)*dt,0,100);const l=Math.hypot(vx,vy)||1;p.x=clamp(p.x+vx/l*sp*dt,20,this.len);p.y=clamp(p.y+vy/l*sp*dt,150,525);this.solid(p);p.walk=!!(vx||vy);if(vx)p.dir=vx>0?1:-1;
+    p.hidden=this.bushes.some(b=>dist(p.x,p.y,b.x,b.y)<b.r);
+    this.cam=clamp(p.x-320,0,this.len-W);const km=p.x/KM;this.km=km;
+    if(km>=GOAL_KM)return this.end(true);
+    if(p.x>this.next&&this.ws.length<6){this.next+=2.5*KM;this.ws.push({x:this.cam-80,y:rnd(180,500),mode:'search',lx:p.x-200,ly:rnd(180,500),t:0});floatT(p.x,p.y-90,'More warriors are coming!','#ff8f7a',16)}
+    if(this.clue){this.clue.t-=dt;if(this.clue.t<=0){this.reveal=12;this.clue=null;sfx.bad();toast('🚨 The camp found the bonked scout! Now everyone knows YOU are the rebel!',3200);this.ws.push({x:p.x-420,y:p.y,mode:'chase',t:0})}}
+    this.reveal=Math.max(0,this.reveal-dt);this.grace=Math.max(0,this.grace-dt);
+    for(const s of this.scouts){if(s.st==='out')continue;s.face=p.x>s.x?1:-1;const d=dist(s.x,s.y,p.x,p.y);
+      if(s.st==='watch'){if(d<150&&!p.hidden){s.a+=dt;if(s.a>1.1){s.st='shout';s.t=2;sfx.bad();floatT(s.x,s.y-80,'REBEL HERE!','#ff4040',20);for(const w of this.ws){w.mode='chase'}}}else s.a=Math.max(0,s.a-dt)}
+      else if(s.st==='shout'){s.t-=dt;if(s.t<=0)s.st='done'}}
+    for(const w of this.ws){w.t+=dt;const d=dist(w.x,w.y,p.x,p.y);const sees=this.reveal>0||d<45||(!p.hidden&&d<270);
+      if(w.mode==='chase'){if(!sees&&p.hidden){w.mode='search';w.st=5;w.lx=p.x+rnd(130,260);w.ly=clamp(p.y+rnd(-140,140),170,510);floatT(w.x,w.y-80,'Where did they go?','#fff',14)}else{w.lx=p.x;w.ly=p.y}}
+      else if(sees){w.mode='chase';floatT(w.x,w.y-80,'❗','#ff4040',26)}
+      else if(w.mode==='search'){w.st=(w.st==null?6:w.st)-dt;if(w.st<=0){w.mode='home';w.lx=-9999;w.ly=w.y}}
+      const tx=w.mode==='chase'?p.x:w.lx,ty=w.mode==='chase'?p.y:w.ly;const dx=tx-w.x,dy=ty-w.y,dd=Math.hypot(dx,dy);
+      if(w.mode==='home'){w.lx=w.x-200}
+      if(w.mode==='search'&&dd<20){w.lx=w.x+rnd(60,200);w.ly=clamp(w.y+rnd(-150,150),170,510)}
+      let wsp=(w.mode==='chase'?178:95)*(this.inStream(w.x)?.55:1);if(dd>1){w.x+=dx/dd*wsp*dt;w.y+=dy/dd*wsp*dt;w.dir=dx>0?1:-1}this.solid(w);
+      if(w.x<this.cam-600){if(w.mode==='home')w.gone=1;else w.x=this.cam-600}
+      if(d<24&&this.grace<=0)return this.end(false)}
+    this.ws=this.ws.filter(w=>!w.gone);if(this.ws.length<2&&!this.ws.some(w=>w.x>this.cam-700)&&Math.random()<dt*.15)this.ws.push({x:this.cam-120,y:rnd(180,500),mode:'search',st:7,lx:p.x+rnd(0,200),ly:rnd(180,500),t:0})},
+  end(win){this.on=false;this.sprint=false;const km=Math.min(GOAL_KM,this.km||0);let pay=Math.round(km*2);if(win){pay+=50;S.stats.rebelWins++}S.stats.bestKm=Math.max(S.stats.bestKm,+km.toFixed(1));earn(pay);save();updActs();
+    modal(`<h2>${win?'🎉 REBELS WIN!':'🚨 Caught!'}</h2><p>${win?'You escaped 18 km into the forest! The warriors could not keep up.':'A warrior caught you and walked you back to the Rebel Pen.'}</p><p>You ran <b>${km.toFixed(1)} km</b>. Best: <b>${S.stats.bestKm} km</b></p><p>+${pay} 🪙</p><button class="big" id="mAgain">Run again</button><button class="ab s" id="mClose">Close</button>`);
+    $('mAgain').onclick=()=>{closeModal();this.start()};$('mClose').onclick=closeModal},
+  draw(){const c=this.cam;forestBg('#3f8a45',['#7fd0ff','#c9f0ff'],c);g.fillStyle='#478f4a';for(let i=0;i<40;i++){const x=((i*173-c)%1100+1100)%1100-60;ell(x,160+(i*67)%370,18,6,'#4a944d')}
+    for(const s of this.streams){if(s.x+s.w<c-10||s.x>c+W+10)continue;g.fillStyle='#3d95d8';g.fillRect(s.x-c,100,s.w,H);g.fillStyle='#8fd6ff';for(let i=0;i<6;i++)g.fillRect(s.x-c+10+(i*17)%50,((i*90+T*80)%440)+100,14,3)}
+    for(let k=1;k<=GOAL_KM;k++){const x=k*KM-c;if(x<-20||x>W+20)continue;g.fillStyle='#7a4a26';g.fillRect(x-3,118,6,30);rr(x-26,104,52,20,4);g.fill();txt(k+' km',x,114,12,k===GOAL_KM?'#ffd23f':'#fff')}
+    if(GOAL_KM*KM-c<W+40){const x=GOAL_KM*KM-c;g.fillStyle='#ffd23f';g.fillRect(x-2,140,4,H);txt('🏁 FREEDOM!',x+60,170,20,'#ffd23f')}
+    if(this.clue){txt('💫',this.clue.x-c,this.clue.y-40,22,'#fff','center',false)}
+    const ents=[];const vis=o=>o.x>c-80&&o.x<c+W+80;
+    for(const t of this.trees)if(vis(t))ents.push({y:t.y,f:()=>pine(t.x-c,t.y+6,t.r/20)});
+    for(const s of this.scouts)if(vis(s))ents.push({y:s.y,f:()=>{if(s.st==='watch'){g.globalAlpha=.12+s.a*.2;circ(s.x-c,s.y-10,150,s.a>0?'#ff4040':'#fff');g.globalAlpha=1}
+      person(s.x-c,s.y,{job:'scout',skin:SKINS[1],dir:s.face,sleep:s.st==='out',t:T});if(s.st==='out')txt('💤',s.x-c+16,s.y-70,16,'#fff','center',false);if(s.st==='watch'&&s.a>0)txt('👀',s.x-c,s.y-80,18,'#fff','center',false);if(s.st==='shout')txt('📣',s.x-c,s.y-80,22,'#fff','center',false)}});
+    const p=this.p;ents.push({y:p.y,f:()=>person(p.x-c,p.y,{job:'rebel',walk:p.walk,t:T,dir:p.dir,alpha:p.hidden?.45:1})});
+    for(const w of this.ws)if(vis(w))ents.push({y:w.y,f:()=>{person(w.x-c,w.y,{job:'warrior',tool:'sword',walk:true,t:T,dir:w.dir||1});if(w.mode!=='chase')txt(w.mode==='home'?'💤':'❓',w.x-c,w.y-82,18,'#fff','center',false)}});
+    ents.sort((a,b)=>a.y-b.y).forEach(e=>e.f());
+    for(const b of this.bushes)if(vis(b)){const x=b.x-c;circ(x,b.y-10,b.r,'#2e7d32');circ(x-24,b.y,24,'#388e3c');circ(x+24,b.y,24,'#388e3c');circ(x,b.y-30,20,'#43a047')}
+    if(this.on||this.km){const km=(this.p.x/KM);rr(20,130,300,22,11);g.fillStyle='#0008';g.fill();g.fillStyle='#ffd23f';g.fillRect(22,132,296*Math.min(1,km/GOAL_KM),18);txt(`🏃 ${km.toFixed(1)} / ${GOAL_KM} km`,170,141,14);
+      rr(20,160,140,12,6);g.fillStyle='#0008';g.fill();g.fillStyle='#8fd6ff';g.fillRect(21,161,138*p.st/100,10);txt('💨',172,166,12,'#fff','center',false);
+      if(p.hidden)txt('🌳 Hiding!',480,140,20,'#8bff8b');if(this.reveal>0)txt(`🚨 Everyone knows you are the rebel! ${Math.ceil(this.reveal)}`,620,170,16,'#ff8f7a');
+      const close=this.ws.reduce((m,w)=>Math.min(m,p.x-w.x),9999);if(close>0&&close<500&&close>320)txt('◀ warrior close!',60,300,14,'#ff8f7a')}
+    if(!this.on){rr(230,400,500,110,16);g.fillStyle='#000a';g.fill();txt('Press ESCAPE! Move with arrows/WASD or tap.',480,428,16);txt('Warriors are FASTER than you. Hide in bushes 🌳 to lose them.',480,456,15);txt('Bonk a scout and the camp will find out you are the rebel!',480,484,15)}}
+};
+JOBS.push(rebel);
+
+/* ===== MAKER ===== */
+const TREES=[{x:80,y:330},{x:200,y:260},{x:310,y:350}];
+const SLOTS={bed:[[470,230],[540,230],[610,230],[680,230],[470,290],[540,290],[610,290],[680,290]],table:[[770,250],[850,250],[770,310],[850,310]],fence:[[440,500],[530,500],[620,500],[710,500],[800,500]],
+  fire:[[600,400]],barrel:[[880,400]],tower:[[900,170]],chest:[[760,400],[800,400]]};
+const maker={id:'maker',n:'Maker',ic:'🪚',desc:'Build beds and everything else the camp needs! Chop trees for wood, then hammer the nails to build.',trees:[],mx:200,my:400,swing:0,job:null,
+  enter(){if(!this.trees.length)this.trees=TREES.map(t=>({...t,hp:0,re:0,fall:0}));setActs([{label:'🔨 Build',cls:'g',fn:()=>this.menu(),show:()=>!this.job}])},
+  menu(){let h=`<h2>🔨 What will you build?</h2><p>You have: ${Object.keys(ITEMS).filter(k=>['wood','stone','iron'].includes(k)).map(k=>ITEMS[k].i+(S.inv[k]||0)).join('  ')}</p>`;
+    for(const b of BUILDS){const n=bl(b.id),full=n>=b.max,ok=has(b.need);h+=`<div class="row"><span class="ic">${b.ic}</span><div><b>${b.n}</b> (${n}/${b.max})<br><small>${b.desc}</small><br><small>Needs ${needTxt(b.need)}</small></div>${full?'<b>DONE</b>':`<button class="ab ${ok?'g':''}" data-b="${b.id}" ${ok?'':'disabled'}>Build</button>`}</div>`}
+    h+='<p><small>Chop trees for 🪵. Miners find 🪨 and ⚪ iron.</small></p><button class="big" id="mClose">Close</button>';modal(h);$('mClose').onclick=closeModal;
+    $('mp').querySelectorAll('[data-b]').forEach(b=>b.onclick=()=>{closeModal();this.build(b.dataset.b)})},
+  build(id){const b=BUILDS.find(x=>x.id===id);if(!has(b.need))return;take(b.need);this.job={b,left:6,miss:0,nail:null};this.spawnNail();toast('Tap the nails to hammer them in! 🔨');updActs()},
+  spawnNail(){this.job.nail={x:rnd(460,900),y:rnd(200,470),t:1.5+up('toolbox')*.45}},
+  down(x,y){if(this.job){const n=this.job.nail;if(n&&dist(x,y,n.x,n.y)<40){sfx.clang();burst(n.x,n.y,'#ffd23f',8);this.mx=n.x-30;this.my=n.y+40;this.swing=1;this.job.left--;floatT(n.x,n.y-20,'Bang!','#fff',18);
+        if(this.job.left<=0)this.finish();else this.spawnNail()}return}
+    for(const t of this.trees){if(t.re>0)continue;if(dist(x,y,t.x,t.y-50)<55){this.mx=t.x+40;this.my=t.y+20;this.swing=1;t.hp++;sfx.hit();burst(t.x,t.y-10,'#c49a6c',6);t.shake=.2;
+        if(t.hp>=4-up('saw')){t.hp=0;t.re=6;const n=2+(up('saw')>=2?1:0);give('wood',n,t.x,t.y-80);sfx.good();save()}return}}
+    if(x<400){this.mx=x;this.my=clamp(y,250,520)}},
+  finish(){const b=this.job.b;S.builds[b.id]=(S.builds[b.id]||0)+1;S.stats.built++;const bonus=Math.max(2,12-this.job.miss*2);earn(bonus,700,200);sfx.good();burst(700,300,'#ffd23f',30,260);
+    toast(`${b.ic} You built a ${b.n}! ${b.desc}.`,2800);this.job=null;hudUp();save();updActs()},
+  update(dt){this.swing=Math.max(0,this.swing-dt*4);for(const t of this.trees){if(t.re>0)t.re-=dt;t.shake=Math.max(0,(t.shake||0)-dt)}
+    if(this.job&&this.job.nail){this.job.nail.t-=dt;if(this.job.nail.t<=0){this.job.miss++;floatT(this.job.nail.x,this.job.nail.y,'Missed!','#ff8f7a',16);this.spawnNail()}}},
+  drawBuild(id,x,y){const s={bed:'🛏️',table:'🪑',fence:'🚧',fire:'🔥',barrel:'🛢️',tower:'🗼',chest:'📦'}[id];txt(s,x,y,id==='tower'?70:38,'#fff','center',false)},
+  draw(){forestBg('#4f9a48');g.fillStyle='#b08a5a';g.fillRect(420,160,540,380);g.fillStyle='#a07a4a';for(let i=0;i<10;i++)g.fillRect(430+i*54,165,2,370);txt('CAMP',690,180,18,'#ffffff66','center',false);
+    for(const id in SLOTS){const n=bl(id);SLOTS[id].forEach(([x,y],i)=>{if(i<n)this.drawBuild(id,x,y);else{g.globalAlpha=.18;this.drawBuild(id,x,y);g.globalAlpha=1}})}
+    const tents=[[500,370],[680,370]];for(const [x,y] of tents){g.fillStyle='#2e86c1';g.beginPath();g.moveTo(x-45,y+30);g.lineTo(x,y-40);g.lineTo(x+45,y+30);g.fill()}
+    for(const t of this.trees){const sx=t.shake?rnd(-3,3):0;if(t.re>0){g.fillStyle='#7a4a26';g.fillRect(t.x-10,t.y-10,20,14);txt('🌱',t.x,t.y-24,18,'#fff','center',false)}else pine(t.x+sx,t.y,1.5);if(!t.re&&t.hp)txt('🪓'.repeat(t.hp),t.x,t.y+24,12,'#fff','center',false)}
+    person(this.mx,this.my,{job:'maker',tool:this.job?'hammer':'axe',swing:this.swing*2.2,t:T,dir:this.mx<400?-1:1});
+    txt(`🪵 ${S.inv.wood}  🪨 ${S.inv.stone}  ⚪ ${S.inv.iron}`,200,150,18);
+    if(this.job){const n=this.job.nail;if(n){circ(n.x,n.y,30,'#ffd23f44');g.fillStyle='#ccc';g.fillRect(n.x-3,n.y-26,6,26);g.fillRect(n.x-10,n.y-30,20,6);g.globalAlpha=.7;g.strokeStyle='#ffd23f';g.lineWidth=4;g.beginPath();g.arc(n.x,n.y-10,34,-1.57,-1.57+6.283*(n.t/(1.5+up('toolbox')*.45)));g.stroke();g.globalAlpha=1}
+      txt(`Building ${this.job.b.n}: ${6-this.job.left}/6 nails`,690,140,18,'#ffd23f')}
+    else txt('Tap a tree to chop 🪓, then press BUILD',200,515,15)}
+};
+JOBS.push(maker);
+
+/* ---------- wolves ---------- */
+let raid=null;
+function startRaid(){const n=clamp(3+Math.floor(S.day/2)-bl('fence'),1,7);raid={warn:bl('tower')?4:2.2,wolves:[],n};sfx.howl();toast('🐺 AWOOO! Wolves are coming! Tap them to scare them off!',2600)}
+function updRaid(dt){if(!raid){if(cur&&cur.raids!==false){S.raidT-=dt;if(S.raidT<=0){S.raidT=rnd(100,150);startRaid()}}return}
+  if(raid.warn>0){raid.warn-=dt;if(raid.warn<=0){for(let i=0;i<raid.n;i++){const side=Math.random()<.5;raid.wolves.push({x:side?-40-i*60:W+40+i*60,y:rnd(180,500),hp:Math.max(1,3-Math.floor(S.weapon/2)),st:'in',dir:side?1:-1,t:rnd(0,2),kb:0})}}return}
+  const sp=(bl('tower')?55:75)+S.day*2;
+  for(const w of raid.wolves){w.t+=dt;if(w.st==='in'){const dx=480-w.x,dy=330-w.y,d=Math.hypot(dx,dy);if(w.kb>0){w.kb-=dt;w.x-=w.dir*180*dt}else{w.x+=dx/d*sp*dt;w.y+=dy/d*sp*dt;w.dir=dx>0?1:-1}
+      if(d<40){w.st='steal';if(S.food>0){S.food--;floatT(480,280,'-1 🍖 stolen!','#ff8f7a')}else{const c=Math.min(S.coins,5);S.coins-=c;floatT(480,280,`-${c} 🪙 stolen!`,'#ff8f7a')}sfx.bad();hudUp()}}
+    else w.x+=(w.x<480?-1:1)*260*dt}
+  raid.wolves=raid.wolves.filter(w=>w.x>-120&&w.x<W+120);
+  if(!raid.wolves.length){const scared=raid.scared||0;if(scared){earn(scared*3);toast(`🐺 Wolves chased away! You scared ${scared}.`)}raid=null;save()}}
+function raidTap(x,y){if(!raid||raid.warn>0)return false;for(const w of raid.wolves){if(w.st==='in'&&dist(x,y,w.x+(w.dir>0?10:-10),w.y-18)<50){w.hp--;w.kb=.25;sfx.bonk();burst(w.x,w.y-20,'#c9ccd3',8);floatT(w.x,w.y-50,'Shoo!','#fff',18);
+      if(w.hp<=0){w.st='run';w.dir=w.x<480?-1:1;raid.scared=(raid.scared||0)+1;S.stats.wolves++;floatT(w.x,w.y-70,'Yip yip!','#ffd23f',20)}return true}}return false}
+function drawRaid(){if(!raid)return;if(raid.warn>0){g.fillStyle=`rgba(80,0,0,${.15+.1*Math.sin(T*10)})`;g.fillRect(0,0,W,H);txt('🐺 WOLVES ARE COMING! 🐺',480,90,34,'#ffd23f')}
+  for(const w of raid.wolves){wolf(w.x,w.y,{dir:w.st==='in'?w.dir:(w.x<480?-1:1),t:w.t,scared:w.st==='run'});if(w.st==='in'){for(let i=0;i<w.hp;i++)circ(w.x-8*(w.hp-1)/2*2+i*16-0,w.y-58,4,'#ff6b6b')}}
+  if(raid.wolves.length&&raid.warn<=0)txt('Tap the wolves to scare them away!',480,90,22,'#fff')}
+
+/* ---------- survival ---------- */
+function survive(dt){S.hun-=dt*100/(bl('fire')?330:240);S.thi-=dt*100/(bl('barrel')?280:200);
+  if(S.hun<=0||S.thi<=0){const what=S.hun<=0?'hungry':'thirsty';S.hun=Math.max(S.hun,60);S.thi=Math.max(S.thi,60);const lost=Math.floor(S.coins*.2);S.coins-=lost;
+    modal(`<h2>😵 You fainted!</h2><p>You got too ${what}. The camp doctor helped you up, but you dropped ${lost} 🪙.</p><p>Tip: press <b>🍖 Eat</b> and <b>💧 Drink</b> when your bars get low. Collectors bring food and water to camp!</p><button class="big" id="mClose">OK</button>`);$('mClose').onclick=closeModal;save()}
+  S.dayT+=dt;if(S.dayT>=180){S.dayT=0;S.day++;const troops=3+bl('bed'),need=Math.ceil(troops/2);const fOk=S.food>=need,wOk=S.water>=need;S.food=Math.max(0,S.food-need);S.water=Math.max(0,S.water-need);
+    toast(`☀️ Day ${S.day}! The ${troops} troops ate ${need}🍖 and drank ${need}💧.${fOk&&wOk?'':' The camp is running low! Collectors needed!'}`,3200);save()}
+  if(Math.floor(T*4)%4===0)hudUp()}
+
+/* ---------- screens & input ---------- */
+let scene='title';
+function show(id){document.body.classList.toggle('playing',!id);['sTitle','sBoard'].forEach(s=>$(s).classList.toggle('show',s===id))}
+function board(){scene='board';cur=null;show('sBoard');closeModal();save();
+  const st=S.stats,info={miner:`Gold found: ${st.gold}. Depth ${S.mineDepth*10} m`,smith:`Orders done: ${st.orders}. Weapon: ${WEAPONS[S.weapon]}`,collector:`Food & water delivered: ${st.delivered}`,scientist:`Rocks named: ${st.ids}. Finds waiting: ${S.finds.length}`,
+    warrior:`Rebels caught: ${st.caught}`,rebel:`Best escape: ${st.bestKm} km. Wins: ${st.rebelWins}`,maker:`Things built: ${st.built}`};
+  $('jobs').innerHTML=JOBS.map(j=>`<button class="job" data-j="${j.id}"><span class="ic">${j.ic}</span><b>${j.n}</b>${j.desc}<small>${info[j.id]}</small></button>`).join('')+
+    `<div class="job" style="text-align:center"><b>⛺ Camp</b>🪙 ${S.coins} coins · Day ${S.day}<br>🍖 ${S.food} food · 💧 ${S.water} water<br>🐺 Wolves scared: ${st.wolves}<br><small>Shoutout to Alessandro and Chris for helping test camp life!</small></div>`;
+  $('jobs').querySelectorAll('[data-j]').forEach(b=>b.onclick=()=>startJob(b.dataset.j))}
+function startJob(id){cur=JOBS.find(j=>j.id===id);scene='job';show(null);fx=[];cur.enter();hudUp();layout();if(!S['seen_'+id]){S['seen_'+id]=1;toast(cur.ic+' '+cur.desc,3600)}}
+$('bPlay').onclick=()=>{beep(600,.05);board()};
+const keys={};let ptr={down:false};
+addEventListener('keydown',e=>{keys[e.key.length===1?e.key.toLowerCase():e.key]=true;if(e.key===' '&&cur){e.preventDefault();if(cur.bonk)cur.bonk();else if(cur.hammer)cur.hammer()}if(e.key.startsWith('Arrow'))e.preventDefault()});
+addEventListener('keyup',e=>{keys[e.key.length===1?e.key.toLowerCase():e.key]=false;if(e.key==='Shift'&&cur===rebel)rebel.sprint=false});
+function lp(e){const r=cv.getBoundingClientRect();return{x:(e.clientX-r.left-offX)/scale,y:(e.clientY-r.top-offY)/scale}}
+cv.addEventListener('pointerdown',e=>{if(scene!=='job'||isModal())return;e.preventDefault();ptr.down=true;try{cv.setPointerCapture(e.pointerId)}catch(_){}const p=lp(e);if(raidTap(p.x,p.y))return;cur.down&&cur.down(p.x,p.y);updActs()});
+cv.addEventListener('pointermove',e=>{if(scene!=='job')return;const p=lp(e);cur&&cur.move&&cur.move(p.x,p.y)});
+['pointerup','pointercancel'].forEach(ev=>cv.addEventListener(ev,e=>{ptr.down=false;if(scene==='job'&&cur&&cur.up){const p=lp(e);cur.up(p.x,p.y)}}));
+
+let last=performance.now(),actT=0,saveT=0;
+function frame(now){let dt=Math.min(.05,(now-last)/1000);last=now;T+=dt;
+  if(scene==='job'&&cur){const paused=isModal();if(!paused){cur.update(dt);updRaid(dt);survive(dt);updFx(dt)}
+    actT+=dt;if(actT>.2){actT=0;updActs()}saveT+=dt;if(saveT>5){saveT=0;save()}
+    const d=cv._dpr||1;g.setTransform(d,0,0,d,0,0);g.fillStyle='#0c2314';g.fillRect(0,0,cv.width,cv.height);g.setTransform(d*scale,0,0,d*scale,d*offX,d*offY);
+    g.save();g.beginPath();g.rect(0,0,W,H);g.clip();cur.draw();drawRaid();drawFx();g.restore()}
+  requestAnimationFrame(frame)}
+layout();hudUp();requestAnimationFrame(frame);
+addEventListener('beforeunload',save);
+document.addEventListener('visibilitychange',()=>{if(document.hidden)save()});
+
+/* test hooks */
+window.SV={S:()=>S,JOBS,startJob,board,startRaid,raid:()=>raid,give:(k,n)=>{S.inv[k]=(S.inv[k]||0)+n},coins:n=>{S.coins+=n;hudUp()},save,
+  rebel,warrior,miner,smith,collector,scientist,maker,raidTap,reset:()=>{localStorage.removeItem(KEY);load()}};
+})();
+</script>
+</body>
+</html>
